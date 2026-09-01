@@ -137,6 +137,13 @@ an approved architecture delta; a no-contract-change implementation needs
 recorded evidence. Read [execution.md](references/execution.md) before executing
 a leaf or parallel wave.
 
+For parallel execution of independent nodes, use an installed parallel dispatch
+skill (such as `dispatching-parallel-agents`) to dispatch subagents concurrently,
+or use a subagent-driven development skill (such as `subagent-driven-development`)
+when executing an implementation plan with independent tasks in the current session.
+Never flatten parallel-capable nodes into a sequential plan without explicit
+evidence that parallelization is unsafe.
+
 ## Compatibility
 
 Read schema v1 maps and handoffs without inventing v2 design or architecture

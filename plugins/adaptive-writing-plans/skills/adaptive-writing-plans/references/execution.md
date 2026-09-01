@@ -88,10 +88,16 @@ independent acceptance command. Missing evidence means serial execution.
 ## Coordinator contract
 
 For a safe wave, create one wave-level `update_plan` item and keep it as the
-single `in_progress` item. Dispatch one fresh subagent per node through the
-host's execution workflow with the full brief, owned paths, resource limits,
-and acceptance criteria. Subagents must not call `update_plan`, commit in a
-shared worktree, or change canonical planning state.
+single `in_progress` item. **Use an installed parallel dispatch skill** (such as
+`dispatching-parallel-agents`) **to dispatch fresh subagents concurrently** — one
+per node, with the full brief, owned paths, resource limits, and acceptance
+criteria. Subagents must not call `update_plan`, commit in a shared worktree, or
+change canonical planning state.
+
+When executing an implementation plan with independent tasks in the current
+session, **use an installed subagent-driven development skill** (such as
+`subagent-driven-development`) instead — it handles the full workflow including
+two-phase review (spec compliance, then code quality).
 
 Buffer each result in a coordinator-owned queue with node/agent IDs, status,
 changed paths, verification output, and concerns. The coordinator serializes
