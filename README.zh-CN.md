@@ -95,8 +95,6 @@ ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.codex/plugins/adaptive-writing-
 
 Codex 会自动从插件目录发现 MCP 元数据。
 
-Codex 会自动从插件目录发现 MCP 元数据。
-
 ## 使用
 
 当需要以下操作时，通过 `/adaptive-writing-plans` 调用技能：
