@@ -18,7 +18,7 @@
   ],
   "mcp": {
     "command": "node",
-    "args": ["mcp/server-sdk.mjs"],
+    "args": ["mcp/server.mjs"],
     "tool_timeout_sec": 120
   },
   "engines": {
