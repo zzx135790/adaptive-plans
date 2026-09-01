@@ -12,12 +12,57 @@ Adaptive planning workflow for multi-phase uncertain work — turns discussions,
 
 ## Installation
 
-### Claude Code
+### Option 1: Official Plugin Commands (Recommended)
+
+#### Claude Code
+
+```bash
+# Add the marketplace
+claude plugin marketplace add https://github.com/zzx135790/adaptive-plans.git
+
+# Install the plugin
+claude plugin install adaptive-writing-plans@adaptive-plans-local
+```
+
+The plugin will be installed to `~/.claude/plugins/` with MCP server automatically configured.
+
+#### Codex
+
+The plugin is available in the `personal` marketplace if your home directory contains `.agents/plugins/marketplace.json`:
 
 ```bash
 # Install the plugin
-git clone <repository-url>
-cd adaptive-writing-plans
+codex plugin add adaptive-writing-plans@personal
+```
+
+Alternatively, add to your personal marketplace manually by editing `~/.agents/plugins/marketplace.json`:
+
+```json
+{
+  "name": "personal",
+  "plugins": [
+    {
+      "name": "adaptive-writing-plans",
+      "source": {
+        "source": "local",
+        "path": "./plugins/adaptive-writing-plans"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
+```
+
+Then clone this repository to `~/plugins/adaptive-writing-plans`.
+
+### Option 2: Manual Installation (Symlink)
+
+#### Claude Code
+
+```bash
+# Clone the repository
+git clone https://github.com/zzx135790/adaptive-plans.git
+cd adaptive-plans
 
 # Link to Claude Code
 ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.claude/plugins/adaptive-writing-plans
@@ -37,15 +82,15 @@ Add MCP server to `~/.claude/settings.json`:
 }
 ```
 
-### Codex
+#### Codex
 
 ```bash
-# Install the plugin
-git clone <repository-url>
-cd adaptive-writing-plans
+# Clone the repository
+git clone https://github.com/zzx135790/adaptive-plans.git
+cd adaptive-plans
 
 # Link to Codex
-ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.agents/plugins/adaptive-writing-plans
+ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.codex/plugins/adaptive-writing-plans
 ```
 
 Codex discovers MCP metadata automatically from the plugin directory.

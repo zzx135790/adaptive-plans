@@ -12,12 +12,57 @@
 
 ## 安装
 
-### Claude Code
+### 方式 1：官方插件命令（推荐）
+
+#### Claude Code
+
+```bash
+# 添加 marketplace
+claude plugin marketplace add https://github.com/zzx135790/adaptive-plans.git
+
+# 安装插件
+claude plugin install adaptive-writing-plans@adaptive-plans-local
+```
+
+插件将自动安装到 `~/.claude/plugins/`，MCP 服务器自动配置。
+
+#### Codex
+
+如果您的主目录包含 `.agents/plugins/marketplace.json`，插件在 `personal` marketplace 中可用：
 
 ```bash
 # 安装插件
-git clone <repository-url>
-cd adaptive-writing-plans
+codex plugin add adaptive-writing-plans@personal
+```
+
+或者手动编辑 `~/.agents/plugins/marketplace.json` 添加到个人 marketplace：
+
+```json
+{
+  "name": "personal",
+  "plugins": [
+    {
+      "name": "adaptive-writing-plans",
+      "source": {
+        "source": "local",
+        "path": "./plugins/adaptive-writing-plans"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
+```
+
+然后克隆此仓库到 `~/plugins/adaptive-writing-plans`。
+
+### 方式 2：手动安装（符号链接）
+
+#### Claude Code
+
+```bash
+# 克隆仓库
+git clone https://github.com/zzx135790/adaptive-plans.git
+cd adaptive-plans
 
 # 链接到 Claude Code
 ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.claude/plugins/adaptive-writing-plans
@@ -37,16 +82,18 @@ ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.claude/plugins/adaptive-writing
 }
 ```
 
-### Codex
+#### Codex
 
 ```bash
-# 安装插件
-git clone <repository-url>
-cd adaptive-writing-plans
+# 克隆仓库
+git clone https://github.com/zzx135790/adaptive-plans.git
+cd adaptive-plans
 
 # 链接到 Codex
-ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.agents/plugins/adaptive-writing-plugins
+ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.codex/plugins/adaptive-writing-plans
 ```
+
+Codex 会自动从插件目录发现 MCP 元数据。
 
 Codex 会自动从插件目录发现 MCP 元数据。
 
