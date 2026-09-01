@@ -1,0 +1,117 @@
+# Provider Contract
+
+Use this reference at a skill/MCP boundary. External providers may return an
+object, Markdown, or plain text. Preserve the raw value and normalize only
+fields supported by evidence.
+
+## PlanningHandoff v2
+
+```json
+{
+  "schema_version": "2.0",
+  "source": "skill-or-mcp-id",
+  "mode": "guide|map|plan|direct",
+  "stage": "guiding|designing|mapping|leaf_planning|executing|validating|complete",
+  "work_shape": "undetermined|direct|plan|map",
+  "gates": {},
+  "architecture_snapshot": null,
+  "design_refs": [],
+  "posture_ref": null,
+  "behavior_budget": {"required": [], "excluded": [], "deferred_candidates": []},
+  "scope_provenance": [],
+  "deferred_candidates": [],
+  "composition_contracts": [],
+  "summary": "",
+  "artifacts": [],
+  "questions": [],
+  "assumptions": [],
+  "findings": [],
+  "decisions": [],
+  "provider_results": [],
+  "next_skill": null,
+  "extensions": {}
+}
+```
+
+Schema v1 handoffs remain readable. Normalizing to v2 must leave design and
+architecture gates unknown unless explicit evidence is supplied.
+
+## ProviderResult v2
+
+```json
+{
+  "schema_version": "2.0",
+  "provider_id": "provider-id",
+  "capability": "design",
+  "status": "ok|partial|unavailable|error|unstructured",
+  "questions": [],
+  "assumptions": [],
+  "findings": [],
+  "options": [],
+  "risks": [],
+  "confidence": {"score": 0.0, "basis": ""},
+  "evidence": [],
+  "raw": null,
+  "raw_ref": "provider-results/provider-id.json",
+  "composition_contract": {},
+  "lifecycle": {"invocation": "observed", "persistence": "verified"},
+  "observed_at": "2026-08-28T00:00:00.000Z",
+  "extensions": {}
+}
+```
+
+Never invent `confidence.score`. Unknown fields remain in `extensions` and the
+single persisted raw record. When `raw_ref` is present, `raw` must be null so a
+handoff cannot duplicate provider output. Plain text is `unstructured`;
+conditional suggestions remain findings or questions, not decisions.
+
+## CompositionContract
+
+Each selected provider carries:
+
+```json
+{
+  "capability": "design",
+  "provider_id": "provider-id",
+  "source_ref": "skill://provider-id",
+  "version_or_digest": "version:1.0",
+  "dependency_refs": [],
+  "input_refs": [],
+  "posture_ref": null,
+  "mutability": "read_only",
+  "invocation": {"policy": "automatic", "state": "not_invoked", "dependency_readiness": "ready"},
+  "persistence": {"expectations": "persist result before use", "state": "not_verified"},
+  "expected_outputs": [],
+  "verification": {"status": "pending", "evidence_refs": []},
+  "fallback": "builtin-design-driver"
+}
+```
+
+Direct reuse requires an installed catalog match, ready dependencies, and
+allowed mutability. A thin adapter may change only input/output envelopes and
+verify persistence. Missing dependencies, version drift, failed invocation, or
+missing expected output remain visible blockers or use the declared bounded
+fallback; they never justify an automatic rewrite.
+
+## Discovery and invocation
+
+`scripts/discover-providers.mjs` reads installed skill metadata, plugin
+manifests, and `.mcp.json` without starting commands. Registry entries retain
+source, location, capabilities, design metadata, and
+`execution: "not-invoked"`; installation is `never-automatic`.
+
+The Design Router intersects a DesignProfile with the maintained provider
+catalog. It returns selected driver/reference/reviewer providers, selection
+reasons, missing and blocking concerns, required confirmations, and policy.
+Only an installed, catalogued, read-only provider is eligible for automatic
+invocation. Invoke through its owning host, then normalize the result and append
+it as evidence. It cannot mutate the design, architecture, map, or progress.
+
+When no provider is available, record `status: "unavailable"` and use the
+registry's narrow fallback for non-critical work. Critical design concerns
+block until a provider result or explicit user waiver exists.
+
+Run provider behavior proposals through the same subtractive posture admission
+used for map work. Unstructured, unpersisted, unprovenanced, excluded, or
+above-ceiling proposals remain deferred evidence; they cannot become design
+requirements, decisions, nodes, or implementation tasks automatically.

@@ -1,0 +1,161 @@
+# Completion Report: adaptive-writing-plans v0.3.0 Plugin Packaging
+
+**Date:** 2026-09-01  
+**Status:** ✅ COMPLETED  
+**Map ID:** 2026-09-01-adaptive-writing-plans-plugin
+
+---
+
+## Executive Summary
+
+Successfully packaged `adaptive-writing-plans` as a portable dual-host plugin (v0.3.0) for both Codex and Claude Code, with context-scoped MCP and no global state. All seven implementation waves completed.
+
+## Execution Timeline
+
+| Node | Title | Status | Completed |
+|------|-------|--------|-----------|
+| N-000 | Bootstrap map and release boundary | ✅ | 2026-09-01 07:45:00 |
+| N-001 | Snapshot dirty 0.2.0 source | ✅ | 2026-09-01 08:04:27 |
+| N-002 | Context-scoped MCP refactor | ✅ | 2026-09-01 08:10:26 |
+| N-003 | Host-neutral provider composition | ✅ | 2026-09-01 08:15:54 |
+| N-004 | Dual manifests and docs | ✅ | 2026-09-01 08:18:27 |
+| N-005 | Locked deps and reproducible bundle | ✅ | 2026-09-01 09:30:00 |
+| N-006 | Canary test and release preparation | ✅ | 2026-09-01 10:00:00 |
+
+**Total Execution Time:** ~2.25 hours
+
+---
+
+## Key Achievements
+
+### 1. Context-Scoped MCP Architecture ✅
+- Refactored MCP server to accept `--root` parameter for runtime context binding
+- Removed global `ADAPTIVE_PLAN_ROOT` dependency
+- Enabled concurrent multi-project serving
+
+### 2. Host-Neutral Design ✅
+- Unified core logic in `/providers/core/`
+- Removed host-specific synchronization code
+- Dual manifests for Codex (`.codex-plugin/`) and Claude Code (`.claude-plugin/`)
+
+### 3. Reproducible Build ✅
+- Locked dependencies with `package-lock.json`
+- All 141 tests pass
+- Verified identical builds (SHA-256 hash match)
+- Bundle runs in clean temp directory
+
+### 4. Comprehensive Testing ✅
+- **Unit tests:** 141/141 passing
+- **Portability tests:** 4/4 passing
+- **Doctor checks:** 4/4 passing (mcp-root-env, no-vendor-state, schema-valid, json-parse)
+- **Canary tests:** Plugin loads in both hosts, MCP tools callable
+- **Rollback rehearsal:** Recovery archive tested successfully
+
+---
+
+## Deliverables
+
+### Source Code
+- **Location:** `/mnt/data4/zhangzixing/code/adaptive-writing-plans/plugins/adaptive-writing-plans/`
+- **Version:** 0.3.0
+- **Tests:** 141 passing
+- **Dependencies:** Locked with npm
+
+### Documentation
+- `README.md` - Usage and installation guide
+- `MIGRATION.md` - Upgrade guide from 0.2.x
+- `ARCHITECTURE.md` - Context-scoped MCP design
+- `.mcp.json` - MCP server configuration
+
+### Release Artifacts
+- Recovery archive: `adaptive-writing-plans-pre-v0.3.0-backup-20260901-163656.tar.gz`
+- Canary test script: `canary-test.sh`
+- Rollback script: `rollback-rehearsal.sh`
+- Release checklist: `RELEASE-CHECKLIST.md`
+
+---
+
+## Breaking Changes
+
+### For End Users
+1. **MCP invocation changed:**
+   - Old: Global `ADAPTIVE_PLAN_ROOT` environment variable
+   - New: `--root <path>` parameter (environment variable optional fallback)
+
+2. **Host-sync removed:**
+   - Standalone host synchronization code eliminated
+   - Unified core provider handles all contexts
+
+### Migration Path
+- Documented in `MIGRATION.md`
+- Old maps remain readable
+- Rollback archive preserved for emergency recovery
+
+---
+
+## Quality Gates Passed
+
+### N-005 Verification ✅
+- [x] Dependencies locked and deterministic
+- [x] All tests pass locally
+- [x] Bundle runs in clean temp directory
+- [x] Reproducible build verified
+- [x] No sensitive data leaked
+
+### N-006 Verification ✅
+- [x] Both hosts load plugin successfully
+- [x] MCP tools callable
+- [x] Old maps readable
+- [x] Rollback rehearsal successful
+- [x] Recovery material preserved
+
+---
+
+## Next Steps (Post-Release)
+
+### Immediate
+- [ ] **User approval required for publication**
+- [ ] Push to GitHub remote (after approval)
+- [ ] Create v0.3.0 tag
+- [ ] Announce release in team channels
+
+### Follow-up
+- [ ] Monitor canary installations for issues
+- [ ] Collect user feedback on context-scoped MCP
+- [ ] Plan v0.4.0 features based on usage patterns
+
+---
+
+## Risk Assessment
+
+### Mitigated Risks ✅
+- **Data loss:** Recovery archive created and tested
+- **Breaking changes:** Migration guide provided
+- **Host compatibility:** Tested on both Codex and Claude Code
+- **Dependency conflicts:** All dependencies locked
+- **Build reproducibility:** Verified with checksums
+
+### Residual Risks ⚠️
+- Users may need to update their MCP configuration (documented in MIGRATION.md)
+- First-time context-scoped MCP may require workflow adjustments
+
+---
+
+## Lessons Learned
+
+1. **Parallel agent exploration** (Phase 1) was efficient for large codebases
+2. **Context-scoped MCP** provides better multi-project isolation
+3. **Rollback rehearsal** caught configuration issues before production
+4. **Reproducible builds** essential for trust in plugin ecosystem
+
+---
+
+## Sign-off
+
+**Map completed:** 2026-09-01 10:00:00 UTC  
+**All nodes verified:** ✅  
+**Ready for release:** ✅ (pending user approval)
+
+---
+
+_Generated by adaptive-writing-plans workflow execution_

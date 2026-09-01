@@ -1,0 +1,54 @@
+{
+  "schema_version": "2.0",
+  "design_id": "adaptive-writing-plans-plugin",
+  "current_revision": 1,
+  "revisions": [
+    {
+      "revision": 1,
+      "scope": "root",
+      "node_id": null,
+      "status": "in_progress",
+      "architecture_hash": null,
+      "profile": {
+        "schema_version": "2.0",
+        "required": true,
+        "scope": "root",
+        "node_id": null,
+        "triggers": ["cross_module", "migration", "new_dependency", "user_requested"],
+        "concerns": ["alternatives", "boundaries", "compatibility", "dependencies", "migration", "operability", "reliability", "security", "tradeoffs"],
+        "domains": ["packaging", "planning", "architecture"],
+        "impacted_modules": [],
+        "impacted_relations": [],
+        "risk": "critical",
+        "requires_alternatives": true,
+        "architecture_hash": null,
+        "posture_ref": {
+          "kind": "reusable_internal",
+          "posture_hash": "51dde14f6265696222e5f6b0581730d7783408d80da403b00a40852c2962bc10",
+          "source_ref": "conversation:2026-09-01"
+        },
+        "behavior_budget": {"required": [], "excluded": [], "deferred_candidates": []},
+        "scope_provenance": [],
+        "deferred_candidates": [],
+        "input_refs": ["decisions/001-contracts.md", "decisions/002-release-boundary.md"]
+      },
+      "provider_selection": {"status": "pending", "selected": []},
+      "provider_results": [],
+      "requirements": ["R-DUAL-HOST", "R-MCP-CONTEXT", "R-PORTABILITY"],
+      "options": [],
+      "selected_option": null,
+      "interfaces": [],
+      "invariants": [],
+      "failure_modes": [],
+      "operational_model": [],
+      "migration": [],
+      "blocking_questions": [],
+      "architecture_delta": null,
+      "approval": null,
+      "updated_at": "2026-09-01T07:49:52.949Z",
+      "content_hash": "481d24020a045cf79d8974ccdcae9c1dce9e9c60f2ef1da57349b4927d328960",
+      "design_hash": "481d24020a045cf79d8974ccdcae9c1dce9e9c60f2ef1da57349b4927d328960",
+      "state_hash": "0aae37d4a339d5db9f6da6361d6eefdd899a2896d61d7bc2b8402ba2c7ae0c23"
+    }
+  ]
+}

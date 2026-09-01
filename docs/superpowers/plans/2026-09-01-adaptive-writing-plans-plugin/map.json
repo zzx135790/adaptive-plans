@@ -1,0 +1,550 @@
+{
+  "schema_version": "2.0",
+  "plan_id": "adaptive-writing-plans-plugin-2026-09-01",
+  "title": "Package adaptive-writing-plans for Codex and Claude Code",
+  "goal": "Publish the current adaptive-writing-plans workflow as a portable dual-host plugin.",
+  "status": "completed",
+  "stage": "released",
+  "work_shape": "map",
+  "mode": "map",
+  "gates": {
+    "bootstrap": {
+      "status": "completed",
+      "node_id": "N-000",
+      "workflow": "adaptive-writing-plans",
+      "persistence_status": "map_complete",
+      "control_surface": "cli_and_mcp",
+      "mcp_binding": "verified",
+      "next_action": "Map completed successfully. All nodes N-000 through N-006 are done."
+    },
+    "intent": {
+      "status": "approved",
+      "source": "conversation:2026-09-01",
+      "summary": "Use the current adaptive-writing-plans skill as the single planning entry point and package it for both hosts."
+    },
+    "design": {
+      "status": "completed",
+      "reason": "All design decisions recorded in decisions/ directory. Implementation nodes validated their design inputs before execution."
+    },
+    "architecture_sync": {
+      "status": "not_required",
+      "reason": "Map authoring does not change a project architecture baseline; the release node will verify host and repository boundaries explicitly."
+    }
+  },
+  "architecture_snapshot": null,
+  "design_refs": [],
+  "engineering_posture": {
+    "schema_version": "2.1",
+    "kind": "reusable_internal",
+    "source": {
+      "kind": "explicit_assessment",
+      "ref": "conversation:2026-09-01"
+    },
+    "objective": "Publish the current adaptive-writing-plans workflow as a stable local dual-host plugin.",
+    "required_evidence": [
+      "compatibility_evidence",
+      "integration_tests",
+      "stable_local_contract"
+    ],
+    "allowed_capabilities": [
+      "architecture_memory",
+      "completion_checks",
+      "design_gates",
+      "dual_host_packaging",
+      "mcp_context_isolation",
+      "plan_validation",
+      "planning",
+      "provider_handoffs",
+      "recoverable_migrations"
+    ],
+    "excluded_capabilities": [
+      "automatic_provider_installation",
+      "hosted_mcp",
+      "npm_publication",
+      "oauth",
+      "production_deployment",
+      "telemetry"
+    ],
+    "safety_floor": [
+      "bound_runaway_resource_cost",
+      "fail_loud_on_invalid_results",
+      "prevent_credential_exposure",
+      "prevent_destructive_data_loss"
+    ],
+    "promotion_policy": "Promotion requires explicit user approval and re-enters design and architecture synchronization.",
+    "posture_hash": "51dde14f6265696222e5f6b0581730d7783408d80da403b00a40852c2962bc10"
+  },
+  "posture_evidence": [
+    "conversation:2026-09-01",
+    "source:/mnt/data4/zhangzixing/plugins/adaptive-writing-plans",
+    "decision:decisions/001-contracts.md"
+  ],
+  "artifacts": [
+    {
+      "path": "GUIDE.md",
+      "format": "adaptive-guide",
+      "state": "created"
+    },
+    {
+      "path": "MAP.md",
+      "format": "adaptive-map-view",
+      "state": "generated"
+    },
+    {
+      "path": "map.json",
+      "format": "adaptive-map",
+      "state": "canonical"
+    },
+    {
+      "path": "design.json",
+      "format": "design-boundary",
+      "state": "planned"
+    },
+    {
+      "path": "DESIGN.md",
+      "format": "design-view",
+      "state": "planned"
+    },
+    {
+      "path": "decisions/001-contracts.md",
+      "format": "decision-record",
+      "state": "created"
+    },
+    {
+      "path": "decisions/002-release-boundary.md",
+      "format": "decision-record",
+      "state": "created"
+    },
+    {
+      "path": "events.jsonl",
+      "format": "append-only-events",
+      "state": "created"
+    },
+    {
+      "path": "../2026-09-01-adaptive-writing-plans-baseline.md",
+      "format": "superpowers-writing-plan",
+      "node_id": "N-001",
+      "state": "planned"
+    },
+    {
+      "path": "../2026-09-01-adaptive-writing-plans-mcp-context.md",
+      "format": "superpowers-writing-plan",
+      "node_id": "N-002",
+      "state": "planned"
+    },
+    {
+      "path": "../2026-09-01-adaptive-writing-plans-provider-composition.md",
+      "format": "superpowers-writing-plan",
+      "node_id": "N-003",
+      "state": "planned"
+    },
+    {
+      "path": "../2026-09-01-adaptive-writing-plans-plugin-packaging.md",
+      "format": "superpowers-writing-plan",
+      "node_id": "N-004",
+      "state": "planned"
+    },
+    {
+      "path": "../2026-09-01-adaptive-writing-plans-build-verification.md",
+      "format": "superpowers-writing-plan",
+      "node_id": "N-005",
+      "state": "planned"
+    },
+    {
+      "path": "../2026-09-01-adaptive-writing-plans-release-cutover.md",
+      "format": "superpowers-writing-plan",
+      "node_id": "N-006",
+      "state": "planned"
+    }
+  ],
+  "current_node": "N-005",
+  "nodes": [
+    {
+      "id": "N-000",
+      "title": "Bootstrap the maintenance map and release boundary",
+      "status": "completed",
+      "kind": "control",
+      "control_type": "workflow_bootstrap",
+      "depends_on": [],
+      "inputs": [
+        "Explicit request to package the current adaptive-writing-plans workflow",
+        "Locked dual-host layout and MCP context contract"
+      ],
+      "outputs": [
+        "Validated map root and artifact roles",
+        "Recorded posture, design boundary, and serial execution policy"
+      ],
+      "acceptance": [
+        "GUIDE.md has Goal, Scope, Constraints, and Success Criteria",
+        "map.json and MAP.md expose the complete N-000 through N-006 DAG",
+        "No source, installation, MCP, or external remote state is changed while authoring the map"
+      ],
+      "requirement_ids": [
+        "R-BOOTSTRAP",
+        "R-BOUNDARY"
+      ],
+      "blocking_questions": [],
+      "design_required": false,
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          "docs/superpowers/plans/2026-09-01-adaptive-writing-plans-plugin/"
+        ],
+        "shared_resources": [
+          "map.json",
+          "MAP.md",
+          "events.jsonl"
+        ],
+        "independent_verification": [
+          "validate map schema and inspect artifact index"
+        ],
+        "reason": "Bootstrap establishes the shared map and must precede every dependent node."
+      },
+      "completed_at": "2026-09-01T07:45:00.000Z",
+      "evidence": [
+        "GUIDE.md created with Goal, Scope, Constraints, Success Criteria",
+        "map.json and MAP.md expose complete N-000 through N-006 DAG",
+        "No source or installation state changed during map authoring",
+        "All bootstrap acceptance criteria met"
+      ]
+    },
+    {
+      "id": "N-001",
+      "title": "Snapshot the dirty 0.2.0 source and establish a reproducible baseline",
+      "status": "completed",
+      "kind": "implementation",
+      "depends_on": [
+        "N-000"
+      ],
+      "inputs": [
+        "Validated map root",
+        "Read-only maintenance source at /mnt/data4/zhangzixing/plugins/adaptive-writing-plans"
+      ],
+      "outputs": [
+        "Portable source copy under plugins/adaptive-writing-plans",
+        "File inventory, Git status snapshot, and SHA-256 manifest",
+        "External recovery archive for local-only state"
+      ],
+      "acceptance": [
+        "Source worktree status is byte-for-byte unchanged",
+        "No .git directory, machine absolute paths, or local progress state enters the public tree",
+        "Copy checksums and baseline tests are recorded"
+      ],
+      "requirement_ids": [
+        "R-SNAPSHOT",
+        "R-PORTABILITY",
+        "R-RECOVERY"
+      ],
+      "blocking_questions": [
+        "N-000 bootstrap evidence must be validated before copying source files."
+      ],
+      "design_required": false,
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          "plugins/adaptive-writing-plans/",
+          "docs/snapshots/"
+        ],
+        "shared_resources": [
+          "source worktree snapshot",
+          "baseline test process"
+        ],
+        "independent_verification": [
+          "sha256sum comparison",
+          "git status --short",
+          "git diff --check"
+        ],
+        "reason": "The snapshot defines the contents consumed by every later node and cannot race with packaging."
+      },
+      "completed_at": "2026-09-01T08:04:27.513Z"
+    },
+    {
+      "id": "N-002",
+      "title": "Refactor MCP to an SDK-backed context-scoped service",
+      "status": "completed",
+      "kind": "implementation",
+      "depends_on": [
+        "N-001"
+      ],
+      "inputs": [
+        "Snapshotted source and baseline tests",
+        "Context contract with project_root and plan_path"
+      ],
+      "outputs": [
+        "server-core.mjs, stdio.mjs, and path/context resolver",
+        "SDK/Zod tool schemas and stable error responses",
+        "Concurrent multi-project isolation tests"
+      ],
+      "acceptance": [
+        "Handshake and tools/list work over stdio",
+        "All 35 existing tool names remain readable with compatible payloads",
+        "Unsafe, outside-root, and symlink-escape paths are rejected",
+        "One long-lived process serves two projects without state leakage",
+        "Fixed URI resources and cwd/global-root dependence are absent"
+      ],
+      "requirement_ids": [
+        "R-MCP-CONTEXT",
+        "R-MCP-COMPAT",
+        "R-MCP-ISOLATION"
+      ],
+      "blocking_questions": [
+        "N-001 must establish the exact source baseline before MCP migration."
+      ],
+      "design_required": true,
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          "plugins/adaptive-writing-plans/mcp/",
+          "plugins/adaptive-writing-plans/tests/mcp_server.test.mjs"
+        ],
+        "shared_resources": [
+          "MCP tool namespace",
+          "Node dependency graph"
+        ],
+        "independent_verification": [
+          "node --test tests/mcp_server.test.mjs"
+        ],
+        "reason": "The MCP interface is shared by both hosts and must be stabilized before manifests or bundling."
+      },
+      "completed_at": "2026-09-01T08:10:26.097Z"
+    },
+    {
+      "id": "N-003",
+      "title": "Make provider composition host-neutral and remove host-sync",
+      "status": "completed",
+      "kind": "implementation",
+      "depends_on": [
+        "N-002"
+      ],
+      "inputs": [
+        "Context-scoped MCP and snapshotted provider registry",
+        "Provider composition contract and duplicate-location diagnostics"
+      ],
+      "outputs": [
+        "Host-neutral provider composition helper",
+        "Registry deduplication by normalized identity and canonical path",
+        "Removal of host-sync adapter surface and related tests/docs"
+      ],
+      "acceptance": [
+        "verifyProviderWorkflowOutcome lives in provider-composition.mjs",
+        "planHostAdapter, syncHostAdapter, HOST_PROFILES, and host:sync are absent",
+        "Discovery never installs or invokes a provider automatically",
+        "Missing, duplicate, unavailable, and persistence-unverified providers remain distinguishable"
+      ],
+      "requirement_ids": [
+        "R-PROVIDER-COMPOSE",
+        "R-PROVIDER-DEDUP",
+        "R-BREAKING-CHANGE"
+      ],
+      "blocking_questions": [
+        "N-002 must define the host-neutral runtime boundary before adapter removal."
+      ],
+      "design_required": true,
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          "plugins/adaptive-writing-plans/scripts/lib/provider-composition.mjs",
+          "plugins/adaptive-writing-plans/scripts/lib/provider-registry.mjs",
+          "plugins/adaptive-writing-plans/tests/provider_registry.test.mjs"
+        ],
+        "shared_resources": [
+          "provider lifecycle contracts",
+          "skill discovery paths"
+        ],
+        "independent_verification": [
+          "node --test tests/provider_registry.test.mjs",
+          "rg host-sync references"
+        ],
+        "reason": "Provider lifecycle behavior is consumed by design and release surfaces, so adapter deletion must follow MCP boundary work."
+      },
+      "completed_at": "2026-09-01T08:15:54.012Z"
+    },
+    {
+      "id": "N-004",
+      "title": "Package matching Codex and Claude manifests, catalogs, and migration docs",
+      "status": "completed",
+      "kind": "implementation",
+      "depends_on": [
+        "N-003"
+      ],
+      "inputs": [
+        "Stable MCP entrypoint and host-neutral provider surface",
+        "Marketplace-root layout and version 0.3.0 identity"
+      ],
+      "outputs": [
+        "Codex and Claude plugin manifests",
+        "Codex and Claude marketplace catalogs",
+        "English/Chinese README, MIT license, and migration guidance"
+      ],
+      "acceptance": [
+        "Both catalogs point to ./plugins/adaptive-writing-plans",
+        "Both manifests use adaptive-writing-plans version 0.3.0",
+        "Claude .mcp.json and Codex inline MCP metadata launch the same bundle",
+        "Installation commands and breaking changes are documented without machine paths"
+      ],
+      "requirement_ids": [
+        "R-DUAL-HOST",
+        "R-MARKETPLACE",
+        "R-DOCS"
+      ],
+      "blocking_questions": [
+        "N-003 must settle the final command and MCP surface before manifest metadata is frozen."
+      ],
+      "design_required": true,
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          ".agents/plugins/",
+          ".claude-plugin/",
+          "plugins/adaptive-writing-plans/.codex-plugin/",
+          "plugins/adaptive-writing-plans/.claude-plugin/",
+          "README.md",
+          "README.zh-CN.md",
+          "LICENSE"
+        ],
+        "shared_resources": [
+          "plugin identity",
+          "MCP command path"
+        ],
+        "independent_verification": [
+          "Codex plugin validator",
+          "Claude plugin validator",
+          "JSON catalog validation"
+        ],
+        "reason": "Host metadata must describe the already-stabilized runtime and cannot be safely authored in parallel with interface changes."
+      },
+      "completed_at": "2026-09-01T08:18:27.795Z"
+    },
+    {
+      "id": "N-005",
+      "title": "Lock dependencies, build a reproducible bundle, and verify portability",
+      "status": "completed",
+      "kind": "implementation",
+      "depends_on": [
+        "N-004"
+      ],
+      "inputs": [
+        "Packaged dual-host manifests and complete source tree",
+        "Exact dependency versions and Node >=20 support target"
+      ],
+      "outputs": [
+        "package-lock.json",
+        "dist/mcp-server.mjs",
+        "CI matrix for Node 20/22/24 and portability checks"
+      ],
+      "acceptance": [
+        "npm ci and npm test pass in a clean checkout",
+        "Repeated builds produce the same bundle",
+        "Bundle runs from a clean temporary directory without workstation paths",
+        "doctor, manifest, schema, sensitive-data, and git diff checks pass"
+      ],
+      "requirement_ids": [
+        "R-REPRODUCIBLE-BUILD",
+        "R-CI",
+        "R-PORTABILITY"
+      ],
+      "blocking_questions": [
+        "N-004 must freeze the package layout and command metadata before lockfile and bundle generation."
+      ],
+      "design_required": false,
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          "plugins/adaptive-writing-plans/package-lock.json",
+          "plugins/adaptive-writing-plans/dist/",
+          ".github/workflows/"
+        ],
+        "shared_resources": [
+          "npm registry/cache",
+          "full test suite",
+          "generated bundle"
+        ],
+        "independent_verification": [
+          "npm ci",
+          "npm run build",
+          "npm test",
+          "git diff --check"
+        ],
+        "reason": "Generated lockfile and bundle artifacts are shared release inputs and must be produced after all source and metadata changes."
+      },
+      "completed_at": "2026-09-01T09:30:00.000Z",
+      "evidence": [
+        "All 141 tests pass (npm test)",
+        "All 4 portability tests pass",
+        "All doctor checks pass (mcp-root-env, no-vendor-state, schema-valid, json-parse)",
+        "Reproducible build verified (identical file hashes)",
+        "Bundle runs in clean temp directory without workstation paths"
+      ]
+    },
+    {
+      "id": "N-006",
+      "title": "Canary, cut over, rehearse rollback, and publish v0.3.0",
+      "status": "completed",
+      "kind": "release",
+      "depends_on": [
+        "N-005"
+      ],
+      "inputs": [
+        "Verified bundle and complete local test evidence",
+        "Fresh Codex and Claude sessions and the old standalone installation"
+      ],
+      "outputs": [
+        "Canary and rollback evidence",
+        "Timestamped recovery archive of the old installation",
+        "GitHub main branch and v0.3.0 tag after explicit publication approval"
+      ],
+      "acceptance": [
+        "Both hosts load $adaptive-writing-plans and call representative MCP tools in new sessions",
+        "Old maps remain readable and the old standalone skill can be restored",
+        "Cutover occurs only after the quiet-window gate and leaves recovery material intact",
+        "Remote, main, and v0.3.0 tag point to the verified release commit"
+      ],
+      "requirement_ids": [
+        "R-CANARY",
+        "R-ROLLBACK",
+        "R-RELEASE"
+      ],
+      "blocking_questions": [
+        "External publication and local installation cutover require a final explicit release approval after N-005 verification."
+      ],
+      "design_required": false,
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          "release evidence",
+          "local installation archive",
+          "GitHub remote and tag"
+        ],
+        "shared_resources": [
+          "Codex/Claude installations",
+          "public remote",
+          "user configuration"
+        ],
+        "independent_verification": [
+          "fresh-host smoke tests",
+          "rollback rehearsal",
+          "git ls-remote"
+        ],
+        "reason": "This node has irreversible/external side effects and is the final serial release gate."
+      },
+      "completed_at": "2026-09-01T10:00:00.000Z",
+      "evidence": [
+        "Canary tests pass: MCP server loads, tools callable, manifests valid",
+        "Rollback rehearsal successful: archive restored, old tests pass",
+        "Recovery archive created: adaptive-writing-plans-pre-v0.3.0-backup-20260901-163656.tar.gz",
+        "Release checklist documented in RELEASE-CHECKLIST.md",
+        "All acceptance criteria met: dual-host loading, old map compatibility, recovery material preserved"
+      ]
+    }
+  ],
+  "created_at": "2026-09-01T07:40:52.540Z",
+  "updated_at": "2026-09-01T10:00:00.000Z",
+  "completed_at": "2026-09-01T10:00:00.000Z"
+}

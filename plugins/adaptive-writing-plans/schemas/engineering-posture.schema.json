@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "adaptive-writing-plans/engineering-posture.schema.json",
+  "$defs": {
+    "source": {
+      "type": "object",
+      "required": ["kind", "ref"],
+      "properties": {
+        "kind": {
+          "enum": ["approved_guide", "approved_design", "project_default", "module_default", "experimental_zone", "explicit_assessment"]
+        },
+        "ref": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "posture": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "kind",
+        "source",
+        "objective",
+        "required_evidence",
+        "allowed_capabilities",
+        "excluded_capabilities",
+        "safety_floor",
+        "promotion_policy",
+        "posture_hash"
+      ],
+      "properties": {
+        "schema_version": {"const": "2.1"},
+        "kind": {"enum": ["spike", "experiment", "reusable_internal", "production"]},
+        "source": {"$ref": "#/$defs/source"},
+        "objective": {"type": "string", "minLength": 1},
+        "required_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "allowed_capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "excluded_capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "safety_floor": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "promotion_policy": {"type": "string", "minLength": 1},
+        "posture_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "legacy": {
+      "type": "object",
+      "required": ["schema_version", "status", "kind", "posture_hash", "source"],
+      "properties": {
+        "schema_version": {"const": "2.1"},
+        "status": {"const": "unknown_legacy"},
+        "kind": {"type": "null"},
+        "posture_hash": {"type": "null"},
+        "source": {
+          "type": "object",
+          "required": ["kind", "ref"],
+          "properties": {
+            "kind": {"const": "legacy_artifact"},
+            "ref": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {"$ref": "#/$defs/posture"},
+    {"$ref": "#/$defs/legacy"}
+  ]
+}

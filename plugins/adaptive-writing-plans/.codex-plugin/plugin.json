@@ -1,0 +1,31 @@
+{
+  "name": "adaptive-writing-plans",
+  "version": "0.3.0",
+  "description": "Architecture-aware adaptive maps, re-entrant design gates, provider handoffs, and completion checks.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Adaptive Writing Plans",
+    "shortDescription": "Architecture-aware maps and design-gated plans.",
+    "longDescription": "Maintain project architecture memory, route tasks through a re-entrant Design Gate, create navigable multi-file DAG maps, preserve provider evidence, and validate implementation completion without replacing the existing writing-plans leaf format.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "planning",
+      "architecture-memory",
+      "design-gates",
+      "provider-adapters",
+      "plan-validation",
+      "completion-gates",
+      "engineering-posture",
+      "scope-provenance",
+      "inline-approval-briefs",
+      "recoverable-migrations",
+      "local-mcp"
+    ],
+    "defaultPrompt": "Use adaptive-writing-plans to route this request, check project architecture memory and the re-entrant Design Gate, and return a navigable DAG plus complete artifact index when a map is required."
+  },
+  "mcpServers": "./.mcp.json"
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "plugins": [
+    {
+      "id": "adaptive-writing-plans",
+      "name": "Adaptive Writing Plans",
+      "version": "0.3.0",
+      "description": "Adaptive planning workflow for multi-phase uncertain work — turns discussions, approved designs, and specifications into implementation plans with durable project state.",
+      "author": "Adaptive Writing Plans Contributors",
+      "license": "MIT",
+      "homepage": "https://github.com/your-org/adaptive-writing-plans",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/your-org/adaptive-writing-plans.git"
+      },
+      "path": "./plugins/adaptive-writing-plans",
+      "tags": ["planning", "workflow", "adaptive", "multi-phase", "dag"],
+      "requires": {
+        "node": ">=18.0.0"
+      },
+      "features": [
+        "Adaptive planning folder with stable direction",
+        "Multi-phase DAG mapping for uncertain dependencies",
+        "Context-scoped MCP for concurrent multi-project serving",
+        "Host-neutral portable plugin",
+        "Provider composition workflow validation"
+      ],
+      "breaking_changes": [
+        "MCP is now context-scoped (no global env vars)",
+        "Host-sync adapter removed",
+        "Provider composition moved to new module"
+      ]
+    }
+  ]
+}

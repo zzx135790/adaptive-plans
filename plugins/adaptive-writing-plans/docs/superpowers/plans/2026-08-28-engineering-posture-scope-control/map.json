@@ -1,0 +1,1422 @@
+{
+  "schema_version": "2.0",
+  "plan_id": "engineering-posture-scope-control",
+  "title": "Engineering Posture and Scope Control",
+  "goal": "Keep experimental work rigorous without silently promoting it to production maturity, while preserving full engineering gates for reusable and production modules.",
+  "status": "complete",
+  "stage": "complete",
+  "work_shape": "map",
+  "mode": "map",
+  "gates": {
+    "bootstrap": {
+      "status": "validated",
+      "node_id": "N-000",
+      "workflow": "adaptive-writing-plans",
+      "plugin_version": "0.2.0+codex.20260828110011",
+      "project_ref": ".",
+      "plan_ref": "docs/superpowers/plans/2026-08-28-engineering-posture-scope-control",
+      "persistence_status": "validated",
+      "control_surface": "mcp_and_cli",
+      "mcp_binding": "matched",
+      "artifact_manifest": [
+        {
+          "path": "GUIDE.md",
+          "role": "intent",
+          "state": "existing"
+        },
+        {
+          "path": "map.json",
+          "role": "canonical_map",
+          "state": "existing"
+        },
+        {
+          "path": "MAP.md",
+          "role": "map_view",
+          "state": "existing"
+        },
+        {
+          "path": "design.json",
+          "role": "canonical_design",
+          "state": "existing"
+        },
+        {
+          "path": "DESIGN.md",
+          "role": "design_view",
+          "state": "existing"
+        },
+        {
+          "path": "nodes/N-000.md",
+          "role": "workflow_bootstrap",
+          "state": "created"
+        },
+        {
+          "path": "designs/",
+          "role": "thread_views",
+          "state": "deferred"
+        }
+      ],
+      "next_action": "No executable nodes remain; use the completion gate before treating this map as release evidence."
+    },
+    "intent": {
+      "status": "approved",
+      "source": "GUIDE.md"
+    },
+    "design": {
+      "status": "approved",
+      "design_ref": {
+        "design_id": "engineering-posture-scope-control",
+        "revision": 2,
+        "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716",
+        "status": "approved",
+        "scope": "root",
+        "node_id": null
+      }
+    },
+    "architecture_sync": {
+      "status": "not_required",
+      "reason": "This repository has no approved project architecture baseline to synchronize; N-002 adds posture-aware architecture memory without fabricating a baseline for the current map."
+    }
+  },
+  "architecture_snapshot": null,
+  "design_refs": [
+    {
+      "design_id": "engineering-posture-scope-control",
+      "revision": 2,
+      "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716",
+      "status": "approved",
+      "scope": "root",
+      "node_id": null
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "../2026-08-28-engineering-foundations.md",
+      "format": "writing-plan",
+      "node_id": "N-001",
+      "review": "finalise-plan"
+    },
+    {
+      "path": "../2026-08-28-architecture-posture-zones.md",
+      "format": "writing-plan",
+      "node_id": "N-002",
+      "review": "finalise-plan"
+    },
+    {
+      "path": "../2026-08-28-map-posture-admission.md",
+      "format": "writing-plan",
+      "node_id": "N-003",
+      "review": "finalise-plan"
+    },
+    {
+      "path": "../2026-08-28-recursive-design-ledger.md",
+      "format": "writing-plan",
+      "node_id": "N-004",
+      "review": "finalise-plan"
+    },
+    {
+      "path": "../2026-08-28-execution-posture-handoffs.md",
+      "format": "writing-plan",
+      "node_id": "N-005",
+      "review": "finalise-plan"
+    },
+    {
+      "path": "../2026-08-28-posture-cli-mcp-surfaces.md",
+      "format": "writing-plan",
+      "node_id": "N-006",
+      "review": "finalise-plan"
+    },
+    {
+      "path": "../2026-08-28-posture-migration-release.md",
+      "format": "writing-plan",
+      "node_id": "N-007",
+      "review": "finalise-plan"
+    }
+  ],
+  "current_node": null,
+  "nodes": [
+    {
+      "id": "N-000",
+      "title": "Bootstrap and attest the adaptive workflow",
+      "status": "done",
+      "depends_on": [],
+      "kind": "control",
+      "control_type": "workflow_bootstrap",
+      "inputs": [
+        "Explicit user request to implement the approved adaptive-writing-plans map",
+        "Existing plan folder and repository-local plugin source",
+        "Adaptive Planning MCP binding diagnostic"
+      ],
+      "outputs": [
+        "A persisted workflow receipt bound to the selected project and plan",
+        "A validated manifest of existing, created, deferred, and not-applicable artifacts",
+        "A visible CLI fallback when the installed MCP is not bound to this plan"
+      ],
+      "acceptance": [
+        "The selected route is map and the plan root is project-relative",
+        "GUIDE.md, map.json, MAP.md, design.json, DESIGN.md, events.jsonl, and node briefs exist",
+        "Strict map validation succeeds without treating bootstrap completion as design approval",
+        "Every non-control root work node depends on N-000",
+        "The terminal receipt reports the MCP binding mismatch and the CLI fallback"
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-BOOTSTRAP"
+      ],
+      "contract_refs": [],
+      "design_refs": [],
+      "interaction_refs": [
+        "F-MCP-BINDING",
+        "F-FILE-ONLY-APPROVAL"
+      ],
+      "impacted_modules": [],
+      "design_required": false,
+      "parallelization": {
+        "candidate": false,
+        "wave": "control",
+        "owned_paths": [
+          "docs/superpowers/plans/2026-08-28-engineering-posture-scope-control/"
+        ],
+        "shared_resources": [
+          "canonical plan artifacts"
+        ],
+        "independent_verification": [
+          "node scripts/validate-plan.mjs --root docs/superpowers/plans/2026-08-28-engineering-posture-scope-control --strict",
+          "node scripts/overview.mjs --root docs/superpowers/plans/2026-08-28-engineering-posture-scope-control"
+        ],
+        "reason": "This control node must complete before any source implementation begins."
+      },
+      "scope_provenance": [
+        {
+          "kind": "requirement",
+          "ref": "R-BOOTSTRAP",
+          "behavior_id": "workflow-attestation"
+        }
+      ],
+      "workflow_receipt_ref": "gates.bootstrap",
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-000"
+      },
+      "leaf_plan_required": false,
+      "execution_boundary": "Control-only; completion authorizes planning reconciliation, not source implementation.",
+      "revalidation_required": false
+    },
+    {
+      "id": "N-001",
+      "title": "Define posture, provenance, hashing, compatibility, and provider discovery foundations",
+      "status": "done",
+      "depends_on": [
+        "N-000"
+      ],
+      "inputs": [
+        "GUIDE.md intent profiles, required capabilities, exclusions, and safety floor",
+        "Approved Root Design revision 2 at hash 7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716",
+        "Existing v1 and v2.0 schema, canonical hashing, migration, and provider-registry behavior",
+        "F-PROVIDER-DISCOVERY evidence for symlink roots and catalog fallback",
+        "Approved, finalise-plan-reviewed leaf plan with independently verifiable commit boundaries; this map brief alone does not authorize implementation."
+      ],
+      "outputs": [
+        "EngineeringPosture, PostureRef, ScopeProvenance, behavior-budget, and deferred-candidate schema contracts",
+        "Deterministic canonical posture hashing and stale/mismatch validation primitives",
+        "Read-compatible legacy representation that begins as unknown_legacy and never fabricates intent",
+        "Provider discovery that resolves installed symlink roots and uses catalog metadata when registry metadata arrays are empty",
+        "Provider registry state for source/version or digest, dependency availability, catalog match, mutability, and verified persistence expectations.",
+        "Design content-hash and state-hash primitives that preserve the exact content approved by the user."
+      ],
+      "acceptance": [
+        "The four profiles validate as distinct intent contracts with no ordered comparison or implicit production promotion",
+        "Equal normalized posture content hashes identically and any material posture change invalidates the old PostureRef",
+        "v1 and v2.0 inputs remain readable, while migration preview/apply preserves unknown_legacy until explicit assessment",
+        "A symlink-installed catalogued design provider is discovered with fallback metadata; unresolved critical coverage remains visibly blocking",
+        "Negative tests reject missing provenance, stale hashes, invented legacy profiles, and silently skipped catalog fallback",
+        "Before implementation, the node is decomposed into a finalise-plan-reviewed leaf plan with exact paths, validation commands, and independent commit boundaries.",
+        "Discovery distinguishes installed, dependency-ready, invoked, and persistence-verified states without automatic installation or equivalent-behavior claims.",
+        "Approval does not change the reviewed content hash; lifecycle changes are represented by a separate state hash."
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-POSTURE",
+        "R-PERSIST",
+        "R-PROVENANCE",
+        "R-BUDGET",
+        "R-COMPAT",
+        "R-COMPOSE"
+      ],
+      "contract_refs": [],
+      "design_refs": [
+        {
+          "design_id": "engineering-posture-scope-control",
+          "revision": 2,
+          "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716",
+          "status": "approved",
+          "scope": "root",
+          "node_id": null
+        }
+      ],
+      "interaction_refs": [
+        "F-PROVIDER-DISCOVERY",
+        "F-PROVIDER-COVERAGE"
+      ],
+      "impacted_modules": [],
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          "schemas/engineering-posture.schema.json",
+          "schemas/scope-provenance.schema.json",
+          "schemas/design.schema.json",
+          "scripts/lib/engineering-posture.mjs",
+          "scripts/lib/design-engine.mjs",
+          "scripts/lib/design-hashing.mjs",
+          "scripts/lib/provider-registry.mjs",
+          "skills/adaptive-writing-plans/references/design-provider-catalog.json",
+          "tests/engineering_posture.test.mjs",
+          "tests/provider_registry.test.mjs",
+          "tests/design_engine.test.mjs"
+        ],
+        "shared_resources": [],
+        "independent_verification": [
+          "node --test tests/engineering_posture.test.mjs tests/provider_registry.test.mjs tests/design_engine.test.mjs"
+        ],
+        "reason": "This establishes shared contracts and fixes provider discovery before any dependent integration can be planned in detail."
+      },
+      "design_required": true,
+      "owned_components": [
+        "posture schemas and hashing",
+        "legacy compatibility primitives",
+        "provider registry and catalog fallback"
+      ],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "3bac162f05064abd582eafde327ea76810487972be3ae4c16a6b8c990384ea90",
+        "source_ref": "GUIDE.md#constraints"
+      },
+      "scope_provenance": [
+        {
+          "kind": "requirement",
+          "ref": "R-POSTURE",
+          "behavior_id": "posture-contracts"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-COMPAT",
+          "behavior_id": "legacy-unknown-state"
+        },
+        {
+          "kind": "observed_failure",
+          "ref": "F-PROVIDER-DISCOVERY",
+          "behavior_id": "provider-catalog-fallback"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-COMPOSE",
+          "behavior_id": "provider-composition-state"
+        }
+      ],
+      "behavior_budget": {
+        "required": [
+          "posture-contracts",
+          "legacy-unknown-state",
+          "provider-catalog-fallback",
+          "provider-composition-state"
+        ],
+        "excluded": [
+          "remote provider registry",
+          "automatic skill installation",
+          "maturity scoring"
+        ],
+        "deferred_candidates": [
+          "registry performance caching unless tests demonstrate need"
+        ]
+      },
+      "deferred_candidates": [],
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-001"
+      },
+      "leaf_plan_ref": "../2026-08-28-engineering-foundations.md",
+      "leaf_plan_required": true,
+      "execution_boundary": "This map node is not directly executable. Generate and finalise a node-scoped leaf plan with exact file ownership, validation, and commit boundaries after all gates and dependencies pass.",
+      "revalidation_required": false
+    },
+    {
+      "id": "N-002",
+      "title": "Integrate module defaults and experimental zones into project architecture memory",
+      "status": "done",
+      "depends_on": [
+        "N-001"
+      ],
+      "inputs": [
+        "Approved posture schema, hash, and compatibility primitives from N-001",
+        "Existing project architecture baseline, module Core Contract, relation, impact, and delta protocols",
+        "Design rule that stable modules have defaults while ephemeral work can use lightweight experimental zones",
+        "Approved, finalise-plan-reviewed leaf plan with independently verifiable commit boundaries; this map brief alone does not authorize implementation."
+      ],
+      "outputs": [
+        "Project and module posture defaults bound to architecture revision/hash",
+        "Lightweight experimental-zone records that do not require a full Core Contract until explicit promotion",
+        "Boundary rule that experiment work touching a stable public interface still triggers normal design and architecture deltas",
+        "Architecture invalidation rules for changed defaults, zone promotion, and conflicting task overrides"
+      ],
+      "acceptance": [
+        "Architecture bootstrap/check/delta distinguish stable modules from experimental zones without treating zones as incomplete production modules",
+        "Module defaults are inherited deterministically and conflicting overrides require an explicit hash-bound decision",
+        "Promoting a zone is proposal-only until user approval and creates or updates the relevant Core Contract",
+        "Changing a default or public boundary reports exactly which maps/nodes require revalidation",
+        "Architecture protocol tests cover inheritance, zones, promotion, boundary crossing, and stale references",
+        "Before implementation, the node is decomposed into a finalise-plan-reviewed leaf plan with exact paths, validation commands, and independent commit boundaries."
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-POSTURE",
+        "R-PERSIST",
+        "R-PROMOTION",
+        "R-COMPAT"
+      ],
+      "contract_refs": [],
+      "design_refs": [
+        {
+          "design_id": "engineering-posture-scope-control",
+          "revision": 2,
+          "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716",
+          "status": "approved",
+          "scope": "root",
+          "node_id": null
+        }
+      ],
+      "interaction_refs": [],
+      "impacted_modules": [],
+      "parallelization": {
+        "candidate": true,
+        "wave": "W2-core-integrations",
+        "owned_paths": [
+          "schemas/architecture.schema.json",
+          "schemas/architecture-impact.schema.json",
+          "scripts/lib/architecture-protocol.mjs",
+          "scripts/lib/architecture-impact.mjs",
+          "scripts/architecture-*.mjs",
+          "skills/adaptive-writing-plans/references/architecture-memory.md",
+          "tests/architecture_protocol.test.mjs",
+          "tests/architecture_ci.test.mjs"
+        ],
+        "shared_resources": [],
+        "independent_verification": [
+          "node --test tests/architecture_protocol.test.mjs tests/architecture_ci.test.mjs"
+        ],
+        "reason": "After N-001, these paths and tests are independent from N-003's map-engine paths; do not parallelize if a leaf plan introduces shared schema or package edits."
+      },
+      "design_required": true,
+      "owned_components": [
+        "architecture schema",
+        "architecture memory protocol",
+        "architecture impact and delta workflow"
+      ],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "3bac162f05064abd582eafde327ea76810487972be3ae4c16a6b8c990384ea90",
+        "source_ref": "GUIDE.md#constraints"
+      },
+      "scope_provenance": [
+        {
+          "kind": "requirement",
+          "ref": "R-PERSIST",
+          "behavior_id": "architecture-posture-defaults"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-POSTURE",
+          "behavior_id": "experimental-zones"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-PERSIST",
+          "behavior_id": "public-boundary-delta-trigger"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-PROMOTION",
+          "behavior_id": "experimental-zone-promotion"
+        }
+      ],
+      "behavior_budget": {
+        "required": [
+          "architecture-posture-defaults",
+          "experimental-zones",
+          "public-boundary-delta-trigger",
+          "experimental-zone-promotion"
+        ],
+        "excluded": [
+          "organization policy hierarchy",
+          "remote architecture service",
+          "automatic promotion"
+        ],
+        "deferred_candidates": [
+          "cross-repository architecture federation"
+        ]
+      },
+      "deferred_candidates": [],
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-002"
+      },
+      "design_assessment": {
+        "outcome": "covered_by",
+        "design_refs": [
+          {
+            "design_id": "engineering-posture-scope-control",
+            "revision": 2,
+            "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716"
+          }
+        ],
+        "rationale": "Root Design revision 2 already fixes project-scoped architecture ownership, experimental-zone boundaries, explicit promotion, and approved-delta semantics; this leaf introduces no additional unresolved contract choice."
+      },
+      "leaf_plan_ref": "../2026-08-28-architecture-posture-zones.md",
+      "leaf_plan_required": true,
+      "execution_boundary": "This map node is not directly executable. Generate and finalise a node-scoped leaf plan with exact file ownership, validation, and commit boundaries after all gates and dependencies pass.",
+      "revalidation_required": false
+    },
+    {
+      "id": "N-003",
+      "title": "Enforce scope provenance, maturity ceilings, and deferred candidates in the map engine",
+      "status": "done",
+      "depends_on": [
+        "N-001"
+      ],
+      "inputs": [
+        "Approved posture and provenance primitives from N-001",
+        "Existing map schema, node readiness, invalidation, migration, and completion rules",
+        "Profile-specific required and excluded capability sets from GUIDE.md",
+        "Approved, finalise-plan-reviewed leaf plan with independently verifiable commit boundaries; this map brief alone does not authorize implementation."
+      ],
+      "outputs": [
+        "Posture-aware map and node schema with exact PostureRef inheritance/override rules",
+        "ScopeProvenance required for executable capability-producing nodes and behavior-budget entries",
+        "Maturity ceiling validation that removes out-of-scope work from execution and preserves it as a deferred candidate",
+        "Subtractive finalization checks that report unsupported behaviors before suggesting additions"
+      ],
+      "acceptance": [
+        "A node cannot become ready when its posture ref is missing/stale or a required behavior lacks approved provenance",
+        "Capabilities above the selected profile ceiling are rejected from the executable DAG and retained with reason/evidence as deferred candidates",
+        "Spike and experiment fixtures keep mandatory safety floors but reject speculative compatibility, HA, recovery, deployment, and operability work",
+        "Reusable_internal and production fixtures apply their distinct definitions of done without an ordinal maturity comparison",
+        "Map migration and completion checks preserve existing artifacts, node topology, decisions, and provenance",
+        "Before implementation, the node is decomposed into a finalise-plan-reviewed leaf plan with exact paths, validation commands, and independent commit boundaries.",
+        "Provider-derived behavior enters required scope only through normalized evidence and explicit provenance; conversation-only or unverified-persistence output cannot authorize execution."
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-POSTURE",
+        "R-PERSIST",
+        "R-PROVENANCE",
+        "R-BUDGET",
+        "R-EXPERIMENT",
+        "R-COMPAT",
+        "R-COMPOSE"
+      ],
+      "contract_refs": [],
+      "design_refs": [
+        {
+          "design_id": "engineering-posture-scope-control",
+          "revision": 2,
+          "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716",
+          "status": "approved",
+          "scope": "root",
+          "node_id": null
+        }
+      ],
+      "interaction_refs": [],
+      "impacted_modules": [],
+      "parallelization": {
+        "candidate": true,
+        "wave": "W2-core-integrations",
+        "owned_paths": [
+          "schemas/map.schema.json",
+          "scripts/lib/plan-protocol.mjs",
+          "scripts/lib/planning-engine.mjs",
+          "scripts/add-node.mjs",
+          "tests/plan_protocol.test.mjs",
+          "tests/planning_engine.test.mjs"
+        ],
+        "shared_resources": [],
+        "independent_verification": [
+          "node --test tests/plan_protocol.test.mjs tests/planning_engine.test.mjs"
+        ],
+        "reason": "Can run with N-002 after N-001 because owned paths and tests do not overlap; it must run serially relative to N-004 if handoff normalization remains in plan-protocol.mjs."
+      },
+      "design_required": true,
+      "owned_components": [
+        "map schema",
+        "plan protocol",
+        "node readiness",
+        "planning engine"
+      ],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "3bac162f05064abd582eafde327ea76810487972be3ae4c16a6b8c990384ea90",
+        "source_ref": "GUIDE.md#constraints"
+      },
+      "scope_provenance": [
+        {
+          "kind": "requirement",
+          "ref": "R-PERSIST",
+          "behavior_id": "posture-inheritance"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-PROVENANCE",
+          "behavior_id": "node-admission"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-BUDGET",
+          "behavior_id": "behavior-ceiling"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-BUDGET",
+          "behavior_id": "deferred-candidates"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-BUDGET",
+          "behavior_id": "subtractive-review"
+        }
+      ],
+      "behavior_budget": {
+        "required": [
+          "posture-inheritance",
+          "node-admission",
+          "behavior-ceiling",
+          "deferred-candidates",
+          "subtractive-review"
+        ],
+        "excluded": [
+          "automatic scope expansion",
+          "unbounded completeness heuristics",
+          "production inference from reuse speculation"
+        ],
+        "deferred_candidates": [
+          "policy expression language beyond the four named profiles"
+        ]
+      },
+      "deferred_candidates": [],
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-003"
+      },
+      "design_assessment": {
+        "outcome": "covered_by",
+        "design_refs": [
+          {
+            "design_id": "engineering-posture-scope-control",
+            "revision": 2,
+            "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716"
+          }
+        ],
+        "rationale": "Root Design revision 2 already fixes posture-bound admission, scope provenance, behavior budgets, deferred candidates, and contract-level invalidation; this leaf introduces no additional unresolved contract choice."
+      },
+      "leaf_plan_ref": "../2026-08-28-map-posture-admission.md",
+      "leaf_plan_required": true,
+      "execution_boundary": "This map node is not directly executable. Generate and finalise a node-scoped leaf plan with exact file ownership, validation, and commit boundaries after all gates and dependencies pass.",
+      "revalidation_required": false
+    },
+    {
+      "id": "N-004",
+      "title": "Make the Design Gate and provider handoffs posture-aware",
+      "status": "done",
+      "depends_on": [
+        "N-001",
+        "N-003"
+      ],
+      "inputs": [
+        "Approved posture/provenance primitives from N-001",
+        "Existing re-entrant Design Gate, provider catalog, routing, normalization, and approval rules",
+        "Observed missing provider coverage for data, migration, and security",
+        "Approved, finalise-plan-reviewed leaf plan with independently verifiable commit boundaries; this map brief alone does not authorize implementation."
+      ],
+      "outputs": [
+        "PostureRef, allowed/excluded capabilities, and behavior budget in DesignProfile and provider handoffs",
+        "Provider result classification that preserves over-ceiling recommendations as evidence/deferred candidates without mutating canonical state",
+        "Approval/waiver rules that bind exact design and posture hashes and keep critical missing coverage visible",
+        "Re-entry rules for posture changes, promotions, conflicts, and stale provider/design evidence",
+        "Hash-bound ApprovalBrief generation for design approval and waiver gates, rendered inline by the orchestrator.",
+        "Capability-driven CompositionContract and conditional routing for mature design, grilling, domain, decision, scenario, and review providers."
+      ],
+      "acceptance": [
+        "Design routing exposes profile, exclusions, provider roles, provenance, missing concerns, and confirmation policy",
+        "Provider recommendations outside the behavior budget cannot become requirements, decisions, map nodes, or implementation tasks automatically",
+        "Critical uncovered concerns block approval until evidence or an explicit scoped waiver is recorded",
+        "Changing posture after approval creates a new design revision and stales exact dependent references",
+        "Structured and unstructured handoff tests preserve raw evidence and unknown extension fields",
+        "Before implementation, the node is decomposed into a finalise-plan-reviewed leaf plan with exact paths, validation commands, and independent commit boundaries.",
+        "A design or waiver gate emits a bounded inline summary and one explicit confirmation prompt; a file-only handoff is rejected.",
+        "Routing prefers a contract-matching installed provider, reports dependency/mutability/persistence state, and requires evidence before any rewrite."
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-PERSIST",
+        "R-PROVENANCE",
+        "R-BUDGET",
+        "R-PROMOTION",
+        "R-COMPAT",
+        "R-APPROVAL-UX",
+        "R-COMPOSE"
+      ],
+      "contract_refs": [],
+      "design_refs": [
+        {
+          "design_id": "engineering-posture-scope-control",
+          "revision": 2,
+          "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716",
+          "status": "approved",
+          "scope": "root",
+          "node_id": null
+        }
+      ],
+      "interaction_refs": [
+        "F-PROVIDER-COVERAGE"
+      ],
+      "impacted_modules": [],
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial-after-W2-map-integration",
+        "owned_paths": [
+          "schemas/design.schema.json",
+          "schemas/handoff.schema.json",
+          "schemas/provider-result.schema.json",
+          "scripts/lib/design-engine.mjs",
+          "scripts/design-*.mjs",
+          "scripts/lib/plan-protocol.mjs",
+          "skills/adaptive-writing-plans/references/design-gate.md",
+          "skills/adaptive-writing-plans/references/provider-contract.md",
+          "tests/design_engine.test.mjs"
+        ],
+        "shared_resources": [],
+        "independent_verification": [
+          "node --test tests/design_engine.test.mjs tests/plan_protocol.test.mjs"
+        ],
+        "reason": "Current handoff normalization shares plan-protocol.mjs with N-003, so this remains serial unless the approved leaf plan proves a non-overlapping ownership split."
+      },
+      "design_required": true,
+      "owned_components": [
+        "design schema and engine",
+        "provider handoff contracts",
+        "design approval and re-entry"
+      ],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "3bac162f05064abd582eafde327ea76810487972be3ae4c16a6b8c990384ea90",
+        "source_ref": "GUIDE.md#constraints"
+      },
+      "scope_provenance": [
+        {
+          "kind": "requirement",
+          "ref": "R-PERSIST",
+          "behavior_id": "posture-aware-design"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-BUDGET",
+          "behavior_id": "provider-budget-filtering"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-APPROVAL-UX",
+          "behavior_id": "exact-content-approval"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-PERSIST",
+          "behavior_id": "design-re-entry"
+        },
+        {
+          "kind": "observed_failure",
+          "ref": "F-FILE-ONLY-APPROVAL",
+          "behavior_id": "inline-design-approval"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-COMPOSE",
+          "behavior_id": "composition-provider-routing"
+        }
+      ],
+      "behavior_budget": {
+        "required": [
+          "posture-aware-design",
+          "provider-budget-filtering",
+          "exact-content-approval",
+          "design-re-entry",
+          "inline-design-approval",
+          "composition-provider-routing"
+        ],
+        "excluded": [
+          "provider authority to approve",
+          "provider authority to mutate canonical state",
+          "automatic waiver"
+        ],
+        "deferred_candidates": [
+          "provider reputation or popularity ranking until trustworthy metrics exist"
+        ]
+      },
+      "deferred_candidates": [],
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-004"
+      },
+      "design_assessment": {
+        "outcome": "covered_by",
+        "design_refs": [
+          {
+            "design_id": "engineering-posture-scope-control",
+            "revision": 2,
+            "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716"
+          }
+        ],
+        "rationale": "Root Design revision 2 explicitly fixes recursive DesignThread identity, content/state hashing, provider composition, terminal ApprovalBrief, critical coverage, and contract-level invalidation; no additional unresolved contract choice blocks this implementation leaf."
+      },
+      "leaf_plan_ref": "../2026-08-28-recursive-design-ledger.md",
+      "leaf_plan_required": true,
+      "execution_boundary": "This map node is not directly executable. Generate and finalise a node-scoped leaf plan with exact file ownership, validation, and commit boundaries after all gates and dependencies pass.",
+      "revalidation_required": false
+    },
+    {
+      "id": "N-005",
+      "title": "Carry posture through leaf planning, execution, finalization, and compact handoffs",
+      "status": "done",
+      "depends_on": [
+        "N-004"
+      ],
+      "inputs": [
+        "Posture-aware map admission and deferred-candidate behavior from N-003",
+        "Posture-aware design/provider handoffs from N-004",
+        "Existing writing-plans, finalise-plan, executing-plans, progress, replan, and compaction contracts",
+        "Approved, finalise-plan-reviewed leaf plan with independently verifiable commit boundaries; this map brief alone does not authorize implementation."
+      ],
+      "outputs": [
+        "Leaf-plan handoff containing exact PostureRef, approved behaviors, exclusions, provenance, and deferred candidates",
+        "Execution start/resume/compact checks that re-read and verify hashes instead of reconstructing maturity from prose",
+        "Finalise-plan routing that performs subtractive provenance and ceiling review before completeness review",
+        "Replan behavior that stops execution and stales dependents when posture, design, or architecture evidence changes",
+        "Compact-safe pending ApprovalBrief handoff that is regenerated from the exact current hash before asking the user.",
+        "Provider-owned workflow invocation with normalized handoff and explicit persisted, conversation_only, or unverified_persistence outcome."
+      ],
+      "acceptance": [
+        "No leaf plan is generated until the referenced design and posture are approved/current and node provenance is complete",
+        "Compact/resume fixtures preserve the same selected profile, exclusions, approved behaviors, and deferred candidates",
+        "Execution refuses a stale/missing/conflicting PostureRef before source edits and reports the exact recovery action",
+        "Finalization removes unsupported production hardening from spike/experiment plans while retaining mandatory safety and experimental-validity work",
+        "Third-party skills remain unmodified and are integrated only through versioned orchestration handoffs",
+        "Before implementation, the node is decomposed into a finalise-plan-reviewed leaf plan with exact paths, validation commands, and independent commit boundaries.",
+        "After compact, approval is requested only from a freshly regenerated inline brief bound to the current hash.",
+        "Execution orchestration does not duplicate provider workflow logic and verifies expected artifacts before treating output as durable state."
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-PERSIST",
+        "R-PROVENANCE",
+        "R-BUDGET",
+        "R-EXPERIMENT",
+        "R-PROMOTION",
+        "R-APPROVAL-UX",
+        "R-COMPOSE"
+      ],
+      "contract_refs": [],
+      "design_refs": [
+        {
+          "design_id": "engineering-posture-scope-control",
+          "revision": 2,
+          "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716",
+          "status": "approved",
+          "scope": "root",
+          "node_id": null
+        }
+      ],
+      "interaction_refs": [],
+      "impacted_modules": [],
+      "parallelization": {
+        "candidate": true,
+        "wave": "W4-orchestration-and-adapters",
+        "owned_paths": [
+          "skills/adaptive-writing-plans/SKILL.md",
+          "skills/adaptive-writing-plans/references/execution.md",
+          "skills/adaptive-writing-plans/references/compatibility.md",
+          "scripts/lib/host-adapter.mjs",
+          "tests/skill_contract.test.mjs",
+          "tests/host_adapter.test.mjs"
+        ],
+        "shared_resources": [
+          "host skill discovery and execution progress protocol"
+        ],
+        "independent_verification": [
+          "node --test tests/skill_contract.test.mjs tests/host_adapter.test.mjs"
+        ],
+        "reason": "After N-004, its skill/host-adapter paths and tests do not overlap N-006 CLI/MCP paths; cancel parallel execution if a leaf plan introduces shared files."
+      },
+      "design_required": true,
+      "owned_components": [
+        "planning orchestration",
+        "execution handoff",
+        "compact-safe resume",
+        "finalization routing"
+      ],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "3bac162f05064abd582eafde327ea76810487972be3ae4c16a6b8c990384ea90",
+        "source_ref": "GUIDE.md#constraints"
+      },
+      "scope_provenance": [
+        {
+          "kind": "requirement",
+          "ref": "R-PERSIST",
+          "behavior_id": "leaf-posture-handoff"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-BUDGET",
+          "behavior_id": "pre-edit-execution-check"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-PERSIST",
+          "behavior_id": "compact-hash-verification"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-BUDGET",
+          "behavior_id": "subtractive-finalization"
+        }
+      ],
+      "behavior_budget": {
+        "required": [
+          "leaf-posture-handoff",
+          "pre-edit-execution-check",
+          "compact-hash-verification",
+          "subtractive-finalization"
+        ],
+        "excluded": [
+          "editing third-party skills",
+          "implicit execution continuation",
+          "automatic replan acceptance"
+        ],
+        "deferred_candidates": [
+          "cross-host distributed execution posture"
+        ]
+      },
+      "deferred_candidates": [],
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-005"
+      },
+      "leaf_plan_required": true,
+      "execution_boundary": "This map node is not directly executable. Generate and finalise a node-scoped leaf plan with exact file ownership, validation, and commit boundaries after all gates and dependencies pass.",
+      "revalidation_required": false,
+      "leaf_plan_ref": "../2026-08-28-execution-posture-handoffs.md"
+    },
+    {
+      "id": "N-006",
+      "title": "Expose posture assessment, checking, promotion, and blockers through CLI, MCP, and overview",
+      "status": "done",
+      "depends_on": [
+        "N-002",
+        "N-004"
+      ],
+      "inputs": [
+        "Architecture posture defaults and experimental zones from N-002",
+        "Map admission, ceilings, and deferred candidates from N-003",
+        "Design approval, provider evidence, and re-entry semantics from N-004",
+        "Approved, finalise-plan-reviewed leaf plan with independently verifiable commit boundaries; this map brief alone does not authorize implementation."
+      ],
+      "outputs": [
+        "CLI and MCP assess/check/promote operations with deterministic structured results",
+        "Dry-run or proposal semantics for any operation that could change canonical posture, design, or architecture",
+        "Overview output showing posture source/hash, inherited/overridden scope, exclusions, deferred work, and exact blockers",
+        "Portable plugin manifest and command wiring for supported hosts",
+        "CLI/MCP/overview approval_brief projection for terminal-native confirmation without opening artifacts.",
+        "CLI/MCP/ApprovalBrief visibility for provider source, version/digest, dependencies, invocation, persistence verification, and fallback."
+      ],
+      "acceptance": [
+        "Assess reports candidate profile and evidence without mutating canonical files",
+        "Check reports stale refs, over-ceiling behaviors, missing provenance, and critical provider coverage with stable error codes",
+        "Promote only prepares a bounded proposal until explicit user approval and then re-enters design/architecture gates",
+        "Overview makes the full multi-file map, exact design hash, posture, blockers, nodes, and artifact index visible",
+        "CLI and MCP return equivalent structured outcomes and never claim that a discovery failure means no provider is installed",
+        "Before implementation, the node is decomposed into a finalise-plan-reviewed leaf plan with exact paths, validation commands, and independent commit boundaries.",
+        "CLI and MCP expose equivalent approval_brief fields, and the terminal flow displays them before requesting approval.",
+        "Terminal output distinguishes discovery, invocation, dependency readiness, persisted output, and fallback instead of collapsing them into available/unavailable."
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-PERSIST",
+        "R-PROVENANCE",
+        "R-BUDGET",
+        "R-PROMOTION",
+        "R-COMPAT",
+        "R-APPROVAL-UX",
+        "R-COMPOSE"
+      ],
+      "contract_refs": [],
+      "design_refs": [
+        {
+          "design_id": "engineering-posture-scope-control",
+          "revision": 2,
+          "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716",
+          "status": "approved",
+          "scope": "root",
+          "node_id": null
+        }
+      ],
+      "interaction_refs": [
+        "F-PROVIDER-DISCOVERY",
+        "F-PROVIDER-COVERAGE"
+      ],
+      "impacted_modules": [],
+      "parallelization": {
+        "candidate": true,
+        "wave": "W4-orchestration-and-adapters",
+        "owned_paths": [
+          "scripts/adaptive-plan.mjs",
+          "scripts/overview.mjs",
+          "scripts/posture-*.mjs",
+          "mcp/server.mjs",
+          ".mcp.json",
+          ".codex-plugin/plugin.json",
+          "package.json",
+          "tests/cli.test.mjs",
+          "tests/mcp_server.test.mjs",
+          "tests/overview_v2.test.mjs"
+        ],
+        "shared_resources": [
+          "CLI entrypoint and MCP method namespace"
+        ],
+        "independent_verification": [
+          "node --test tests/cli.test.mjs tests/mcp_server.test.mjs tests/overview_v2.test.mjs"
+        ],
+        "reason": "After N-002 and N-004, its CLI/MCP paths and tests do not overlap N-005 orchestration paths; cancel parallel execution if a leaf plan introduces shared files."
+      },
+      "design_required": true,
+      "owned_components": [
+        "CLI",
+        "MCP",
+        "overview",
+        "host and plugin wiring"
+      ],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "3bac162f05064abd582eafde327ea76810487972be3ae4c16a6b8c990384ea90",
+        "source_ref": "GUIDE.md#constraints"
+      },
+      "scope_provenance": [
+        {
+          "kind": "requirement",
+          "ref": "R-PERSIST",
+          "behavior_id": "posture-assess"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-BUDGET",
+          "behavior_id": "posture-check"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-PROMOTION",
+          "behavior_id": "promotion-proposal"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-PERSIST",
+          "behavior_id": "map-overview-visibility"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-COMPAT",
+          "behavior_id": "cli-mcp-parity"
+        },
+        {
+          "kind": "observed_failure",
+          "ref": "F-FILE-ONLY-APPROVAL",
+          "behavior_id": "approval-brief-projection"
+        }
+      ],
+      "behavior_budget": {
+        "required": [
+          "posture-assess",
+          "posture-check",
+          "promotion-proposal",
+          "map-overview-visibility",
+          "cli-mcp-parity",
+          "approval-brief-projection"
+        ],
+        "excluded": [
+          "silent canonical mutation",
+          "remote policy API",
+          "deployment or release control plane"
+        ],
+        "deferred_candidates": [
+          "interactive dashboard",
+          "telemetry and usage analytics"
+        ]
+      },
+      "deferred_candidates": [],
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-006"
+      },
+      "leaf_plan_required": true,
+      "execution_boundary": "This map node is not directly executable. Generate and finalise a node-scoped leaf plan with exact file ownership, validation, and commit boundaries after all gates and dependencies pass.",
+      "revalidation_required": false,
+      "leaf_plan_ref": "../2026-08-28-posture-cli-mcp-surfaces.md"
+    },
+    {
+      "id": "N-007",
+      "title": "Validate migration and all posture profiles end to end, then document the portable release",
+      "status": "done",
+      "depends_on": [
+        "N-005",
+        "N-006"
+      ],
+      "inputs": [
+        "Complete leaf/execution orchestration from N-005",
+        "Complete architecture, CLI, MCP, and overview surfaces from N-006",
+        "Existing v1/v2.0 fixtures, host adapters, portability checks, and completion gates",
+        "Approved, finalise-plan-reviewed leaf plan with independently verifiable commit boundaries; this map brief alone does not authorize implementation."
+      ],
+      "outputs": [
+        "End-to-end fixtures for spike, experiment, reusable_internal, production, promotion, compact/resume, and stale evidence",
+        "Explicit v2.1 migration preview/apply with preservation and rollback guidance",
+        "Completion validation covering scope provenance, behavior ceilings, hash freshness, and required safety floors",
+        "Updated user/developer documentation, portable package metadata, and release-validation evidence"
+      ],
+      "acceptance": [
+        "Each profile fixture implements only its approved behavior budget and passes its distinct definition of done",
+        "Migration preserves topology, design history, decisions, provider evidence, artifact links, and unknown_legacy posture until assessment",
+        "Promotion fixture is auditable, user-approved, design-re-entrant, and updates architecture only when boundary impact requires it",
+        "A full test run, strict portability scan, schema validation, CLI/MCP smoke tests, and completion checks pass",
+        "Documentation explains the project-scoped architecture memory lifecycle, module/zone posture, scope provenance, compact behavior, and recovery from blockers",
+        "No posture.json, maturity score, automatic promotion, automatic provider installation, telemetry, HA, or deployment automation is introduced",
+        "Before implementation, the node is decomposed into a finalise-plan-reviewed leaf plan with exact paths, validation commands, and independent commit boundaries.",
+        "A terminal-only end-to-end fixture completes an approval from the inline brief while treating artifact links as optional.",
+        "Composition fixtures cover direct reuse, thin adapters, missing dependencies, version/digest drift, provider failure, and expected artifact not written."
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-POSTURE",
+        "R-PERSIST",
+        "R-PROVENANCE",
+        "R-BUDGET",
+        "R-EXPERIMENT",
+        "R-PROMOTION",
+        "R-COMPAT",
+        "R-APPROVAL-UX",
+        "R-COMPOSE"
+      ],
+      "contract_refs": [],
+      "design_refs": [
+        {
+          "design_id": "engineering-posture-scope-control",
+          "revision": 2,
+          "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716",
+          "status": "approved",
+          "scope": "root",
+          "node_id": null
+        }
+      ],
+      "interaction_refs": [],
+      "impacted_modules": [],
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          "scripts/migrate-plan.mjs",
+          "scripts/completion-check.mjs",
+          "tests/fixtures/posture/",
+          "tests/portability.test.mjs",
+          "tests/integration_posture.test.mjs",
+          "README.md",
+          "skills/adaptive-writing-plans/references/plan-folder-protocol.md",
+          "skills/adaptive-writing-plans/references/ci-integration.md"
+        ],
+        "shared_resources": [
+          "full repository test suite and package metadata"
+        ],
+        "independent_verification": [
+          "npm test",
+          "node scripts/validate-plan.mjs --root tests/fixtures/posture/reusable-internal --strict",
+          "node scripts/completion-check.mjs --root tests/fixtures/posture/reusable-internal"
+        ],
+        "reason": "This is the final integration and release gate and depends on all user-facing and orchestration behavior being stable."
+      },
+      "design_required": true,
+      "owned_components": [
+        "migration",
+        "profile fixtures",
+        "completion validation",
+        "documentation",
+        "release validation"
+      ],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "3bac162f05064abd582eafde327ea76810487972be3ae4c16a6b8c990384ea90",
+        "source_ref": "GUIDE.md#constraints"
+      },
+      "scope_provenance": [
+        {
+          "kind": "requirement",
+          "ref": "R-COMPAT",
+          "behavior_id": "migration-preservation"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-EXPERIMENT",
+          "behavior_id": "all-profile-fixtures"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-BUDGET",
+          "behavior_id": "completion-validation"
+        },
+        {
+          "kind": "requirement",
+          "ref": "R-COMPAT",
+          "behavior_id": "portable-documentation"
+        }
+      ],
+      "behavior_budget": {
+        "required": [
+          "migration-preservation",
+          "all-profile-fixtures",
+          "completion-validation",
+          "portable-documentation"
+        ],
+        "excluded": [
+          "production deployment",
+          "release automation beyond local validation",
+          "organization-wide governance"
+        ],
+        "deferred_candidates": [
+          "external marketplace publication unless separately requested"
+        ]
+      },
+      "deferred_candidates": [],
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-007"
+      },
+      "leaf_plan_required": true,
+      "execution_boundary": "This map node is not directly executable. Generate and finalise a node-scoped leaf plan with exact file ownership, validation, and commit boundaries after all gates and dependencies pass.",
+      "revalidation_required": false,
+      "leaf_plan_ref": "../2026-08-28-posture-migration-release.md"
+    }
+  ],
+  "created_at": "2026-08-28T06:13:22.200Z",
+  "updated_at": "2026-08-28T11:09:47.515Z",
+  "engineering_posture": {
+    "schema_version": "2.1",
+    "kind": "reusable_internal",
+    "source": {
+      "kind": "approved_guide",
+      "ref": "GUIDE.md#constraints"
+    },
+    "objective": "Provide stable local planning contracts and compatibility behavior without production operations that this plugin does not need.",
+    "required_evidence": [
+      "compatibility_evidence",
+      "integration_tests",
+      "stable_local_contract"
+    ],
+    "allowed_capabilities": [
+      "composition-first reuse of installed mature skills with verified dependencies and persistence",
+      "deterministic CLI and MCP assessment with visible blocking reasons",
+      "explicit user-approved promotion with design re-entry",
+      "four intent profiles with profile-specific definitions of done",
+      "hash-bound posture references across architecture, design, map, handoff, and compact boundaries",
+      "inline hash-bound ApprovalBrief for every human gate",
+      "legacy read compatibility and explicit v2.1 migration",
+      "profile fixtures, integration tests, and host portability checks",
+      "project and module defaults plus lightweight experimental zones",
+      "scope provenance and observable behavior budgets for executable work"
+    ],
+    "excluded_capabilities": [
+      "a separate posture database",
+      "automatic production promotion",
+      "automatic provider installation",
+      "duplicating mature provider workflow logic without a documented composition blocker",
+      "modification of third-party skills",
+      "numeric maturity scoring or an automatic maturity ladder",
+      "remote policy services or organization-wide governance",
+      "telemetry, high availability, deployment automation, and production release operations"
+    ],
+    "safety_floor": [
+      "bound_runaway_resource_cost",
+      "fail_loud_on_invalid_results",
+      "prevent_credential_exposure",
+      "prevent_destructive_data_loss"
+    ],
+    "promotion_policy": "Evidence may propose promotion, but explicit user approval must create a separate change and re-enter design.",
+    "posture_hash": "3bac162f05064abd582eafde327ea76810487972be3ae4c16a6b8c990384ea90"
+  },
+  "posture_evidence": [
+    {
+      "id": "stable_local_contract",
+      "refs": [
+        "README.md",
+        "schemas/engineering-posture.schema.json",
+        "schemas/map.schema.json",
+        "scripts/adaptive-plan.mjs",
+        "mcp/server.mjs"
+      ],
+      "summary": "The plugin exposes a documented, versioned local CLI/MCP contract for posture-aware maps, design gates, migration, and completion."
+    },
+    {
+      "id": "compatibility_evidence",
+      "refs": [
+        "scripts/lib/migration-protocol.mjs",
+        "scripts/lib/host-adapter.mjs",
+        "tests/migration_protocol.test.mjs",
+        "tests/host_adapter.test.mjs",
+        "tests/portability.test.mjs"
+      ],
+      "summary": "Legacy reads, exact recovery, provider composition outcomes, host adapters, and repository-relative packaging have dedicated compatibility coverage."
+    },
+    {
+      "id": "integration_tests",
+      "refs": [
+        "tests/integration_posture.test.mjs",
+        "tests/mcp_server.test.mjs",
+        "tests/cli.test.mjs",
+        "tests/execution_protocol.test.mjs"
+      ],
+      "summary": "Profile-specific completion, promotion, compact recovery, inline approval, CLI/MCP parity, and skill composition are exercised end to end."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "R-BOOTSTRAP",
+      "statement": "Expose a fixed, validated N-000 workflow receipt for every map so users can verify the selected route, plugin binding, artifact state, and next action in the terminal."
+    },
+    {
+      "id": "R-POSTURE",
+      "statement": "Model spike, experiment, reusable_internal, and production as intent profiles rather than a quality ladder."
+    },
+    {
+      "id": "R-PERSIST",
+      "statement": "Carry a hash-bound posture through project defaults, maps, nodes, designs, handoffs, and compact-safe execution context."
+    },
+    {
+      "id": "R-PROVENANCE",
+      "statement": "Admit executable work only when it traces to approved intent/design/contracts, observed failure, or a mandatory safety floor."
+    },
+    {
+      "id": "R-BUDGET",
+      "statement": "Bind implementation to approved observable behavior and the minimum code needed to satisfy it."
+    },
+    {
+      "id": "R-EXPERIMENT",
+      "statement": "Require hypothesis, measurement validity, reproducibility, and fail-loud behavior without speculative production capabilities."
+    },
+    {
+      "id": "R-PROMOTION",
+      "statement": "Make posture promotion an explicit user-approved change that re-enters design and architecture synchronization."
+    },
+    {
+      "id": "R-COMPAT",
+      "statement": "Preserve readable legacy artifacts and require explicit migration before new posture claims are authoritative."
+    },
+    {
+      "id": "R-APPROVAL-UX",
+      "statement": "Render every human gate as a bounded inline ApprovalBrief in the active conversation; artifact paths are optional audit references only."
+    },
+    {
+      "id": "R-COMPOSE",
+      "statement": "Prefer installed mature skills through verified composition contracts; use thin adapters for envelope mismatch and reimplement only with evidence and approved provenance."
+    }
+  ],
+  "known_findings": [
+    {
+      "id": "F-MCP-BINDING",
+      "statement": "The installed Adaptive Planning MCP resolves its plan root to the plugin cache when ADAPTIVE_PLAN_ROOT is not configured, so plan_overview cannot attest the selected repository plan.",
+      "disposition": "N-000 records the mismatch and uses the repository CLI until N-006 adds explicit binding diagnostics."
+    },
+    {
+      "id": "F-PROVIDER-DISCOVERY",
+      "statement": "Provider discovery misses symlinked skill roots, and empty registry design metadata prevents fallback to design-provider-catalog.json.",
+      "disposition": "required input to N-001"
+    },
+    {
+      "id": "F-PROVIDER-COVERAGE",
+      "statement": "The current design gate has unresolved critical coverage for data, migration, and security.",
+      "disposition": "design approval remains blocked until provider coverage or explicit waiver is recorded"
+    },
+    {
+      "id": "F-FILE-ONLY-APPROVAL",
+      "statement": "A terminal user was required to open DESIGN.md separately before approval, making the durable artifact act as the user interface.",
+      "disposition": "required input to N-004, N-005, N-006, and N-007"
+    },
+    {
+      "id": "F-COMPOSITION-DRIFT",
+      "statement": "Rewriting mature skill workflows inside the plugin would create duplicate ownership, while blind invocation can hide missing dependencies or failed persistence.",
+      "disposition": "required input to N-001, N-004, N-005, N-006, and N-007"
+    }
+  ],
+  "execution_policy": {
+    "map_nodes_are_not_directly_executable": true,
+    "leaf_plan_required": true,
+    "leaf_plan_review": "Run finalise-plan before execution and split work into independently verifiable commit boundaries.",
+    "progress_state": "Do not create .adaptive-plan-progress.json until the user explicitly selects and executes an approved leaf plan."
+  },
+  "pre_execution_actions": [
+    "Resolve data, migration, and security provider coverage with valid evidence or an explicit scoped waiver.",
+    "Approve the exact resulting design hash; if evidence changes the current hash, update every design ref and revalidate the map.",
+    "Select one dependency-ready node, generate its node-scoped leaf plan, and run finalise-plan before implementation."
+  ],
+  "design_ref_update_policy": "Any design revision or hash change must append evidence, stale affected nodes, and replace refs only after explicit approval; never reconstruct approval after compact.",
+  "risk_assessment_ref": {
+    "design_id": "engineering-posture-scope-control",
+    "revision": 1,
+    "design_hash": "5762fc37a055d97b395e36d559d3d9bba045505d056c66764f406e9ba8e9c9bf",
+    "provider_id": "risk-assessment"
+  },
+  "approval_experience": {
+    "mode": "inline_first",
+    "artifact_role": "optional_audit_reference",
+    "required_fields": [
+      "decision_summary",
+      "included_scope",
+      "excluded_scope",
+      "material_risks",
+      "waiver_request",
+      "downstream_effect",
+      "exact_hash",
+      "prompt"
+    ],
+    "stale_policy": "regenerate after any canonical hash change"
+  },
+  "composition_policy": {
+    "order": [
+      "direct_provider",
+      "thin_adapter",
+      "bounded_builtin_fallback",
+      "evidence_backed_reimplementation"
+    ],
+    "direct_requires": [
+      "installed",
+      "contract_match",
+      "dependencies_available",
+      "allowed_mutability"
+    ],
+    "adapter_scope": "input/output envelope and persistence verification only",
+    "reimplementation_requires": [
+      "documented blocker",
+      "license and portability review",
+      "scope provenance",
+      "explicit approval"
+    ],
+    "installation": "never_automatic"
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Adaptive Writing Plans"
+  short_description: "Architecture-aware maps, design gates, and leaf plans"
+  default_prompt: "Use $adaptive-writing-plans to route this request, check project architecture memory and the re-entrant Design Gate, and return a navigable DAG plus complete artifact index when a map is required."

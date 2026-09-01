@@ -1,0 +1,9 @@
+{
+  "note": "Illustrative mapping only. Verify the host Codex hook schema before enabling.",
+  "events": {
+    "tool_completed": "node hooks/record-event.mjs --root <plan-root>",
+    "context_compaction": "node hooks/record-event.mjs --root <plan-root>",
+    "turn_ended": "node hooks/record-event.mjs --root <plan-root>"
+  },
+  "write_policy": "append-facts-only"
+}

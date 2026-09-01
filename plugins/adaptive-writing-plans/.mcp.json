@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "adaptive-planning": {
+      "command": "node",
+      "args": ["./mcp/server.mjs", "--stdio"],
+      "cwd": ".",
+      "env_vars": ["ADAPTIVE_PLAN_ROOT", "ADAPTIVE_PROJECT_ROOT", "ADAPTIVE_ARCHITECTURE_ROOT"],
+      "tool_timeout_sec": 120
+    }
+  }
+}

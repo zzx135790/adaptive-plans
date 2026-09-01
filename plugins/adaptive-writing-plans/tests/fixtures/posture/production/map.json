@@ -1,0 +1,45 @@
+{
+  "schema_version": "2.0",
+  "plan_id": "fixture-production",
+  "title": "Production posture fixture",
+  "status": "complete",
+  "stage": "complete",
+  "work_shape": "map",
+  "mode": "map",
+  "gates": {
+    "intent": {"status": "approved"},
+    "design": {"status": "not_required"},
+    "architecture_sync": {"status": "not_required"}
+  },
+  "engineering_posture": {
+    "schema_version": "2.1",
+    "kind": "production",
+    "source": {"kind": "explicit_assessment", "ref": "fixtures/production"},
+    "objective": "Operate an owned public capability under explicit reliability and change controls.",
+    "required_evidence": ["migration_and_rollback", "operational_ownership", "reliability_evidence", "security_assessment"],
+    "allowed_capabilities": ["owned-public-capability"],
+    "excluded_capabilities": ["deployment-automation"],
+    "safety_floor": ["bound_runaway_resource_cost", "fail_loud_on_invalid_results", "prevent_credential_exposure", "prevent_destructive_data_loss"],
+    "promotion_policy": "Promotion requires explicit user approval and re-enters design and architecture synchronization.",
+    "posture_hash": "8495e5a0ebcc384613c08988ee644116078f618975b924f4025d9a070f28e847"
+  },
+  "posture_evidence": ["migration_and_rollback", "operational_ownership", "reliability_evidence", "security_assessment"],
+  "architecture_snapshot": null,
+  "design_refs": [],
+  "artifacts": [],
+  "current_node": null,
+  "nodes": [{
+    "id": "N-001",
+    "title": "Validate the owned capability contract",
+    "status": "done",
+    "depends_on": [],
+    "inputs": ["approved public contract"],
+    "outputs": ["ownership and reliability evidence"],
+    "acceptance": ["required production evidence is recorded"],
+    "blocking_questions": [],
+    "posture_ref": {"kind": "production", "posture_hash": "8495e5a0ebcc384613c08988ee644116078f618975b924f4025d9a070f28e847", "source_ref": "fixtures/production"},
+    "scope_provenance": [{"kind": "requirement", "ref": "R-PUBLIC", "behavior_id": "owned-capability"}],
+    "behavior_budget": {"required": ["owned-capability"], "excluded": ["deploy"], "deferred_candidates": []},
+    "deferred_candidates": []
+  }]
+}

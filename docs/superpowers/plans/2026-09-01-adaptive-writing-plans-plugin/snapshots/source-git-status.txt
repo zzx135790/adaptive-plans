@@ -1,0 +1,82 @@
+ M .codex-plugin/plugin.json
+ M .mcp.json
+ M mcp/server.mjs
+ M package.json
+ M schemas/handoff.schema.json
+ M schemas/map.schema.json
+ M schemas/provider-registry.schema.json
+ M schemas/provider-result.schema.json
+ M scripts/add-node.mjs
+ M scripts/doctor.mjs
+ M scripts/lib/plan-protocol.mjs
+ M scripts/lib/planning-engine.mjs
+ M scripts/lib/provider-registry.mjs
+ M skills/adaptive-writing-plans/SKILL.md
+ M skills/adaptive-writing-plans/agents/openai.yaml
+ M skills/adaptive-writing-plans/references/compatibility.md
+ M skills/adaptive-writing-plans/references/plan-folder-protocol.md
+ M skills/adaptive-writing-plans/references/provider-contract.md
+ M tests/cli.test.mjs
+ M tests/handoff_validation.test.mjs
+ M tests/hooks.test.mjs
+ M tests/mcp_server.test.mjs
+ M tests/plan_protocol.test.mjs
+ M tests/planning_engine.test.mjs
+ M tests/portability.test.mjs
+ M tests/provider_registry.test.mjs
+ M tests/skill_contract.test.mjs
+?? .adaptive-plan-progress.json
+?? README.md
+?? assets/
+?? docs/
+?? schemas/architecture-impact.schema.json
+?? schemas/architecture.schema.json
+?? schemas/design.schema.json
+?? schemas/engineering-posture.schema.json
+?? schemas/scope-provenance.schema.json
+?? scripts/adaptive-plan.mjs
+?? scripts/architecture-bootstrap.mjs
+?? scripts/architecture-check.mjs
+?? scripts/architecture-delta.mjs
+?? scripts/completion-check.mjs
+?? scripts/design-approve.mjs
+?? scripts/design-brief.mjs
+?? scripts/design-record-result.mjs
+?? scripts/design-revise.mjs
+?? scripts/design-start.mjs
+?? scripts/design-update.mjs
+?? scripts/lib/architecture-impact.mjs
+?? scripts/lib/architecture-protocol.mjs
+?? scripts/lib/design-engine.mjs
+?? scripts/lib/design-hashing.mjs
+?? scripts/lib/design-ledger.mjs
+?? scripts/lib/engineering-posture.mjs
+?? scripts/lib/execution-protocol.mjs
+?? scripts/lib/host-adapter.mjs
+?? scripts/lib/io-utils.mjs
+?? scripts/lib/migration-protocol.mjs
+?? scripts/lib/posture-operations.mjs
+?? scripts/migrate-plan.mjs
+?? scripts/overview.mjs
+?? scripts/plan-link.mjs
+?? scripts/posture-assess.mjs
+?? scripts/posture-check.mjs
+?? scripts/posture-promote.mjs
+?? scripts/sync-host-adapter.mjs
+?? skills/adaptive-writing-plans/references/architecture-memory.md
+?? skills/adaptive-writing-plans/references/ci-integration.md
+?? skills/adaptive-writing-plans/references/design-gate.md
+?? skills/adaptive-writing-plans/references/design-provider-catalog.json
+?? skills/adaptive-writing-plans/references/execution.md
+?? tests/architecture_ci.test.mjs
+?? tests/architecture_protocol.test.mjs
+?? tests/design_engine.test.mjs
+?? tests/design_ledger.test.mjs
+?? tests/engineering_posture.test.mjs
+?? tests/execution_protocol.test.mjs
+?? tests/fixtures/
+?? tests/host_adapter.test.mjs
+?? tests/integration_posture.test.mjs
+?? tests/migration_protocol.test.mjs
+?? tests/overview_v2.test.mjs
+?? tests/posture_operations.test.mjs

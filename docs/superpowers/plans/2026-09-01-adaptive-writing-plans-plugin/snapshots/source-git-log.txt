@@ -1,0 +1,5 @@
+bdf050a chore: refresh plugin cachebuster
+5790bb7 feat: bootstrap adaptive maps alongside superpowers plans
+ad0f2b6 chore: refresh plugin cachebuster
+2d51fd1 feat: add coordinator-owned parallel execution waves
+3542831 baseline: preserve adaptive-writing-plans 0.1.0

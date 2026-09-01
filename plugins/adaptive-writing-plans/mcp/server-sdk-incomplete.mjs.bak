@@ -1,0 +1,620 @@
+#!/usr/bin/env node
+/**
+ * MCP Server for adaptive-writing-plans (v0.3.0)
+ *
+ * Context-scoped MCP service backed by @modelcontextprotocol/sdk.
+ * Every request carries { context: { project_root, plan_path } }.
+ * No process-global project state; supports concurrent multi-project serving.
+ */
+
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
+
+import { validateContext } from './context.mjs';
+import {
+  appendEvent,
+  buildPlanOverview,
+  diagnosePlanBinding,
+  getNextNodes,
+  loadMap,
+  validatePlanCompletion,
+  validateMap,
+} from '../scripts/lib/plan-protocol.mjs';
+import {
+  addNode,
+  assessNodeReadiness,
+  ingestProviderResult,
+  invalidateFromDesignRevision,
+  invalidateFromEvidence,
+  linkApprovedDesign,
+  linkArchitectureSnapshot,
+  recordArchitectureImpact,
+  triageTask,
+} from '../scripts/lib/planning-engine.mjs';
+import {
+  applyArchitectureDelta,
+  loadArchitecture,
+  proposeArchitectureDelta,
+  scanArchitectureProposal,
+  validateArchitecture,
+} from '../scripts/lib/architecture-protocol.mjs';
+import { analyzeArchitectureImpact, validateArchitectureImpact } from '../scripts/lib/architecture-impact.mjs';
+import {
+  approveDesign,
+  createDesignDocument,
+  designApprovalBrief,
+  loadDesign,
+  recordDesignProviderResult,
+  reviseDesign,
+  selectDesignProviders,
+  triageDesign,
+  updateDesignRevision,
+  writeDesign,
+} from '../scripts/lib/design-engine.mjs';
+import {
+  applyPosturePromotion,
+  assessEngineeringPosture,
+  checkPostureMap,
+  previewPosturePromotion,
+} from '../scripts/lib/posture-operations.mjs';
+
+const server = new Server(
+  {
+    name: 'adaptive-writing-plans',
+    version: '0.3.0',
+  },
+  {
+    capabilities: {
+      tools: {},
+    },
+  }
+);
+
+// Tool definitions
+const tools = [
+  {
+    name: 'plan_open',
+    description: 'Read the complete machine-readable plan map.',
+    inputSchema: {
+      type: 'object',
+      required: ['context'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string', description: 'Absolute path to project root' },
+            plan_path: { type: 'string', description: 'Project-relative path to plan folder' },
+          },
+        },
+      },
+    },
+  },
+  {
+    name: 'plan_overview',
+    description: 'Return an inline-ready DAG, gate summary, blocked nodes, and complete artifact index.',
+    inputSchema: {
+      type: 'object',
+      required: ['context'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+      },
+    },
+  },
+  {
+    name: 'plan_get_map',
+    description: 'Read a bounded view of the plan map and its nodes.',
+    inputSchema: {
+      type: 'object',
+      required: ['context'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+        node_ids: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  },
+  {
+    name: 'plan_get_node',
+    description: 'Read one node by stable node ID.',
+    inputSchema: {
+      type: 'object',
+      required: ['context', 'node_id'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+        node_id: { type: 'string' },
+      },
+    },
+  },
+  {
+    name: 'plan_next',
+    description: 'Return nodes whose dependencies are complete and whose gates are open.',
+    inputSchema: {
+      type: 'object',
+      required: ['context'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+      },
+    },
+  },
+  {
+    name: 'plan_validate',
+    description: 'Validate node IDs, dependency references, statuses, and cycles.',
+    inputSchema: {
+      type: 'object',
+      required: ['context'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+        strict: { type: 'boolean' },
+      },
+    },
+  },
+  {
+    name: 'plan_validate_completion',
+    description: 'Validate intent, design, architecture synchronization, and current node completion gates.',
+    inputSchema: {
+      type: 'object',
+      required: ['context'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+      },
+    },
+  },
+  {
+    name: 'plan_append_event',
+    description: 'Append one idempotent fact, evidence, decision, or checkpoint event.',
+    inputSchema: {
+      type: 'object',
+      required: ['context', 'event'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+        event: {
+          type: 'object',
+          required: ['event_id', 'type'],
+          properties: {
+            event_id: { type: 'string' },
+            type: { type: 'string' },
+            message: { type: 'string' },
+            source: { type: 'string' },
+          },
+          additionalProperties: true,
+        },
+      },
+    },
+  },
+  {
+    name: 'plan_assess_node',
+    description: 'Check whether a node has enough evidence to generate a leaf plan.',
+    inputSchema: {
+      type: 'object',
+      required: ['context', 'node_id'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+        node_id: { type: 'string' },
+      },
+    },
+  },
+  {
+    name: 'plan_triage',
+    description: 'Choose guide, map, plan, or direct mode from supplied uncertainty signals.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        signals: { type: 'object', additionalProperties: true },
+      },
+    },
+  },
+  {
+    name: 'plan_add_node',
+    description: 'Add a node and compute its readiness without auto-completing it.',
+    inputSchema: {
+      type: 'object',
+      required: ['context', 'node'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+        node: { type: 'object', additionalProperties: true },
+      },
+    },
+  },
+  {
+    name: 'plan_ingest_provider',
+    description: 'Normalize and append a provider result while preserving raw output.',
+    inputSchema: {
+      type: 'object',
+      required: ['context', 'provider_id', 'capability', 'result'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+        provider_id: { type: 'string' },
+        capability: { type: 'string' },
+        source: { type: 'string' },
+        result: {},
+      },
+    },
+  },
+  {
+    name: 'plan_invalidate_node',
+    description: 'Record new evidence and mark affected descendants stale for explicit replanning.',
+    inputSchema: {
+      type: 'object',
+      required: ['context', 'node_id', 'message'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+        node_id: { type: 'string' },
+        message: { type: 'string' },
+        source: { type: 'string' },
+        decision: { type: 'string' },
+      },
+    },
+  },
+  // Architecture tools
+  {
+    name: 'architecture_open',
+    description: 'Read the approved project architecture baseline and module contracts.',
+    inputSchema: {
+      type: 'object',
+      required: ['context'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+          },
+        },
+      },
+    },
+  },
+  {
+    name: 'architecture_validate',
+    description: 'Validate module ownership, concern packs, typed relations, evidence, and hashes.',
+    inputSchema: {
+      type: 'object',
+      required: ['context'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+          },
+        },
+        architecture: { type: 'object' },
+        proposal: { type: 'boolean' },
+      },
+    },
+  },
+  {
+    name: 'architecture_bootstrap_scan',
+    description: 'Scan project structure and return an unapproved architecture proposal without writing a baseline.',
+    inputSchema: {
+      type: 'object',
+      required: ['context'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+          },
+        },
+        project_id: { type: 'string' },
+      },
+    },
+  },
+  // Design tools
+  {
+    name: 'design_triage',
+    description: 'Determine whether design is required and derive task-specific concerns and risk.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        request: { type: 'object' },
+      },
+    },
+  },
+  {
+    name: 'design_start',
+    description: 'Create the first in-progress design revision after triage and provider routing.',
+    inputSchema: {
+      type: 'object',
+      required: ['context', 'request', 'provider_selection'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+        request: { type: 'object' },
+        provider_selection: { type: 'object' },
+      },
+    },
+  },
+  {
+    name: 'design_approval_brief',
+    description: 'Render the current exact design ApprovalBrief for inline terminal confirmation.',
+    inputSchema: {
+      type: 'object',
+      required: ['context'],
+      properties: {
+        context: {
+          type: 'object',
+          required: ['project_root'],
+          properties: {
+            project_root: { type: 'string' },
+            plan_path: { type: 'string' },
+          },
+        },
+      },
+    },
+  },
+  // Posture tools
+  {
+    name: 'posture_assess',
+    description: 'Return one explicit candidate EngineeringPosture, its PostureRef, and evidence gaps without writing state.',
+    inputSchema: {
+      type: 'object',
+      required: ['assessment'],
+      properties: {
+        assessment: { type: 'object', additionalProperties: true },
+      },
+    },
+  },
+];
+
+// Tool handler
+async function handleToolCall(name, args) {
+  // Extract and validate context (skip for stateless tools)
+  const statelessTools = ['plan_triage', 'posture_assess', 'design_triage'];
+  let ctx;
+
+  if (!statelessTools.includes(name)) {
+    try {
+      ctx = validateContext(args.context);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  let map;
+  switch (name) {
+    case 'plan_open':
+      map = await loadMap(ctx.planRoot);
+      return [{ type: 'text', text: JSON.stringify(map, null, 2) }];
+
+    case 'plan_overview':
+      return [{
+        type: 'text',
+        text: JSON.stringify(
+          await buildPlanOverview(ctx.planRoot, {
+            projectRoot: ctx.projectRoot,
+            mcpPlanRoot: ctx.planRoot
+          }),
+          null,
+          2
+        )
+      }];
+
+    case 'plan_get_map':
+      map = await loadMap(ctx.planRoot);
+      if (Array.isArray(args.node_ids) && args.node_ids.length > 0) {
+        const wanted = new Set(args.node_ids);
+        map = { ...map, nodes: map.nodes.filter((node) => wanted.has(node.id)) };
+      }
+      return [{ type: 'text', text: JSON.stringify(map, null, 2) }];
+
+    case 'plan_get_node':
+      map = await loadMap(ctx.planRoot);
+      {
+        const node = map.nodes.find((candidate) => candidate.id === args.node_id);
+        if (!node) {
+          throw Object.assign(new Error(`Unknown node ${args.node_id}`), { code: 'UNKNOWN_NODE' });
+        }
+        return [{ type: 'text', text: JSON.stringify(node, null, 2) }];
+      }
+
+    case 'plan_next':
+      map = await loadMap(ctx.planRoot);
+      return [{ type: 'text', text: JSON.stringify({ nodes: getNextNodes(map) }, null, 2) }];
+
+    case 'plan_validate':
+      map = await loadMap(ctx.planRoot);
+      return [{ type: 'text', text: JSON.stringify(validateMap(map, { strict: args.strict === true }), null, 2) }];
+
+    case 'plan_validate_completion':
+      map = await loadMap(ctx.planRoot);
+      return [{ type: 'text', text: JSON.stringify(validatePlanCompletion(map, ctx), null, 2) }];
+
+    case 'plan_append_event':
+      if (!args.event || typeof args.event !== 'object') {
+        throw Object.assign(new Error('event object is required'), { code: 'INVALID_EVENT' });
+      }
+      return [{ type: 'text', text: JSON.stringify(await appendEvent(ctx.planRoot, args.event), null, 2) }];
+
+    case 'plan_assess_node':
+      map = await loadMap(ctx.planRoot);
+      return [{ type: 'text', text: JSON.stringify(assessNodeReadiness(map, args.node_id), null, 2) }];
+
+    case 'plan_triage':
+      return [{ type: 'text', text: JSON.stringify(triageTask(args.signals ?? {}), null, 2) }];
+
+    case 'plan_add_node':
+      if (!args.node || typeof args.node !== 'object') {
+        throw Object.assign(new Error('node object is required'), { code: 'INVALID_NODE' });
+      }
+      return [{ type: 'text', text: JSON.stringify(await addNode(ctx.planRoot, args.node), null, 2) }];
+
+    case 'plan_ingest_provider':
+      return [{
+        type: 'text',
+        text: JSON.stringify(
+          await ingestProviderResult(ctx.planRoot, args.result, {
+            provider_id: args.provider_id,
+            capability: args.capability,
+            source: args.source,
+          }),
+          null,
+          2
+        )
+      }];
+
+    case 'plan_invalidate_node':
+      return [{ type: 'text', text: JSON.stringify(await invalidateFromEvidence(ctx.planRoot, args.node_id, args), null, 2) }];
+
+    case 'architecture_open':
+      return [{ type: 'text', text: JSON.stringify(await loadArchitecture(ctx.architectureRoot), null, 2) }];
+
+    case 'architecture_validate':
+      return [{
+        type: 'text',
+        text: JSON.stringify(
+          validateArchitecture(args.architecture ?? await loadArchitecture(ctx.architectureRoot), { proposal: args.proposal === true }),
+          null,
+          2
+        )
+      }];
+
+    case 'architecture_bootstrap_scan':
+      return [{
+        type: 'text',
+        text: JSON.stringify(
+          await scanArchitectureProposal(ctx.projectRoot, { projectId: args.project_id }),
+          null,
+          2
+        )
+      }];
+
+    case 'design_triage':
+      return [{ type: 'text', text: JSON.stringify(triageDesign(args.request ?? {}), null, 2) }];
+
+    case 'design_start': {
+      const profile = triageDesign(args.request);
+      return [{
+        type: 'text',
+        text: JSON.stringify(
+          await writeDesign(ctx.planRoot, createDesignDocument({ ...args.request, profile, provider_selection: args.provider_selection })),
+          null,
+          2
+        )
+      }];
+    }
+
+    case 'design_approval_brief':
+      return [{ type: 'text', text: JSON.stringify(designApprovalBrief(await loadDesign(ctx.planRoot)), null, 2) }];
+
+    case 'posture_assess':
+      return [{ type: 'text', text: JSON.stringify(assessEngineeringPosture(args.assessment), null, 2) }];
+
+    default:
+      throw Object.assign(new Error(`Unknown tool ${name}`), { code: 'UNKNOWN_TOOL' });
+  }
+}
+
+// Register handlers
+server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  try {
+    const content = await handleToolCall(request.params.name, request.params.arguments ?? {});
+    return { content };
+  } catch (error) {
+    return {
+      content: [{ type: 'text', text: `${error.code ?? 'TOOL_ERROR'}: ${error.message}` }],
+      isError: true,
+    };
+  }
+});
+
+// Start server
+async function main() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error('MCP server running on stdio');
+}
+
+main().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});

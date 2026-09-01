@@ -1,0 +1,96 @@
+# Adaptive Writing Plans（自适应写作计划）
+
+多阶段不确定性工作的自适应规划工作流 —— 将讨论、已批准的设计和规格说明转化为带有持久项目状态的实施计划。
+
+## 功能特性
+
+- **自适应规划文件夹**：将稳定的方向与后续发现的细节分离
+- **多阶段映射**：为不确定的依赖和渐进式波次提供 DAG 拓扑
+- **上下文作用域的 MCP**：无全局状态的并发多项目服务
+- **宿主中立**：Codex 和 Claude Code 双平台可移植插件
+- **Provider 组合**：验证工作流结果，绝不自动安装
+
+## 安装
+
+### Claude Code
+
+```bash
+# 安装插件
+git clone <repository-url>
+cd adaptive-writing-plans
+
+# 链接到 Claude Code
+ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.claude/plugins/adaptive-writing-plans
+```
+
+在 `~/.claude/settings.json` 中添加 MCP 服务器：
+
+```json
+{
+  "mcpServers": {
+    "adaptive-planning": {
+      "command": "node",
+      "args": ["~/.claude/plugins/adaptive-writing-plans/mcp/server-sdk.mjs"],
+      "tool_timeout_sec": 120
+    }
+  }
+}
+```
+
+### Codex
+
+```bash
+# 安装插件
+git clone <repository-url>
+cd adaptive-writing-plans
+
+# 链接到 Codex
+ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.agents/plugins/adaptive-writing-plugins
+```
+
+Codex 会自动从插件目录发现 MCP 元数据。
+
+## 使用
+
+当需要以下操作时，通过 `/adaptive-writing-plans` 调用技能：
+
+- 将需求讨论转化为实施计划
+- 映射具有不确定依赖的多阶段工作
+- 在迭代发现细节的同时保持稳定的项目方向
+
+该技能路由到：
+- **guide**：需求阻塞时，澄清目标、范围、约束
+- **map**：为多阶段或长期工作创建 DAG 拓扑
+- **plan**：为单个就绪节点生成叶计划
+- **direct**：小型明确任务立即执行
+
+## 从 0.2.x 迁移
+
+**0.3.0 中的破坏性变更：**
+
+1. **MCP 现在是上下文作用域的**：每个工具调用需要 `context: { project_root, plan_path }`。不再使用全局环境变量 `ADAPTIVE_PLAN_ROOT`、`ADAPTIVE_PROJECT_ROOT`。
+
+2. **移除了 Host-sync 适配器**：删除了 `planHostAdapter`、`syncHostAdapter`、`HOST_PROFILES` 和 `npm run host:sync`。请使用插件安装命令代替。
+
+3. **Provider 组合**：`verifyProviderWorkflowOutcome` 从 `host-adapter.mjs` 移动到 `provider-composition.mjs`。需要更改导入路径。
+
+**迁移步骤：**
+
+```bash
+# 卸载 0.2.x
+rm -rf ~/.claude/skills/adaptive-writing-plans
+rm -rf ~/.agents/skills/adaptive-writing-plans
+
+# 按照上述说明安装 0.3.0
+
+# 更新 MCP 配置以使用上下文作用域服务器
+# 新的 .mcp.json 格式请参见安装部分
+```
+
+## 许可证
+
+MIT
+
+## 版本
+
+0.3.0 — 上下文作用域 MCP、宿主中立打包、Provider 组合

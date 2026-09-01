@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "adaptive-writing-plans/scope-provenance.schema.json",
+  "type": "object",
+  "required": ["schema_version", "posture_ref", "scope_provenance", "behavior_budget"],
+  "properties": {
+    "schema_version": {"const": "2.1"},
+    "posture_ref": {
+      "type": "object",
+      "required": ["kind", "posture_hash", "source_ref"],
+      "properties": {
+        "kind": {"enum": ["spike", "experiment", "reusable_internal", "production"]},
+        "posture_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "source_ref": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "scope_provenance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "ref", "behavior_id"],
+        "properties": {
+          "kind": {
+            "enum": ["requirement", "approved_design", "approved_contract", "observed_failure", "safety_floor"]
+          },
+          "ref": {"type": "string", "minLength": 1},
+          "behavior_id": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": true
+      }
+    },
+    "behavior_budget": {
+      "type": "object",
+      "required": ["required", "excluded", "deferred_candidates"],
+      "properties": {
+        "required": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "excluded": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "deferred_candidates": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

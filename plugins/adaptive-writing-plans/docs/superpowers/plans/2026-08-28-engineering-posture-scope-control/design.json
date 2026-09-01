@@ -1,0 +1,995 @@
+{
+  "schema_version": "2.0",
+  "design_id": "engineering-posture-scope-control",
+  "current_revision": 2,
+  "revisions": [
+    {
+      "revision": 1,
+      "scope": "root",
+      "node_id": null,
+      "status": "stale",
+      "architecture_hash": null,
+      "profile": {
+        "schema_version": "2.0",
+        "required": true,
+        "scope": "root",
+        "node_id": null,
+        "triggers": [
+          "cross_module",
+          "data_model",
+          "failure_semantics",
+          "migration",
+          "public_api",
+          "user_requested"
+        ],
+        "concerns": [
+          "alternatives",
+          "api",
+          "boundaries",
+          "compatibility",
+          "data",
+          "dependencies",
+          "integrity",
+          "migration",
+          "operability",
+          "reliability",
+          "security",
+          "testing",
+          "tradeoffs"
+        ],
+        "domains": [
+          "architecture",
+          "planning",
+          "codebase"
+        ],
+        "impacted_modules": [
+          "architecture-protocol",
+          "plan-protocol",
+          "design-engine",
+          "provider-handoffs",
+          "cli-mcp",
+          "skill-contract"
+        ],
+        "impacted_relations": [],
+        "risk": "critical",
+        "requires_alternatives": true,
+        "architecture_hash": null
+      },
+      "provider_selection": {
+        "schema_version": "2.0",
+        "selected": [
+          {
+            "id": "builtin-design-driver",
+            "source": "builtin://adaptive-writing-plans/design-driver",
+            "role": "driver",
+            "concerns": [
+              "alternatives",
+              "tradeoffs",
+              "boundaries",
+              "dependencies",
+              "compatibility",
+              "reliability",
+              "operability",
+              "testing",
+              "api",
+              "performance"
+            ],
+            "mutability": "read_only",
+            "reason": "Normalizes evidence, alternatives, approvals, and architecture deltas.",
+            "invocation": "automatic"
+          }
+        ],
+        "policy": {
+          "automatic_only_when": "installed-catalogued-read-only",
+          "installation": "never-automatic",
+          "critical_missing_provider": "block-or-explicit-waiver"
+        },
+        "profile_hash": "8835cf5646179a982bda3b37d1f5bcfb6d3e746bb469550987fb03ce96c9c571",
+        "missing_concerns": [
+          "data",
+          "integrity",
+          "migration",
+          "security"
+        ],
+        "blocking_concerns": [
+          "data",
+          "migration",
+          "security"
+        ],
+        "confirmation_required": [],
+        "status": "blocked"
+      },
+      "provider_results": [
+        {
+          "schema_version": "2.0",
+          "provider_id": "mature-skill-web-research",
+          "capability": "design",
+          "status": "partial",
+          "questions": [],
+          "assumptions": [],
+          "findings": [
+            "Superpowers binds implementation to an approved behavior through RED-GREEN minimal code and treats throwaway prototypes as an explicit human-approved exception.",
+            "Spec Kit provides a durable project constitution across sessions but does not itself define an experiment-versus-production policy.",
+            "OpenSpec provides bounded proposal/spec/task/archive changes, making posture promotion suitable as a separate change rather than gradual scope drift.",
+            "BMAD persists product, architecture, and story artifacts, but additional roles and phases are not evidence that production hardening is required.",
+            "The local simplify skill requires concrete cost and repository evidence before adding an abstraction or cleanup, supporting an evidence-proportional complexity rule.",
+            "skills.sh popularity and reputation metrics could not be verified because the public search endpoints were unavailable in the research environment."
+          ],
+          "options": [],
+          "risks": [
+            "Copying full mature workflows without posture-aware routing would add gates and documentation while preserving the original over-engineering failure."
+          ],
+          "confidence": null,
+          "evidence": [
+            "https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md",
+            "https://github.com/obra/superpowers/blob/main/skills/test-driven-development/SKILL.md",
+            "https://github.com/github/spec-kit",
+            "https://github.com/Fission-AI/OpenSpec",
+            "https://github.com/bmad-code-org/BMAD-METHOD"
+          ],
+          "raw": {
+            "schema_version": "2.0",
+            "provider_id": "mature-skill-web-research",
+            "capability": "design",
+            "status": "partial",
+            "questions": [],
+            "assumptions": [],
+            "findings": [
+              "Superpowers binds implementation to an approved behavior through RED-GREEN minimal code and treats throwaway prototypes as an explicit human-approved exception.",
+              "Spec Kit provides a durable project constitution across sessions but does not itself define an experiment-versus-production policy.",
+              "OpenSpec provides bounded proposal/spec/task/archive changes, making posture promotion suitable as a separate change rather than gradual scope drift.",
+              "BMAD persists product, architecture, and story artifacts, but additional roles and phases are not evidence that production hardening is required.",
+              "The local simplify skill requires concrete cost and repository evidence before adding an abstraction or cleanup, supporting an evidence-proportional complexity rule.",
+              "skills.sh popularity and reputation metrics could not be verified because the public search endpoints were unavailable in the research environment."
+            ],
+            "options": [],
+            "risks": [
+              "Copying full mature workflows without posture-aware routing would add gates and documentation while preserving the original over-engineering failure."
+            ],
+            "confidence": null,
+            "evidence": [
+              "https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md",
+              "https://github.com/obra/superpowers/blob/main/skills/test-driven-development/SKILL.md",
+              "https://github.com/github/spec-kit",
+              "https://github.com/Fission-AI/OpenSpec",
+              "https://github.com/bmad-code-org/BMAD-METHOD"
+            ],
+            "raw": {
+              "research_scope": "mature public planning and engineering workflow documentation",
+              "note": "Primary mechanisms were synthesized from mature workflow documentation; skills.sh adoption metrics remain unverified."
+            },
+            "observed_at": "2026-08-28T06:00:00.000Z",
+            "extensions": {
+              "authority": "evidence-only",
+              "selection_status": "not-catalog-selected"
+            }
+          },
+          "observed_at": "2026-08-28T06:00:00.000Z",
+          "extensions": {
+            "authority": "evidence-only",
+            "selection_status": "not-catalog-selected"
+          }
+        },
+        {
+          "schema_version": "2.0",
+          "provider_id": "risk-assessment",
+          "capability": "design",
+          "status": "partial",
+          "questions": [
+            "Will the user explicitly waive the current mechanical provider-routing gaps after reviewing this evidence, or require the registry bug to be fixed out of band before design approval?"
+          ],
+          "assumptions": [
+            "The plugin remains local and file-backed under reusable_internal posture; it does not become a remote policy or deployment service.",
+            "Canonical state continues to be architecture.json, design.json, and map.json, with Markdown and events treated as non-authoritative views/evidence."
+          ],
+          "findings": [
+            "Existing stableHash, atomic rename, file-lock, and expected-hash mechanisms provide the correct primitives for posture integrity, but the new posture and provenance references must use them consistently across every canonical boundary.",
+            "Current migration is preview-by-default and explicit-apply, but v2.1 needs a stated recovery source and field-preservation verification because atomic replacement prevents partial writes but does not by itself reverse a semantically bad migration.",
+            "The MCP surface receives plan/project roots only at process startup and does not execute provider commands, which limits runtime injection; posture changes must preserve this non-executing validation boundary.",
+            "Provider evidence deliberately preserves raw output, so credential-like content and machine-specific absolute paths require validation or rejection before persistence rather than silent copying.",
+            "Resolving symlink-installed skill roots is necessary, but discovery should resolve only explicitly configured roots, deduplicate real paths, and avoid recursive traversal through arbitrary symlink entries.",
+            "The largest scope risk is not missing production hardening but allowing provider suggestions or compact reconstruction to add behaviors above the selected profile ceiling."
+          ],
+          "options": [],
+          "risks": [
+            {
+              "id": "RA-001",
+              "category": "data",
+              "description": "A stale or partially validated posture/provenance reference makes canonical plan state internally inconsistent.",
+              "likelihood": "Medium",
+              "impact": "High",
+              "risk_level": "High",
+              "mitigation": "Use canonical hashing, file locks, atomic replacement, expected-hash writes, target existence checks, and negative tests for dangling/stale refs.",
+              "owner": "N-001 and N-003",
+              "status": "Open"
+            },
+            {
+              "id": "RA-002",
+              "category": "migration",
+              "description": "A syntactically valid v2.1 migration loses legacy topology, evidence, decisions, or artifact links.",
+              "likelihood": "Medium",
+              "impact": "High",
+              "risk_level": "High",
+              "mitigation": "Keep preview as default, require explicit apply, retain a declared recovery source, compare preservation manifests, and run round-trip/strict validation before completion.",
+              "owner": "N-001 and N-007",
+              "status": "Open"
+            },
+            {
+              "id": "RA-003",
+              "category": "security",
+              "description": "Raw provider output persists credentials, tokens, or machine-specific absolute paths into portable plan artifacts.",
+              "likelihood": "Medium",
+              "impact": "High",
+              "risk_level": "High",
+              "mitigation": "Validate provider evidence before persistence, reject credential-like values, reject machine absolute paths, and cover both with portability/security fixtures.",
+              "owner": "N-001, N-004, and N-007",
+              "status": "Open"
+            },
+            {
+              "id": "RA-004",
+              "category": "security",
+              "description": "The provider-discovery symlink fix traverses outside configured roots or enters a cycle.",
+              "likelihood": "Medium",
+              "impact": "Medium",
+              "risk_level": "Medium",
+              "mitigation": "Resolve and deduplicate explicitly configured root paths only; do not recursively follow arbitrary symlink entries; test cycles and outside-root entries.",
+              "owner": "N-001",
+              "status": "Open"
+            },
+            {
+              "id": "RA-005",
+              "category": "data",
+              "description": "A task override or profile transition lowers mandatory safety floors and admits silent invalidity, destructive loss, credential exposure, or runaway cost.",
+              "likelihood": "Medium",
+              "impact": "High",
+              "risk_level": "High",
+              "mitigation": "Make safety floors non-overridable; require explicit promotion/design re-entry for broader posture changes; reject conflicting refs before leaf planning or execution.",
+              "owner": "N-001, N-003, and N-005",
+              "status": "Open"
+            },
+            {
+              "id": "RA-006",
+              "category": "operational",
+              "description": "Provider recommendations or post-compact reconstruction silently expand work above the approved behavior budget.",
+              "likelihood": "High",
+              "impact": "Medium",
+              "risk_level": "High",
+              "mitigation": "Carry exact posture hashes and exclusions, require provenance for executable behavior, preserve over-ceiling suggestions only as deferred candidates, and perform subtractive finalization first.",
+              "owner": "N-003, N-004, and N-005",
+              "status": "Open"
+            },
+            {
+              "id": "RA-007",
+              "category": "data",
+              "description": "Concurrent writers overwrite an approved posture, design revision, or architecture default without detecting the lost update.",
+              "likelihood": "Low",
+              "impact": "High",
+              "risk_level": "Medium",
+              "mitigation": "Reuse file locks and expected-hash compare-and-swap behavior for every canonical mutation and test conflict failures.",
+              "owner": "N-001, N-002, and N-004",
+              "status": "Open"
+            }
+          ],
+          "confidence": null,
+          "evidence": [
+            "scripts/lib/io-utils.mjs",
+            "scripts/lib/plan-protocol.mjs",
+            "scripts/lib/design-engine.mjs",
+            "scripts/lib/architecture-protocol.mjs",
+            "scripts/lib/provider-registry.mjs",
+            "mcp/server.mjs",
+            "tests/portability.test.mjs",
+            "docs/superpowers/plans/2026-08-28-engineering-posture-scope-control/GUIDE.md"
+          ],
+          "raw": {
+            "schema_version": "2.0",
+            "provider_id": "risk-assessment",
+            "capability": "design",
+            "status": "partial",
+            "questions": [
+              "Will the user explicitly waive the current mechanical provider-routing gaps after reviewing this evidence, or require the registry bug to be fixed out of band before design approval?"
+            ],
+            "assumptions": [
+              "The plugin remains local and file-backed under reusable_internal posture; it does not become a remote policy or deployment service.",
+              "Canonical state continues to be architecture.json, design.json, and map.json, with Markdown and events treated as non-authoritative views/evidence."
+            ],
+            "findings": [
+              "Existing stableHash, atomic rename, file-lock, and expected-hash mechanisms provide the correct primitives for posture integrity, but the new posture and provenance references must use them consistently across every canonical boundary.",
+              "Current migration is preview-by-default and explicit-apply, but v2.1 needs a stated recovery source and field-preservation verification because atomic replacement prevents partial writes but does not by itself reverse a semantically bad migration.",
+              "The MCP surface receives plan/project roots only at process startup and does not execute provider commands, which limits runtime injection; posture changes must preserve this non-executing validation boundary.",
+              "Provider evidence deliberately preserves raw output, so credential-like content and machine-specific absolute paths require validation or rejection before persistence rather than silent copying.",
+              "Resolving symlink-installed skill roots is necessary, but discovery should resolve only explicitly configured roots, deduplicate real paths, and avoid recursive traversal through arbitrary symlink entries.",
+              "The largest scope risk is not missing production hardening but allowing provider suggestions or compact reconstruction to add behaviors above the selected profile ceiling."
+            ],
+            "options": [],
+            "risks": [
+              {
+                "id": "RA-001",
+                "category": "data",
+                "description": "A stale or partially validated posture/provenance reference makes canonical plan state internally inconsistent.",
+                "likelihood": "Medium",
+                "impact": "High",
+                "risk_level": "High",
+                "mitigation": "Use canonical hashing, file locks, atomic replacement, expected-hash writes, target existence checks, and negative tests for dangling/stale refs.",
+                "owner": "N-001 and N-003",
+                "status": "Open"
+              },
+              {
+                "id": "RA-002",
+                "category": "migration",
+                "description": "A syntactically valid v2.1 migration loses legacy topology, evidence, decisions, or artifact links.",
+                "likelihood": "Medium",
+                "impact": "High",
+                "risk_level": "High",
+                "mitigation": "Keep preview as default, require explicit apply, retain a declared recovery source, compare preservation manifests, and run round-trip/strict validation before completion.",
+                "owner": "N-001 and N-007",
+                "status": "Open"
+              },
+              {
+                "id": "RA-003",
+                "category": "security",
+                "description": "Raw provider output persists credentials, tokens, or machine-specific absolute paths into portable plan artifacts.",
+                "likelihood": "Medium",
+                "impact": "High",
+                "risk_level": "High",
+                "mitigation": "Validate provider evidence before persistence, reject credential-like values, reject machine absolute paths, and cover both with portability/security fixtures.",
+                "owner": "N-001, N-004, and N-007",
+                "status": "Open"
+              },
+              {
+                "id": "RA-004",
+                "category": "security",
+                "description": "The provider-discovery symlink fix traverses outside configured roots or enters a cycle.",
+                "likelihood": "Medium",
+                "impact": "Medium",
+                "risk_level": "Medium",
+                "mitigation": "Resolve and deduplicate explicitly configured root paths only; do not recursively follow arbitrary symlink entries; test cycles and outside-root entries.",
+                "owner": "N-001",
+                "status": "Open"
+              },
+              {
+                "id": "RA-005",
+                "category": "data",
+                "description": "A task override or profile transition lowers mandatory safety floors and admits silent invalidity, destructive loss, credential exposure, or runaway cost.",
+                "likelihood": "Medium",
+                "impact": "High",
+                "risk_level": "High",
+                "mitigation": "Make safety floors non-overridable; require explicit promotion/design re-entry for broader posture changes; reject conflicting refs before leaf planning or execution.",
+                "owner": "N-001, N-003, and N-005",
+                "status": "Open"
+              },
+              {
+                "id": "RA-006",
+                "category": "operational",
+                "description": "Provider recommendations or post-compact reconstruction silently expand work above the approved behavior budget.",
+                "likelihood": "High",
+                "impact": "Medium",
+                "risk_level": "High",
+                "mitigation": "Carry exact posture hashes and exclusions, require provenance for executable behavior, preserve over-ceiling suggestions only as deferred candidates, and perform subtractive finalization first.",
+                "owner": "N-003, N-004, and N-005",
+                "status": "Open"
+              },
+              {
+                "id": "RA-007",
+                "category": "data",
+                "description": "Concurrent writers overwrite an approved posture, design revision, or architecture default without detecting the lost update.",
+                "likelihood": "Low",
+                "impact": "High",
+                "risk_level": "Medium",
+                "mitigation": "Reuse file locks and expected-hash compare-and-swap behavior for every canonical mutation and test conflict failures.",
+                "owner": "N-001, N-002, and N-004",
+                "status": "Open"
+              }
+            ],
+            "confidence": null,
+            "evidence": [
+              "scripts/lib/io-utils.mjs",
+              "scripts/lib/plan-protocol.mjs",
+              "scripts/lib/design-engine.mjs",
+              "scripts/lib/architecture-protocol.mjs",
+              "scripts/lib/provider-registry.mjs",
+              "mcp/server.mjs",
+              "tests/portability.test.mjs",
+              "docs/superpowers/plans/2026-08-28-engineering-posture-scope-control/GUIDE.md"
+            ],
+            "raw": {
+              "method": "Risk Assessment matrix applied to the current local file-backed design and implementation boundaries.",
+              "scope": [
+                "data integrity",
+                "migration safety",
+                "security boundaries",
+                "scope control"
+              ],
+              "limitations": [
+                "No implementation exists yet for v2.1 posture behavior, so mitigations remain design requirements rather than verified controls."
+              ]
+            },
+            "observed_at": "2026-08-28T06:35:41.000Z",
+            "extensions": {
+              "authority": "evidence-only",
+              "catalog_role": "reviewer",
+              "catalog_concerns": [
+                "security",
+                "reliability",
+                "migration",
+                "operability"
+              ],
+              "selection_status": "manually-invoked-because-registry-fallback-is-defective"
+            }
+          },
+          "observed_at": "2026-08-28T06:35:41.000Z",
+          "extensions": {
+            "authority": "evidence-only",
+            "catalog_role": "reviewer",
+            "catalog_concerns": [
+              "security",
+              "reliability",
+              "migration",
+              "operability"
+            ],
+            "selection_status": "manually-invoked-because-registry-fallback-is-defective"
+          }
+        },
+        {
+          "schema_version": "2.0",
+          "provider_id": "mattpocock-engineering-research",
+          "capability": "design",
+          "status": "partial",
+          "questions": [],
+          "assumptions": [],
+          "findings": [
+            "The upstream engineering directory is a family of composable skills, not one mandatory phase sequence.",
+            "grill-with-docs is a thin user-invoked orchestration entry that delegates interviewing and domain-modeling behavior instead of reimplementing them.",
+            "Its durable outputs are intentionally narrow: resolved terminology may enter CONTEXT.md, only hard-to-reverse surprising tradeoffs merit ADRs, and other decisions can remain conversation-only.",
+            "codebase-design supplies module, interface, seam, depth, locality, adapter, deletion-test, and test-surface heuristics, but it is a reference discipline without its own stopping rule.",
+            "wayfinder treats a multi-session map as a low-resolution index over detailed decision tickets, with explicit frontier, fog, blockers, and out-of-scope state.",
+            "These mechanisms favor composition contracts and verified handoffs over copying mature provider logic into the planning plugin."
+          ],
+          "options": [
+            {
+              "id": "direct-provider-composition",
+              "summary": "Invoke an installed mature skill through its owning host when its capability and artifact contract match."
+            },
+            {
+              "id": "thin-contract-adapter",
+              "summary": "Add only a versioned input/output and persistence adapter when the mature skill's workflow is suitable but its envelope differs."
+            },
+            {
+              "id": "evidence-backed-reimplementation",
+              "summary": "Reimplement only when a documented compatibility, portability, licensing, availability, or required-behavior gap prevents composition."
+            }
+          ],
+          "risks": [
+            "Copying mature skill logic creates duplicate workflow ownership and upstream drift.",
+            "Invoking a thin orchestration skill without checking its dependencies can produce a plausible but incomplete result.",
+            "Assuming a provider wrote CONTEXT.md or ADRs without verifying the files can promote conversation-only content into false persistent state.",
+            "Applying deep-module and production engineering heuristics without a posture-specific stopping rule can over-engineer spikes and experiments."
+          ],
+          "confidence": null,
+          "evidence": [
+            "https://github.com/mattpocock/skills/tree/main/skills/engineering",
+            "https://github.com/mattpocock/skills/blob/main/docs/engineering/grill-with-docs.md",
+            "https://github.com/mattpocock/skills/blob/main/docs/engineering/codebase-design.md",
+            "https://github.com/mattpocock/skills/blob/main/skills/engineering/wayfinder/SKILL.md",
+            "https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md"
+          ],
+          "raw": {
+            "schema_version": "2.0",
+            "provider_id": "mattpocock-engineering-research",
+            "capability": "design",
+            "status": "partial",
+            "questions": [],
+            "assumptions": [],
+            "findings": [
+              "The upstream engineering directory is a family of composable skills, not one mandatory phase sequence.",
+              "grill-with-docs is a thin user-invoked orchestration entry that delegates interviewing and domain-modeling behavior instead of reimplementing them.",
+              "Its durable outputs are intentionally narrow: resolved terminology may enter CONTEXT.md, only hard-to-reverse surprising tradeoffs merit ADRs, and other decisions can remain conversation-only.",
+              "codebase-design supplies module, interface, seam, depth, locality, adapter, deletion-test, and test-surface heuristics, but it is a reference discipline without its own stopping rule.",
+              "wayfinder treats a multi-session map as a low-resolution index over detailed decision tickets, with explicit frontier, fog, blockers, and out-of-scope state.",
+              "These mechanisms favor composition contracts and verified handoffs over copying mature provider logic into the planning plugin."
+            ],
+            "options": [
+              {
+                "id": "direct-provider-composition",
+                "summary": "Invoke an installed mature skill through its owning host when its capability and artifact contract match."
+              },
+              {
+                "id": "thin-contract-adapter",
+                "summary": "Add only a versioned input/output and persistence adapter when the mature skill's workflow is suitable but its envelope differs."
+              },
+              {
+                "id": "evidence-backed-reimplementation",
+                "summary": "Reimplement only when a documented compatibility, portability, licensing, availability, or required-behavior gap prevents composition."
+              }
+            ],
+            "risks": [
+              "Copying mature skill logic creates duplicate workflow ownership and upstream drift.",
+              "Invoking a thin orchestration skill without checking its dependencies can produce a plausible but incomplete result.",
+              "Assuming a provider wrote CONTEXT.md or ADRs without verifying the files can promote conversation-only content into false persistent state.",
+              "Applying deep-module and production engineering heuristics without a posture-specific stopping rule can over-engineer spikes and experiments."
+            ],
+            "confidence": null,
+            "evidence": [
+              "https://github.com/mattpocock/skills/tree/main/skills/engineering",
+              "https://github.com/mattpocock/skills/blob/main/docs/engineering/grill-with-docs.md",
+              "https://github.com/mattpocock/skills/blob/main/docs/engineering/codebase-design.md",
+              "https://github.com/mattpocock/skills/blob/main/skills/engineering/wayfinder/SKILL.md",
+              "https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md"
+            ],
+            "raw": {
+              "method": "Delegated primary-source review of the upstream repository and directly referenced engineering documentation.",
+              "limitation": "A final direct raw.githubusercontent.com refetch returned HTTP 403, so no adoption or runtime-availability claim is made."
+            },
+            "observed_at": "2026-08-28T07:00:39.000Z",
+            "extensions": {
+              "authority": "evidence-only",
+              "selection_status": "user-supplied-upstream-skill-research"
+            }
+          },
+          "observed_at": "2026-08-28T07:00:39.000Z",
+          "extensions": {
+            "authority": "evidence-only",
+            "selection_status": "user-supplied-upstream-skill-research"
+          }
+        }
+      ],
+      "requirements": [
+        "R-POSTURE: Model spike, experiment, reusable_internal, and production as intent profiles rather than a quality ladder.",
+        "R-PERSIST: Carry a hash-bound posture through project defaults, maps, nodes, designs, handoffs, and compact-safe execution context.",
+        "R-PROVENANCE: Admit executable work only when it traces to an approved requirement/design/contract, an observed failure, or a mandatory safety floor.",
+        "R-BUDGET: Bind implementation to approved observable behavior and the minimum code needed to satisfy it.",
+        "R-EXPERIMENT: Require hypothesis, measurement validity, reproducibility, and fail-loud behavior without speculative production capabilities.",
+        "R-PROMOTION: Make posture promotion an explicit user-approved change that re-enters design and architecture synchronization.",
+        "R-COMPAT: Preserve readable legacy artifacts and require explicit migration before new posture claims are authoritative.",
+        "R-APPROVAL-UX: Every human gate renders a bounded inline ApprovalBrief in the active conversation; artifact paths are optional audit references, never the approval interface.",
+        "R-COMPOSE: Prefer an installed mature skill through a verified CompositionContract; add a thin adapter only for envelope mismatch, and reimplement only with documented evidence and approved scope provenance."
+      ],
+      "options": [
+        {
+          "id": "integrated-v2.1",
+          "summary": "Add a hash-bound EngineeringPosture and scope provenance to the existing architecture, design, map, and handoff states, with explicit v2.1 migration.",
+          "tradeoffs": [
+            "Preserves three canonical states and survives compact.",
+            "Requires compatibility readers, migration, and posture-aware completion checks."
+          ]
+        },
+        {
+          "id": "separate-posture-state",
+          "summary": "Create posture.json as a fourth canonical state shared by architecture, designs, and maps.",
+          "tradeoffs": [
+            "Makes posture history independently visible.",
+            "Adds identity, locking, invalidation, and synchronization complexity that exceeds the current need."
+          ]
+        },
+        {
+          "id": "prompt-policy-only",
+          "summary": "Express experiment and production modes only in SKILL.md and project constitution prose.",
+          "tradeoffs": [
+            "Smallest implementation change.",
+            "Cannot reliably enforce scope ceilings, provenance, promotion, or compact-safe references."
+          ]
+        }
+      ],
+      "selected_option": {
+        "id": "integrated-v2.1",
+        "rationale": "It combines Spec Kit-style durable policy and OpenSpec-style bounded changes with Superpowers-style behavior-minimal implementation, without creating another canonical database."
+      },
+      "interfaces": [
+        "EngineeringPosture { kind, source, objective, required_evidence, allowed_capabilities, excluded_capabilities, safety_floor, promotion_policy, posture_hash }",
+        "PostureRef { posture_hash, source_scope, kind } carried by maps, nodes, design revisions, leaf handoffs, and execution context.",
+        "ScopeProvenance { kind, ref, behavior_id, evidence } attached to every executable node and capability-producing task.",
+        "Architecture policy supports stable module defaults plus lightweight experimental zones; a spike does not become a full module contract until promotion.",
+        "Provider handoffs include posture and exclusions; provider output that exceeds them remains deferred evidence.",
+        "CLI/MCP expose posture assess, check, and promote operations with dry-run or proposal semantics before any canonical mutation.",
+        "ApprovalBrief { subject, revision, exact_hash, decision_summary, included_scope, excluded_scope, material_risks, waiver_request, downstream_effect, prompt } is a derived, non-canonical view generated from current canonical state.",
+        "CompositionContract { capability, provider_id, source_ref, version_or_digest, dependency_refs, input_refs, posture_ref, expected_outputs, mutability, invocation_policy, persistence_expectations, verification, fallback }"
+      ],
+      "invariants": [
+        "Intent profiles are different definitions of done, not an ordered quality ladder.",
+        "Production posture is never inferred from hypothetical future reuse.",
+        "No executable node or implemented behavior exists without approved scope provenance.",
+        "Spike and experiment work retain mandatory safety floors for silent invalidity, destructive loss, credentials, and runaway cost.",
+        "Evidence may propose promotion but cannot apply it; promotion requires explicit user approval and re-enters design.",
+        "architecture.json, design.json, and map.json remain the only canonical project/design/map states.",
+        "Compact and provider boundaries re-read and verify posture_hash instead of reconstructing posture from prose.",
+        "A module or task override cannot weaken the mandatory safety floor; broader posture changes require explicit promotion and design re-entry.",
+        "Every ScopeProvenance ref must resolve to a current, hash-verified approved source, observed failure event, or named safety-floor rule before its behavior is executable.",
+        "Provider discovery may resolve explicitly configured root symlinks but must not recursively traverse arbitrary symlink entries or persist resolved machine paths.",
+        "Provider evidence is persisted only after credential-like values and machine-specific absolute paths are rejected.",
+        "A human approval request must be self-contained in the active conversation and must not require opening a file; links are supplementary audit evidence only.",
+        "An ApprovalBrief is valid only for the exact current hash; any canonical change invalidates the displayed brief and requires regeneration before approval.",
+        "A composed provider retains ownership of its workflow; adaptive-writing-plans constrains inputs, posture, provenance, persistence verification, and handoff normalization but does not duplicate hidden provider logic.",
+        "Provider availability, dependencies, invocation, and persisted outputs are independently observable states; discovery or plausible prose cannot be treated as successful execution.",
+        "Provider installation or upgrade is never automatic, and a reimplementation requires an explicit evidence-backed decision naming why direct composition or a thin adapter is insufficient."
+      ],
+      "failure_modes": [
+        "A missing or stale posture reference blocks new posture claims and execution until explicit assessment or migration.",
+        "A capability without provenance is rejected from the executable DAG and retained only as a deferred candidate.",
+        "A provider recommendation outside the maturity ceiling cannot mutate canonical state or silently expand a leaf plan.",
+        "An experiment touching a stable public boundary still triggers the existing design and architecture delta gates for that boundary.",
+        "A conflicting module default and task override requires an explicit, hash-bound override decision.",
+        "Provider catalog fallback failures remain visible and block claimed provider coverage rather than being treated as no installed provider.",
+        "A stale concurrent writer fails its expected-hash check instead of overwriting posture, design, map, or architecture state.",
+        "A migration validation failure leaves the original canonical bytes authoritative; a semantic preservation mismatch blocks completion and uses the declared recovery source.",
+        "Provider evidence containing credential-like material or machine-specific absolute paths is rejected before raw evidence is stored.",
+        "Displaying only an artifact path, an unbounded document dump, or a stale summary is an invalid human-gate handoff and cannot produce approval evidence.",
+        "A missing provider dependency, unverified artifact write, version/digest mismatch, or provider execution failure remains visible and cannot silently fall back to a claim of equivalent mature-skill behavior.",
+        "Duplicating an upstream workflow without a documented composition blocker creates split ownership and is rejected as unsupported scope."
+      ],
+      "operational_model": [
+        "All enforcement remains local and file-backed through schemas, CLI, MCP, and deterministic validators.",
+        "This plugin change itself uses reusable_internal posture: stable compatibility and integration tests are required, while telemetry, remote policy, HA, and deployment automation are excluded.",
+        "Plan finalization performs a subtractive scope/provenance review before adding missing implementation or validation steps.",
+        "Canonical posture mutations reuse file locks, atomic replacement, and optimistic expected-hash checks; assess/check remain read-only and promote remains proposal-only until approval.",
+        "Design, architecture, promotion, and waiver gates expose a concise structured ApprovalBrief through CLI/MCP/overview, while the orchestrator renders it inline and asks one explicit confirmation question.",
+        "Provider routing uses a composition-first order: direct invocation when the contract matches, a thin versioned adapter for envelope differences, a bounded builtin fallback for unrelated/non-critical work, and evidence-backed reimplementation only after explicit approval.",
+        "Interactive grilling/domain providers are conditional Design Gate branches for unresolved terminology or responsibility; module-design references are posture-bounded and cannot impose reusable/production depth requirements on a spike or experiment."
+      ],
+      "migration": [
+        "Read v1 and v2.0 artifacts without inventing a posture.",
+        "Preview migration to v2.1 and write only with an explicit apply operation.",
+        "Migrated artifacts start with unknown_legacy posture until assessed from user intent or an approved module default.",
+        "Preserve prior nodes, decisions, provider evidence, design history, and artifact links during migration.",
+        "Migration preview emits a preservation manifest and prior canonical hash; explicit apply must retain a recovery source until strict schema, hash, topology, provenance, and artifact-link validation passes.",
+        "Rollback restores the exact pre-migration canonical bytes/hash; no automatic cleanup removes recovery evidence before validation."
+      ],
+      "blocking_questions": [
+        "Review the recorded data, migration, and security risk evidence; then either repair provider routing out of band or explicitly waive only the mechanical provider-selection gap before approving the exact current design hash."
+      ],
+      "architecture_delta": null,
+      "approval": null,
+      "updated_at": "2026-08-28T08:42:45.012Z",
+      "design_hash": "443bf3520d8a3890bf676388174826e6b96e8d8718395ec862fe83b8cf0f2bb0",
+      "stale_reason": "Approved discussion added N-000 workflow attestation, recursive child designs, generated per-subject views, and contract-level evidence convergence."
+    },
+    {
+      "revision": 2,
+      "scope": "root",
+      "node_id": null,
+      "status": "approved",
+      "architecture_hash": null,
+      "profile": {
+        "schema_version": "2.0",
+        "required": true,
+        "scope": "root",
+        "node_id": null,
+        "triggers": [
+          "cross_module",
+          "data_model",
+          "failure_semantics",
+          "migration",
+          "public_api",
+          "user_requested"
+        ],
+        "concerns": [
+          "alternatives",
+          "api",
+          "boundaries",
+          "compatibility",
+          "data",
+          "dependencies",
+          "integrity",
+          "migration",
+          "operability",
+          "reliability",
+          "security",
+          "testing",
+          "tradeoffs"
+        ],
+        "domains": [
+          "architecture",
+          "planning",
+          "codebase"
+        ],
+        "impacted_modules": [
+          "architecture-protocol",
+          "plan-protocol",
+          "design-engine",
+          "provider-handoffs",
+          "cli-mcp",
+          "skill-contract"
+        ],
+        "impacted_relations": [],
+        "risk": "critical",
+        "requires_alternatives": true,
+        "architecture_hash": null
+      },
+      "provider_selection": {
+        "schema_version": "2.0",
+        "selected": [
+          {
+            "id": "builtin-design-driver",
+            "source": "builtin://adaptive-writing-plans/design-driver",
+            "role": "driver",
+            "concerns": [
+              "alternatives",
+              "tradeoffs",
+              "boundaries",
+              "dependencies",
+              "compatibility",
+              "reliability",
+              "operability",
+              "testing",
+              "api",
+              "performance"
+            ],
+            "mutability": "read_only",
+            "reason": "Normalizes evidence, alternatives, approvals, and architecture deltas.",
+            "invocation": "automatic"
+          },
+          {
+            "id": "risk-assessment",
+            "source": "skill://risk-assessment",
+            "role": "reviewer",
+            "concerns": [
+              "data",
+              "integrity",
+              "migration",
+              "security"
+            ],
+            "mutability": "read_only",
+            "reason": "The recorded review covers the critical data, integrity, migration, and security failure modes for this local file-backed protocol.",
+            "invocation": "automatic"
+          }
+        ],
+        "policy": {
+          "automatic_only_when": "installed-catalogued-read-only",
+          "installation": "never-automatic",
+          "critical_missing_provider": "block-or-explicit-waiver"
+        },
+        "profile_hash": "8835cf5646179a982bda3b37d1f5bcfb6d3e746bb469550987fb03ce96c9c571",
+        "missing_concerns": [],
+        "blocking_concerns": [],
+        "confirmation_required": [],
+        "status": "ready"
+      },
+      "provider_results": [
+        {
+          "schema_version": "2.0",
+          "provider_id": "risk-assessment",
+          "capability": "design",
+          "status": "partial",
+          "questions": [],
+          "assumptions": [
+            "The plugin remains local and file-backed under reusable_internal posture.",
+            "Canonical state remains limited to architecture.json, design.json, and map.json."
+          ],
+          "findings": [
+            "Existing atomic writes, short file locks, and optimistic hashes are appropriate primitives for thread-level state integrity.",
+            "N-000 must validate workflow structure without being coupled to normal design content changes.",
+            "Contract-level refs are required to avoid invalidating an entire work DAG after a private leaf discovery.",
+            "Migration needs exact-byte recovery and a preservation manifest because syntactic validity does not prove semantic preservation.",
+            "Provider evidence and terminal receipts must reject credentials and machine-specific paths before portable persistence.",
+            "An unbound MCP must expose its mismatch and use a bounded CLI fallback rather than accept arbitrary filesystem roots."
+          ],
+          "options": [],
+          "risks": [
+            {
+              "id": "RA-101",
+              "category": "data",
+              "description": "Thread or contract hashes can diverge across canonical boundaries.",
+              "mitigation": "Use content/state hash separation, document locks, expected thread hashes, and dangling-ref tests."
+            },
+            {
+              "id": "RA-102",
+              "category": "migration",
+              "description": "A v2.1 migration can lose legacy history or artifact links while still validating structurally.",
+              "mitigation": "Require preview, preservation manifest, exact recovery bytes, round-trip validation, and explicit apply."
+            },
+            {
+              "id": "RA-103",
+              "category": "security",
+              "description": "Dynamic plan-root selection or provider evidence could expose arbitrary paths or credentials.",
+              "mitigation": "Keep MCP roots startup-bound, report mismatches, use repository CLI fallback, and reject sensitive or machine-specific evidence."
+            }
+          ],
+          "confidence": null,
+          "evidence": [
+            "Existing architecture/design/map protocol implementation and tests",
+            "Observed Adaptive Planning MCP cache-root mismatch",
+            "Approved recursive-design and N-000 discussion"
+          ],
+          "raw": {
+            "status": "partial",
+            "questions": [],
+            "assumptions": [
+              "The plugin remains local and file-backed under reusable_internal posture.",
+              "Canonical state remains limited to architecture.json, design.json, and map.json."
+            ],
+            "findings": [
+              "Existing atomic writes, short file locks, and optimistic hashes are appropriate primitives for thread-level state integrity.",
+              "N-000 must validate workflow structure without being coupled to normal design content changes.",
+              "Contract-level refs are required to avoid invalidating an entire work DAG after a private leaf discovery.",
+              "Migration needs exact-byte recovery and a preservation manifest because syntactic validity does not prove semantic preservation.",
+              "Provider evidence and terminal receipts must reject credentials and machine-specific paths before portable persistence.",
+              "An unbound MCP must expose its mismatch and use a bounded CLI fallback rather than accept arbitrary filesystem roots."
+            ],
+            "risks": [
+              {
+                "id": "RA-101",
+                "category": "data",
+                "description": "Thread or contract hashes can diverge across canonical boundaries.",
+                "mitigation": "Use content/state hash separation, document locks, expected thread hashes, and dangling-ref tests."
+              },
+              {
+                "id": "RA-102",
+                "category": "migration",
+                "description": "A v2.1 migration can lose legacy history or artifact links while still validating structurally.",
+                "mitigation": "Require preview, preservation manifest, exact recovery bytes, round-trip validation, and explicit apply."
+              },
+              {
+                "id": "RA-103",
+                "category": "security",
+                "description": "Dynamic plan-root selection or provider evidence could expose arbitrary paths or credentials.",
+                "mitigation": "Keep MCP roots startup-bound, report mismatches, use repository CLI fallback, and reject sensitive or machine-specific evidence."
+              }
+            ],
+            "evidence": [
+              "Existing architecture/design/map protocol implementation and tests",
+              "Observed Adaptive Planning MCP cache-root mismatch",
+              "Approved recursive-design and N-000 discussion"
+            ],
+            "observed_at": "2026-08-28T08:45:00.000Z"
+          },
+          "observed_at": "2026-08-28T08:45:00.000Z",
+          "extensions": {}
+        }
+      ],
+      "requirements": [
+        {
+          "id": "R-BOOTSTRAP",
+          "statement": "Every map exposes a validated N-000 workflow receipt and complete artifact index in the terminal."
+        },
+        {
+          "id": "R-POSTURE",
+          "statement": "Model spike, experiment, reusable_internal, and production as distinct intent profiles rather than a quality ladder."
+        },
+        {
+          "id": "R-PERSIST",
+          "statement": "Carry exact architecture, posture, design, contract, and map references through handoff and compact."
+        },
+        {
+          "id": "R-RECURSIVE-DESIGN",
+          "statement": "Use a high-level Root Design and create child design threads only for material module, relation, or task decisions."
+        },
+        {
+          "id": "R-CONVERGENCE",
+          "statement": "Allow producer implementation from approved candidate contracts while blocking consumers until critical contracts are verified."
+        },
+        {
+          "id": "R-PROVENANCE",
+          "statement": "Admit executable behavior only from approved requirements, contracts, observed failures, or mandatory safety floors."
+        },
+        {
+          "id": "R-BUDGET",
+          "statement": "Keep experiments inside explicit behavior budgets and defer speculative production capabilities."
+        },
+        {
+          "id": "R-ARCH-FRESHNESS",
+          "statement": "Detect project changes and require evidence or an approved delta before architecture memory can be considered current."
+        },
+        {
+          "id": "R-APPROVAL-UX",
+          "statement": "Render human gates as bounded terminal ApprovalBriefs; files remain audit artifacts."
+        },
+        {
+          "id": "R-COMPOSE",
+          "statement": "Prefer verified composition of installed mature skills over duplicated implementations."
+        },
+        {
+          "id": "R-COMPAT",
+          "statement": "Read legacy artifacts without invented state and migrate only through preview and explicit apply."
+        }
+      ],
+      "options": [
+        {
+          "id": "recursive-ledger-v2.1",
+          "summary": "Use one plan-local Design Ledger with generated root/module/relation/task views, a reserved N-000 control node, posture-bounded recursive design, and contract-level evidence convergence.",
+          "tradeoffs": [
+            "Keeps canonical state consistent and compact-safe.",
+            "Requires explicit v2.1 migration and new readiness semantics."
+          ]
+        },
+        {
+          "id": "independent-design-files",
+          "summary": "Store each module or task design as an independent canonical JSON document.",
+          "tradeoffs": [
+            "Individual files are directly visible.",
+            "Cross-thread transactions, history, concurrency, and invalidation become substantially more complex."
+          ]
+        },
+        {
+          "id": "single-root-design",
+          "summary": "Keep one global design revision and express all child decisions in the root document.",
+          "tradeoffs": [
+            "Smallest storage change.",
+            "Cannot represent recursive design, local approval, parallel discovery, or precise invalidation."
+          ]
+        }
+      ],
+      "selected_option": {
+        "id": "recursive-ledger-v2.1",
+        "rationale": "It makes workflow use visible through N-000, keeps one canonical Design Ledger with bounded generated views, and allows leaf implementation evidence to refine only affected module and relation contracts without production-oriented scope drift."
+      },
+      "interfaces": [
+        "FlowReceipt { workflow, plugin_source, plugin_version, route, route_rationale, project_ref, plan_ref, persistence_status, artifact_manifest, architecture_status, design_status, control_surface, mcp_binding, next_action }",
+        "BootstrapManifest { node_id: N-000, artifact_roles, validation, created_with, control_surface }",
+        "EngineeringPosture { kind, source, objective, required_evidence, allowed_capabilities, excluded_capabilities, safety_floor, promotion_policy, posture_hash }",
+        "DesignLedger { design_id, threads, document_state_hash }",
+        "DesignThread { thread_id, kind, subject_ref, parent_refs, current_revision, revisions, thread_state_hash }",
+        "DesignRevision { revision, decision_status, content_hash, resolved_items, contracts, posture_ref, provider_refs, approval }",
+        "DesignAssessment { outcome: covered_by|inline|thread_required, design_refs, rationale, triggers }",
+        "ContractClaim { contract_id, owner_ref, envelope, content_hash, criticality, verification_status: candidate|verified|failed, evidence_refs }",
+        "DesignImpact { impact_id, classification: no_contract_change|contract_verified|contract_changed|architecture_changed|posture_changed, source_ref, affected_contract_ids, affected_thread_ids, evidence_refs, rationale }",
+        "ResolvedItem { item_id, type, statement, provenance, status, persistence }",
+        "CompositionContract { capability, provider_id, source_ref, version_or_digest, dependency_refs, input_refs, posture_ref, mutability, expected_outputs, persistence_expectations, verification, fallback }",
+        "ApprovalBrief { subject, exact_content_hash, decision_summary, included_scope, excluded_scope, material_risks, provider_status, downstream_effect, prompt }"
+      ],
+      "invariants": [
+        "N-000 is a real control node for map routes, appears once per map, and never substitutes for intent or design approval.",
+        "Direct and standalone plan routes emit a Flow Receipt without fabricating a map.",
+        "Plan Mode reports pending persistence; it never implies that conversation decisions have already changed repository artifacts.",
+        "map.json, design.json, and project architecture.json remain the only canonical map, design, and architecture states; Markdown files are generated views.",
+        "Root Design fixes module responsibilities, dependency direction, contract envelopes, posture, and critical scenarios without pre-designing private implementation structure.",
+        "Every leaf receives a DesignAssessment, but an independent DesignThread exists only for material contract, dependency, failure, or tradeoff decisions.",
+        "A subject has at most one active thread per plan purpose; revision history stays inline in design.json.",
+        "A producer may implement an approved candidate contract; a consumer requiring a critical contract waits for verified evidence.",
+        "Private contract-preserving implementation choices are autonomous; observable contract, data, migration, failure, security, performance, scope, or posture changes re-enter design.",
+        "Contract changes invalidate only exact consumers and their work descendants unless evidence proves that a parent envelope also changed.",
+        "Architecture memory belongs to the project and changes only through approved deltas; diff checks guarantee freshness without automatic semantic inference.",
+        "Intent profiles are different definitions of done, and production posture is never inferred from hypothetical reuse.",
+        "Experiments keep mandatory safety floors for silent invalidity, destructive loss, credentials, and runaway cost while rejecting speculative production hardening.",
+        "Provider discovery, dependency readiness, invocation, and persistence verification are separate observable states.",
+        "All human approvals are shown inline and bind the exact content hash; file paths are supplementary evidence only.",
+        "Provider raw output is stored once and referenced; full conversation transcripts are never persisted as design state."
+      ],
+      "failure_modes": [
+        "A missing, duplicated, mutable, or invalid N-000 blocks every work node while leaving design and intent statuses unchanged.",
+        "An MCP plan-root mismatch is reported explicitly and uses the bounded repository CLI fallback rather than accepting arbitrary runtime paths.",
+        "A child thread is not created for a helper, directory split, or hypothetical seam without an independent contract and verification surface.",
+        "A failed critical contract blocks consumers and creates a successor design revision; it cannot be converted into a silent fallback.",
+        "A stale thread write fails its expected thread-state hash; changes to independent threads merge only after reloading under the document lock.",
+        "A provider recommendation outside the behavior budget remains a deferred candidate and cannot become a map node automatically.",
+        "A compact or resume operation with missing exact refs blocks instead of reconstructing posture or design depth from prose.",
+        "A syntactically valid migration that loses topology, history, evidence, artifact links, or legacy bytes fails preservation validation and retains its recovery source."
+      ],
+      "operational_model": [
+        "The workflow prints a Flow Receipt at intake, status, handoff, resume, and final map reports.",
+        "For the current plan, N-000 reconciliation is the first mutation and source edits remain blocked until Root Design approval and a finalised N-001 leaf plan.",
+        "DESIGN.md is a generated design graph and index; designs/root.md and material module/relation/task views show current thread revisions.",
+        "Module graphs and task DAGs remain separate; strongly connected module groups use a bounded relation design or tracer while the Work DAG remains acyclic.",
+        "The first implementation wave validates one narrow end-to-end tracer before broadening module work.",
+        "Finalisation performs a subtractive posture and provenance review before adding completeness work.",
+        "Composition order is direct provider, thin adapter, bounded fallback, then evidence-backed approved rewrite.",
+        "This plugin uses reusable_internal posture: stable local contracts, migration, compatibility, and integration tests are required; remote policy, telemetry, HA, and deployment automation remain excluded."
+      ],
+      "migration": [
+        "Read v1 and v2.0 artifacts without inventing N-000, posture, thread parents, or design approval.",
+        "Migration preview partitions legacy design revisions by root or node subject, preserves legacy hashes as provenance, and blocks ambiguous parent links.",
+        "Explicit apply creates N-000, rewrites map design refs to thread/content refs, writes generated views, and preserves a recovery copy of the exact prior bytes.",
+        "Strict schema, hash, DAG, artifact, history, and preservation-manifest validation must succeed before migrated state becomes authoritative.",
+        "Plugin refresh preserves the 0.2.0 base version and replaces only the Codex cachebuster suffix."
+      ],
+      "blocking_questions": [],
+      "architecture_delta": null,
+      "approval": {
+        "source": "user",
+        "statement": "User approved the complete recursive-design, N-000, posture, architecture-memory, and contract-convergence plan by explicitly requesting: Implement the plan.",
+        "expected_content_hash": "eed775b98ef522b5c549fc8f5ea9894c5fbad58e616903e2d5a837aee3dcb4de"
+      },
+      "updated_at": "2026-08-28T08:42:45.013Z",
+      "design_hash": "7296ccafed769548304e549cc0a0a70ddb1276d82318dae336e1866753550716",
+      "supersedes_hash": "5eacacfdfc17030705798aa99e6a7248e292706b23f20c535876380f041fdf4e",
+      "review_reset": [
+        "options",
+        "interfaces",
+        "invariants",
+        "failure_modes",
+        "operational_model",
+        "migration",
+        "provider_results"
+      ],
+      "provider_waiver": null
+    }
+  ]
+}
