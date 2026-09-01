@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { triageTask } from './lib/planning-engine.mjs';
+import { routePlanning } from './lib/planning-engine.mjs';
+import { readStdin, writeJson } from './lib/stdio.mjs';
 
-let input = '';
-for await (const chunk of process.stdin) input += chunk;
+const input = await readStdin();
 let signals;
 try {
   signals = JSON.parse(input || '{}');
@@ -10,4 +10,4 @@ try {
   console.error(`Invalid JSON: ${error.message}`);
   process.exit(2);
 }
-console.log(JSON.stringify(triageTask(signals), null, 2));
+writeJson(routePlanning(signals, signals.visible_providers));

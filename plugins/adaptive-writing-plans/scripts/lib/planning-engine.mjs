@@ -21,6 +21,7 @@ import {
   validateEngineeringPosture,
   validateScopeControl,
 } from './engineering-posture.mjs';
+import { selectVisibleProvider } from './provider-registry.mjs';
 
 const HIGH = new Set(['high', 'critical']);
 const LOW = new Set(['low']);
@@ -76,6 +77,34 @@ export function triageTask(signals = {}) {
   }
   reasons.push('insufficient evidence for a leaf plan');
   return result('map', 'direct', 'medium', reasons);
+}
+
+const PHASE_ROUTES = {
+  guide: [{ capability: 'clarify', role: 'clarifier' }],
+  map: [{ capability: 'explore', role: 'explorer' }, { capability: 'decompose', role: 'mapper' }],
+  plan: [{ capability: 'decompose', role: 'planner' }, { capability: 'review', role: 'reviewer' }],
+};
+
+/** Route planning phases through the host-visible provider envelope only. */
+export function routePlanning(signals = {}, visibleProviders = signals.visible_providers) {
+  const triage = triageTask(signals);
+  if (triage.mode === 'direct') {
+    return {
+      ...triage,
+      routes: [],
+      planning_artifacts: [],
+      reason: 'direct work is stable and does not require full planning provider invocation',
+    };
+  }
+  const routes = (PHASE_ROUTES[triage.mode] ?? []).map(({ capability, role }) =>
+    selectVisibleProvider({ capability, role, visibleProviders }));
+  return {
+    ...triage,
+    routes,
+    provider: routes.find((route) => route.status === 'selected')?.provider ?? null,
+    fallback: routes.filter((route) => route.status === 'unavailable').map((route) => route.fallback),
+    planning_artifacts: triage.mode === 'map' ? ['map-proposal'] : ['leaf-plan-proposal'],
+  };
 }
 
 export function assessNodeReadiness(map, nodeId) {

@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import { readJson } from './lib/io-utils.mjs';
 import { applyPosturePromotion, previewPosturePromotion } from './lib/posture-operations.mjs';
+import { readStdin, writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const parsed = { mode: ['preview', 'apply'].includes(argv[0]) ? argv[0] : null };
@@ -18,8 +19,7 @@ function parseArgs(argv) {
 }
 
 async function stdinJson() {
-  let raw = '';
-  for await (const chunk of process.stdin) raw += chunk;
+  const raw = await readStdin();
   return raw.trim() ? JSON.parse(raw) : null;
 }
 
@@ -35,7 +35,7 @@ try {
     const map = await readJson(path.join(root, 'map.json'));
     const input = args.input ? await readJson(path.resolve(args.input)) : await stdinJson();
     if (!input) throw new Error('posture promotion preview requires target JSON');
-    console.log(JSON.stringify(previewPosturePromotion(map, input), null, 2));
+    writeJson(previewPosturePromotion(map, input));
   } else {
     const proposal = args.proposal ? await readJson(path.resolve(args.proposal)) : await stdinJson();
     if (!proposal) throw new Error('posture promotion apply requires proposal JSON');
@@ -45,10 +45,9 @@ try {
       briefHash: args.brief_hash,
       approval: args.approval,
     });
-    console.log(JSON.stringify(result, null, 2));
+    writeJson(result);
   }
 } catch (error) {
   console.error(JSON.stringify({ code: error.code ?? 'POSTURE_PROMOTION_ERROR', message: error.message }));
   process.exitCode = 1;
 }
-

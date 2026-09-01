@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import { addNode } from './lib/planning-engine.mjs';
+import { writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -45,4 +46,4 @@ const node = {
     reason: args.parallel_reason ?? 'not assessed',
   },
 };
-console.log(JSON.stringify((await addNode(path.resolve(args.root), node)).node, null, 2));
+writeJson((await addNode(path.resolve(args.root), node)).node);

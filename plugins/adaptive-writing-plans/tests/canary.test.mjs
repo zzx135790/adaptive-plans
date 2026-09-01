@@ -29,6 +29,24 @@ test('MCP server starts and responds to list tools', async () => {
     stdout += data.toString();
   });
 
+  const waitForOutput = (needle, timeoutMs = 60000) => new Promise((resolve, reject) => {
+    if (stdout.includes(needle)) {
+      resolve();
+      return;
+    }
+    const timer = setTimeout(() => {
+      server.stdout.off('data', onData);
+      reject(new Error(`timed out waiting for MCP output: ${needle}`));
+    }, timeoutMs);
+    const onData = () => {
+      if (!stdout.includes(needle)) return;
+      clearTimeout(timer);
+      server.stdout.off('data', onData);
+      resolve();
+    };
+    server.stdout.on('data', onData);
+  });
+
   // Send initialize request
   const initRequest = {
     jsonrpc: '2.0',
@@ -40,22 +58,14 @@ test('MCP server starts and responds to list tools', async () => {
       clientInfo: { name: 'canary-test', version: '1.0.0' }
     }
   };
-  server.stdin.write(JSON.stringify(initRequest) + '\n');
-
-  // Wait for response
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  // Send list tools request
   const listRequest = {
     jsonrpc: '2.0',
     id: 2,
     method: 'tools/list',
     params: {}
   };
-  server.stdin.write(JSON.stringify(listRequest) + '\n');
-
-  // Wait for response
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  server.stdin.write(`${JSON.stringify(initRequest)}\n${JSON.stringify(listRequest)}\n`);
+  await waitForOutput('plan_open');
 
   server.kill();
 
@@ -100,12 +110,12 @@ test('plugin manifests exist for both hosts', async () => {
   await fs.access(codexManifest);
   await fs.access(claudeManifest);
 
-  // Both should reference version 0.3.0
+  // Both should reference the current package version.
   const codex = JSON.parse(await fs.readFile(codexManifest, 'utf-8'));
   const claude = JSON.parse(await fs.readFile(claudeManifest, 'utf-8'));
 
-  strictEqual(codex.version, '0.3.0');
-  strictEqual(claude.version, '0.3.0');
+  strictEqual(codex.version.split('+', 1)[0], '0.3.3');
+  strictEqual(claude.version, '0.3.3');
 });
 
 console.log('✅ All canary tests passed');

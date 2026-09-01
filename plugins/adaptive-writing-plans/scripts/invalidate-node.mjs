@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import { invalidateFromEvidence } from './lib/planning-engine.mjs';
+import { writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -23,4 +24,4 @@ const result = await invalidateFromEvidence(path.resolve(args.root), args.node, 
   message: args.message,
   decision: args.decision,
 });
-console.log(JSON.stringify({ affected: result.affected, next: result.next.map((node) => node.id) }, null, 2));
+writeJson({ affected: result.affected, next: result.next.map((node) => node.id) });

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import { loadMap, validateMap } from './lib/plan-protocol.mjs';
+import { writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -22,7 +23,7 @@ if (!args.root) {
 
 try {
   const result = validateMap(await loadMap(path.resolve(args.root)), { strict: Boolean(args.strict) });
-  console.log(JSON.stringify(result, null, 2));
+  writeJson(result);
   process.exitCode = result.valid ? 0 : 1;
 } catch (error) {
   console.error(JSON.stringify({ valid: false, errors: [{ code: 'read_error', message: error.message }] }, null, 2));

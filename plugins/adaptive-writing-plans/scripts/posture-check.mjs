@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import { readJson, readJsonIfExists } from './lib/io-utils.mjs';
 import { checkPostureMap } from './lib/posture-operations.mjs';
+import { readStdin, writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const parsed = {};
@@ -24,8 +25,7 @@ try {
   const root = args.root ? path.resolve(args.root) : path.dirname(path.resolve(args.map));
   const map = await readJson(args.map ? path.resolve(args.map) : path.join(root, 'map.json'));
   const input = args.input ? await readJson(path.resolve(args.input)) : {};
-  let stdin = '';
-  if (!process.stdin.isTTY && !args.input) for await (const chunk of process.stdin) stdin += chunk;
+  const stdin = !args.input ? await readStdin() : '';
   const supplied = stdin.trim() ? JSON.parse(stdin) : input;
   const designDocument = args.design
     ? await readJson(path.resolve(args.design))
@@ -35,10 +35,9 @@ try {
     nodeId: args.node ?? supplied.nodeId ?? supplied.node_id,
     designDocument: supplied.designDocument ?? designDocument,
   });
-  console.log(JSON.stringify(result, null, 2));
+  writeJson(result);
   if (!result.valid) process.exitCode = 1;
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;
 }
-

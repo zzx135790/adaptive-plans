@@ -5,6 +5,7 @@ import path from 'node:path';
 import { currentDesignRevision, loadDesign, reviseDesign } from './lib/design-engine.mjs';
 import { readJson } from './lib/io-utils.mjs';
 import { invalidateFromDesignRevision } from './lib/planning-engine.mjs';
+import { writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -39,7 +40,7 @@ try {
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }
-  console.log(JSON.stringify(revised, null, 2));
+  writeJson(revised);
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;

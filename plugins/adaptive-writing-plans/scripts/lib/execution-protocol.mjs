@@ -14,6 +14,133 @@ import { assessNodeReadiness } from './planning-engine.mjs';
 
 export const EXECUTION_PROTOCOL_SCHEMA_VERSION = '2.1';
 
+const EXECUTION_READY_STATUSES = new Set(['ready', 'in_progress', 'awaiting_validation']);
+
+function dependencyWaves(map) {
+  const nodes = asArray(map?.nodes).filter((node) => isObject(node) && typeof node.id === 'string');
+  const ids = new Set(nodes.map((node) => node.id));
+  const remaining = new Map(nodes.map((node) => [node.id, node]));
+  const satisfied = new Set(nodes.filter((node) => node.status === 'done').map((node) => node.id));
+  const waves = [];
+  const blocked = new Map();
+  for (const node of nodes) {
+    const unknown = asArray(node.depends_on).filter((id) => !ids.has(id));
+    if (unknown.length > 0) blocked.set(node.id, `unknown dependency: ${unknown.join(', ')}`);
+  }
+  while (remaining.size > 0) {
+    const wave = [...remaining.values()].filter((node) => !blocked.has(node.id)
+      && asArray(node.depends_on).every((id) => satisfied.has(id)));
+    if (wave.length === 0) {
+      for (const node of remaining.values()) {
+        if (!blocked.has(node.id)) blocked.set(node.id, 'dependency cycle or unresolved dependency');
+      }
+      break;
+    }
+    wave.sort((a, b) => a.id.localeCompare(b.id));
+    waves.push(wave);
+    for (const node of wave) {
+      satisfied.add(node.id);
+      remaining.delete(node.id);
+    }
+  }
+  return { waves, blocked };
+}
+
+function pathOverlaps(left, right) {
+  const a = String(left).replaceAll('\\', '/');
+  const b = String(right).replaceAll('\\', '/');
+  if (a === b) return true;
+  if (!a.includes('*') && !b.includes('*')) return false;
+  const prefix = (value) => value.split('*')[0];
+  const aPrefix = prefix(a);
+  const bPrefix = prefix(b);
+  return aPrefix.startsWith(bPrefix) || bPrefix.startsWith(aPrefix);
+}
+
+function resourceInfo(resource) {
+  if (isObject(resource)) return { name: resource.name ?? resource.resource ?? resource.id, partition: resource.partition ?? resource.partition_key ?? null };
+  const value = String(resource);
+  const match = value.match(/^([^:]+):partition[:=](.+)$/);
+  return { name: match?.[1] ?? value, partition: match?.[2] ?? null };
+}
+
+function providerEvidence(node) {
+  const metadata = node?.parallelization ?? {};
+  const evidence = metadata.provider_evidence ?? metadata.provider ?? metadata.provider_receipt ?? node?.provider_evidence;
+  if (!isObject(evidence)) return { ok: false, reason: 'missing provider dispatchable/visible evidence' };
+  const dispatchable = metadata.provider_dispatchable === true || evidence.dispatchable === true || evidence.status === 'selected'
+    || evidence.status === 'dispatchable';
+  const visible = metadata.provider_visible === true || evidence.visible === true || evidence.visibility === 'visible';
+  if (!dispatchable) return { ok: false, reason: 'provider is not dispatchable' };
+  if (!visible) return { ok: false, reason: 'provider visibility evidence is missing' };
+  return { ok: true };
+}
+
+function assessNodeExecutionSafety(node, peers) {
+  const metadata = node?.parallelization ?? {};
+  const reasons = [];
+  if (!EXECUTION_READY_STATUSES.has(node.status)) reasons.push(`node status ${node.status} is not executable`);
+  if (asArray(metadata.owned_paths).length === 0) reasons.push('missing owned_paths');
+  if (asArray(metadata.independent_verification).length === 0) reasons.push('missing independent_verification');
+  const shared = asArray(metadata.shared_resources).map(resourceInfo);
+  if (shared.some((resource) => !resource.name || !resource.partition)) reasons.push('shared_resources are not empty or partitioned');
+  for (const peer of peers) {
+    for (const resource of shared) {
+      const peerResource = resourceInfo(asArray(peer.parallelization?.shared_resources).find((candidate) => resourceInfo(candidate).name === resource.name));
+      if (peerResource.name === resource.name && (!peerResource.partition || peerResource.partition === resource.partition)) {
+        reasons.push(`shared resource ${resource.name} partition conflicts with ${peer.id}`);
+      }
+    }
+  }
+  const provider = providerEvidence(node);
+  if (!provider.ok) reasons.push(provider.reason);
+  for (const peer of peers) {
+    for (const left of asArray(metadata.owned_paths)) {
+      for (const right of asArray(peer.parallelization?.owned_paths)) {
+        if (pathOverlaps(left, right)) reasons.push(`owned_paths overlap with ${peer.id}`);
+      }
+    }
+  }
+  return reasons;
+}
+
+/** Evaluate dependency layers independently from execution-safe parallel waves. */
+export function evaluateExecutionSafeWaves(map) {
+  const input = cloneJson(map ?? {});
+  const dependency = dependencyWaves(input);
+  const safeWaves = [];
+  const serial = [];
+  dependency.waves.forEach((wave, index) => {
+    const safe = [];
+    for (const node of wave) {
+      if (node.status === 'done') continue;
+      const reasons = assessNodeExecutionSafety(node, wave.filter((peer) => peer.id !== node.id));
+      const candidate = node.parallelization?.candidate === true;
+      if (!candidate) reasons.unshift('parallelization candidate is not enabled');
+      const result = {
+        node_id: node.id,
+        dependency_wave: index + 1,
+        execution_wave: reasons.length === 0 ? index + 1 : null,
+        parallel: reasons.length === 0,
+        reason: reasons.length === 0 ? 'dependency satisfied and execution safety evidence is complete' : reasons.join('; '),
+      };
+      if (result.parallel) safe.push(result); else serial.push({ ...result, execution_wave: 'serial' });
+    }
+    if (safe.length > 0) safeWaves.push(safe);
+  });
+  for (const [nodeId, reason] of dependency.blocked) {
+    serial.push({ node_id: nodeId, dependency_wave: null, execution_wave: 'serial', parallel: false, reason });
+  }
+  return {
+    dependency_waves: dependency.waves.map((wave, index) => ({ wave: index + 1, node_ids: wave.map((node) => node.id) })),
+    execution_safe_waves: safeWaves,
+    serial,
+    mutates_map: false,
+  };
+}
+
+export const evaluateExecutionWaves = evaluateExecutionSafeWaves;
+
 function withoutHash(value, field) {
   const next = cloneJson(value);
   delete next[field];

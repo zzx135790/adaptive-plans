@@ -17,6 +17,59 @@ export const BUILTIN_FALLBACKS = {
   execute: 'user-selected-executor',
 };
 
+const FALLBACK_ACCEPTANCE = {
+  clarify: 'one bounded question is answered or explicitly deferred',
+  explore: 'repository evidence is collected and referenced',
+  design: 'explicit alternatives and a recorded decision are produced',
+  decide: 'alternatives are compared against stated criteria',
+  scenario: 'a bounded risk register is recorded',
+  decompose: 'a progressive or topological task map is produced',
+  review: 'schema and dependency checks pass',
+  execute: 'the user-selected executor reports completion',
+};
+
+function providerRoles(provider) {
+  return asArray(provider?.roles ?? provider?.metadata?.design?.roles);
+}
+
+/** Select only providers explicitly exposed by the current host session. */
+export function selectVisibleProvider({ capability, role, visibleProviders, fallbacks } = {}) {
+  const normalized = normaliseAlias(capability) ?? String(capability ?? '').trim().toLowerCase();
+  const envelope = visibleProviders && typeof visibleProviders === 'object' ? visibleProviders : {};
+  const candidates = asArray(envelope.providers).filter((provider) => provider && provider.visible === true);
+  const matching = candidates.filter((provider) => {
+    const capabilities = asArray(provider.capabilities).map((item) => normaliseAlias(item) ?? String(item).toLowerCase());
+    return capabilities.includes(normalized);
+  });
+  const exact = role ? matching.find((provider) => providerRoles(provider).includes(role)) : null;
+  const provider = exact ?? matching[0] ?? null;
+  const verification = provider?.verification ?? [`verify ${normalized} output is observed and persisted`];
+  if (provider) {
+    return {
+      capability: normalized,
+      role: role ?? null,
+      status: 'selected',
+      provider: provider.id,
+      provider_id: provider.id,
+      reason: exact ? `visible provider ${provider.id} explicitly matches capability ${normalized} and role ${role}` : `visible provider ${provider.id} explicitly matches capability ${normalized}`,
+      acceptance: FALLBACK_ACCEPTANCE[normalized] ?? 'declared provider output is accepted',
+      verification,
+    };
+  }
+  const fallback = (fallbacks && fallbacks[normalized]) ?? envelope.fallbacks?.[normalized] ?? BUILTIN_FALLBACKS[normalized] ?? 'bounded-ada-fallback';
+  return {
+    capability: normalized,
+    role: role ?? null,
+    status: 'unavailable',
+    provider: null,
+    provider_id: null,
+    fallback,
+    reason: `no visible provider matched capability ${normalized}${role ? ` and role ${role}` : ''}`,
+    acceptance: FALLBACK_ACCEPTANCE[normalized] ?? 'bounded fallback completes without provider invocation',
+    verification: [`verify fallback ${fallback} acceptance evidence`],
+  };
+}
+
 const CAPABILITY_ALIASES = new Map([
   ['clarify', 'clarify'], ['clarification', 'clarify'], ['questions', 'clarify'], ['question', 'clarify'],
   ['ask', 'clarify'], ['ambiguity', 'clarify'],

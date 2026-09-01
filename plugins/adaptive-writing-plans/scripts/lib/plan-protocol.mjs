@@ -98,6 +98,15 @@ function architectureSummary(map) {
 
 export function renderMapMarkdown(map) {
   const counts = statusCounts(map);
+  const dependency = topologicalWaves(map);
+  const executionWaves = new Map();
+  for (const node of asArray(map.nodes)) {
+    const safeWave = node?.parallelization?.execution_wave ?? node?.parallelization?.safe_wave;
+    if (safeWave && safeWave !== 'serial') {
+      if (!executionWaves.has(safeWave)) executionWaves.set(safeWave, []);
+      executionWaves.get(safeWave).push(node.id);
+    }
+  }
   const designRefs = asArray(map.design_refs);
   const lines = [
     '# Plan Map',
@@ -118,6 +127,12 @@ export function renderMapMarkdown(map) {
     '```text',
     renderAsciiDag(map),
     '```',
+    '',
+    '## Execution waves',
+    '',
+    `Dependency waves: ${dependency.map((wave, index) => `${index + 1}=[${wave.map((node) => node.id).join(', ')}]`).join(' | ') || 'none'}`,
+    `Execution-safe waves: ${[...executionWaves.entries()].sort(([a], [b]) => String(a).localeCompare(String(b))).map(([wave, ids]) => `${wave}=[${ids.join(', ')}]`).join(' | ') || 'none (evaluate before dispatch)'}`,
+    `Serial fallback: ${asArray(map.nodes).filter((node) => node?.parallelization?.execution_wave === 'serial' || node?.parallelization?.safe_wave === 'serial').map((node) => `${node.id} (${node.parallelization.reason ?? 'execution safety evidence incomplete'})`).join(' | ') || 'none recorded'}`,
     '',
     '## Nodes',
     '',
@@ -183,7 +198,7 @@ export function renderNodeMarkdown(node) {
     `- Candidate: ${node.parallelization?.candidate === true ? 'yes' : 'no'}`,
     `- Wave: ${node.parallelization?.wave ?? 'serial'}`,
     `- Owned paths: ${asArray(node.parallelization?.owned_paths).join(', ') || 'none'}`,
-    `- Shared resources: ${asArray(node.parallelization?.shared_resources).join(', ') || 'none'}`,
+    `- Shared resources: ${asArray(node.parallelization?.shared_resources).map((resource) => typeof resource === 'string' ? resource : resource?.name ?? resource?.resource ?? JSON.stringify(resource)).join(', ') || 'none'}`,
     `- Independent verification: ${asArray(node.parallelization?.independent_verification).join(', ') || 'none'}`,
     `- Reason: ${node.parallelization?.reason ?? 'not assessed'}`,
     '',

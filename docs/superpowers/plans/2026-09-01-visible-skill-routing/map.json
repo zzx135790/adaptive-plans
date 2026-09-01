@@ -1,0 +1,523 @@
+{
+  "schema_version": "2.0",
+  "plan_id": "visible-skill-routing",
+  "title": "Route plans through visible skills with bounded fallbacks",
+  "goal": "Make Ada plan from the skills visible in the current Codex session and use explicit minimal fallbacks when no matching skill is available.",
+  "status": "complete",
+  "stage": "complete",
+  "work_shape": "map",
+  "mode": "map",
+  "gates": {
+    "intent": {
+      "status": "approved",
+      "source": "conversation:2026-09-01"
+    },
+    "design": {
+      "status": "not_required"
+    },
+    "architecture_sync": {
+      "status": "not_required",
+      "reason": "internal plugin planning contract only; no approved architecture baseline supplied"
+    }
+  },
+  "architecture_snapshot": null,
+  "design_refs": [],
+  "artifacts": [],
+  "current_node": null,
+  "nodes": [
+    {
+      "id": "N-000",
+      "kind": "control",
+      "title": "Bootstrap and validate the visible-skill routing plan",
+      "status": "done",
+      "depends_on": [],
+      "inputs": [
+        "approved conversation requirements",
+        "GUIDE.md"
+      ],
+      "outputs": [
+        "validated map root",
+        "authoritative posture ref",
+        "visible DAG"
+      ],
+      "acceptance": [
+        "map.json, GUIDE.md, MAP.md, events.jsonl, and nodes/N-000.md exist",
+        "plan validation reports no topology errors"
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-PLAN-BOOTSTRAP"
+      ],
+      "contract_refs": [],
+      "design_refs": [],
+      "interaction_refs": [],
+      "impacted_modules": [],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "a37d46e35353f9ec853c7fa273e2eef18f25132dd0c2f66352957a6db668c4e2",
+        "source_ref": "GUIDE.md#posture"
+      },
+      "scope_provenance": [],
+      "behavior_budget": {
+        "required": [],
+        "excluded": [],
+        "deferred_candidates": []
+      },
+      "deferred_candidates": [],
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          "docs/superpowers/plans/2026-09-01-visible-skill-routing/**"
+        ],
+        "shared_resources": [],
+        "independent_verification": [
+          "node plugins/adaptive-writing-plans/scripts/validate-plan.mjs --root docs/superpowers/plans/2026-09-01-visible-skill-routing --strict"
+        ],
+        "reason": "control node must establish canonical state before any work node is released"
+      },
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-000"
+      },
+      "skill_binding": {
+        "capability": "plan-bootstrap",
+        "visible_skill": "adaptive-writing-plans:adaptive-writing-plans",
+        "role": "coordinator",
+        "fallback": "Ada map bootstrap rules",
+        "evidence": "current-session skill catalog"
+      }
+    },
+    {
+      "id": "N-001",
+      "title": "Define the visible-provider input contract and Ada fallback table",
+      "status": "done",
+      "depends_on": [
+        "N-000"
+      ],
+      "inputs": [
+        "Codex-visible skill list",
+        "current provider registry and compatibility references"
+      ],
+      "outputs": [
+        "host-neutral visible_providers envelope",
+        "capability-to-skill selection rules",
+        "explicit fallback table",
+        "scope and safety admission rules"
+      ],
+      "acceptance": [
+        "the contract distinguishes visible candidates from merely discoverable files",
+        "selection precedence is explicit and conservative",
+        "every fallback has a named capability, reason, and verification expectation",
+        "out-of-scope expansion is recorded as deferred_candidates"
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-VISIBLE-SKILLS",
+        "R-ADA-FALLBACK",
+        "R-SCOPE-BUDGET"
+      ],
+      "contract_refs": [],
+      "design_refs": [],
+      "interaction_refs": [],
+      "impacted_modules": [],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "a37d46e35353f9ec853c7fa273e2eef18f25132dd0c2f66352957a6db668c4e2",
+        "source_ref": "GUIDE.md#posture"
+      },
+      "scope_provenance": [
+        {
+          "kind": "requirement",
+          "ref": "conversation:visible-skills-are-source-of-truth",
+          "behavior_id": "visible-skill-routing"
+        }
+      ],
+      "behavior_budget": {
+        "required": [
+          "visible-skill-routing"
+        ],
+        "excluded": [
+          "hidden-provider-discovery"
+        ],
+        "deferred_candidates": [
+          "generic-dispatch-platform"
+        ]
+      },
+      "deferred_candidates": [
+        {
+          "behavior_id": "generic-dispatch-platform",
+          "capability": "dispatch-platform",
+          "reason": "not_allowed_by_posture",
+          "evidence": [
+            {
+              "kind": "scope",
+              "ref": "GUIDE.md#scope"
+            }
+          ]
+        }
+      ],
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          "plugins/adaptive-writing-plans/skills/adaptive-writing-plans/references/provider-contract.md",
+          "plugins/adaptive-writing-plans/skills/adaptive-writing-plans/references/compatibility.md"
+        ],
+        "shared_resources": [],
+        "independent_verification": [
+          "node --test plugins/adaptive-writing-plans/tests/skill_contract.test.mjs"
+        ],
+        "reason": "the contract must be stable before implementation nodes bind to it"
+      },
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-001"
+      },
+      "skill_binding": {
+        "capability": "decompose",
+        "visible_skill": "adaptive-writing-plans:adaptive-writing-plans",
+        "role": "coordinator",
+        "fallback": "Ada explicit provider/fallback contract rules",
+        "evidence": "current-session skill catalog"
+      }
+    },
+    {
+      "id": "N-002",
+      "title": "Route planning phases through visible providers with bounded Ada fallbacks",
+      "status": "done",
+      "depends_on": [
+        "N-001"
+      ],
+      "inputs": [
+        "N-001 visible_providers contract",
+        "triage signals",
+        "Ada fallback table"
+      ],
+      "outputs": [
+        "provider selection function",
+        "route output with provider or fallback reason",
+        "direct-mode no-op planning behavior"
+      ],
+      "acceptance": [
+        "matching visible skills are selected by explicit capability/role",
+        "no hidden or unavailable provider is invoked or implied",
+        "missing matches return the named Ada fallback",
+        "route output includes provider/fallback, rationale, acceptance, and verification",
+        "direct tasks do not create or invoke full planning artifacts"
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-VISIBLE-SKILLS",
+        "R-ADA-FALLBACK",
+        "R-DIRECT-COST"
+      ],
+      "contract_refs": [],
+      "design_refs": [],
+      "interaction_refs": [],
+      "impacted_modules": [],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "a37d46e35353f9ec853c7fa273e2eef18f25132dd0c2f66352957a6db668c4e2",
+        "source_ref": "GUIDE.md#posture"
+      },
+      "scope_provenance": [
+        {
+          "kind": "approved_design",
+          "ref": "N-001",
+          "behavior_id": "visible-skill-routing"
+        },
+        {
+          "kind": "requirement",
+          "ref": "conversation:missing-skill-uses-ada-rules",
+          "behavior_id": "ada-fallback-routing"
+        }
+      ],
+      "behavior_budget": {
+        "required": [
+          "visible-skill-routing",
+          "ada-fallback-routing"
+        ],
+        "excluded": [
+          "hidden-provider-discovery",
+          "auto-install"
+        ],
+        "deferred_candidates": [
+          "model-cost-optimizer"
+        ]
+      },
+      "deferred_candidates": [
+        {
+          "behavior_id": "model-cost-optimizer",
+          "capability": "model-routing",
+          "reason": "not_allowed_by_posture",
+          "evidence": [
+            {
+              "kind": "scope",
+              "ref": "GUIDE.md#out-of-scope"
+            }
+          ]
+        }
+      ],
+      "parallelization": {
+        "candidate": true,
+        "wave": "wave-2",
+        "owned_paths": [
+          "plugins/adaptive-writing-plans/scripts/lib/provider-registry.mjs",
+          "plugins/adaptive-writing-plans/scripts/lib/planning-engine.mjs",
+          "plugins/adaptive-writing-plans/scripts/route-task.mjs",
+          "plugins/adaptive-writing-plans/mcp/server.mjs"
+        ],
+        "shared_resources": [],
+        "independent_verification": [
+          "node --test plugins/adaptive-writing-plans/tests/provider_registry.test.mjs plugins/adaptive-writing-plans/tests/planning_engine.test.mjs plugins/adaptive-writing-plans/tests/mcp_server.test.mjs"
+        ],
+        "reason": "provider routing owns the registry and route surface; its paths do not overlap with wave-safety implementation"
+      },
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-002"
+      },
+      "skill_binding": {
+        "capability": "execute",
+        "visible_skill": "superpowers:subagent-driven-development",
+        "role": "worker-per-leaf",
+        "fallback": "coordinator-owned direct implementation",
+        "evidence": "current-session skill catalog"
+      }
+    },
+    {
+      "id": "N-003",
+      "title": "Enforce execution-safe parallel waves separately from dependency waves",
+      "status": "done",
+      "depends_on": [
+        "N-001"
+      ],
+      "inputs": [
+        "N-001 scope and safety admission rules",
+        "map node dependency graph",
+        "node parallelization metadata"
+      ],
+      "outputs": [
+        "execution-safe wave evaluator",
+        "serial fallback reasons",
+        "rendered distinction between dependency and safe waves"
+      ],
+      "acceptance": [
+        "candidate requires satisfied dependencies, disjoint owned paths, partitioned shared resources, independent verification, and dispatchable provider evidence",
+        "missing evidence marks a node serial with a reason",
+        "dependency layers are not reported as parallel execution automatically",
+        "wave result is deterministic and non-mutating"
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-SAFE-WAVE",
+        "R-MAIN-COORDINATOR"
+      ],
+      "contract_refs": [],
+      "design_refs": [],
+      "interaction_refs": [],
+      "impacted_modules": [],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "a37d46e35353f9ec853c7fa273e2eef18f25132dd0c2f66352957a6db668c4e2",
+        "source_ref": "GUIDE.md#posture"
+      },
+      "scope_provenance": [
+        {
+          "kind": "approved_design",
+          "ref": "N-001",
+          "behavior_id": "execution-safe-wave"
+        }
+      ],
+      "behavior_budget": {
+        "required": [
+          "execution-safe-wave"
+        ],
+        "excluded": [
+          "generic-dispatch-platform",
+          "telemetry"
+        ],
+        "deferred_candidates": [
+          "worktree-orchestrator"
+        ]
+      },
+      "deferred_candidates": [
+        {
+          "behavior_id": "worktree-orchestrator",
+          "capability": "worktree-orchestration",
+          "reason": "not_allowed_by_posture",
+          "evidence": [
+            {
+              "kind": "scope",
+              "ref": "GUIDE.md#out-of-scope"
+            }
+          ]
+        }
+      ],
+      "parallelization": {
+        "candidate": true,
+        "wave": "wave-2",
+        "owned_paths": [
+          "plugins/adaptive-writing-plans/scripts/lib/plan-protocol.mjs",
+          "plugins/adaptive-writing-plans/scripts/lib/execution-protocol.mjs",
+          "plugins/adaptive-writing-plans/schemas/map.schema.json"
+        ],
+        "shared_resources": [],
+        "independent_verification": [
+          "node --test plugins/adaptive-writing-plans/tests/plan_protocol.test.mjs plugins/adaptive-writing-plans/tests/execution_protocol.test.mjs"
+        ],
+        "reason": "wave evaluation is a separate pure protocol surface with disjoint paths from provider routing"
+      },
+      "readiness": {
+        "ready": false,
+        "blockers": [
+          {
+            "code": "dependency_not_done",
+            "message": "N-001"
+          }
+        ],
+        "node_id": "N-003"
+      },
+      "skill_binding": {
+        "capability": "execute",
+        "visible_skill": "superpowers:dispatching-parallel-agents",
+        "role": "parallel-coordinator",
+        "fallback": "sequential execution with visible reason",
+        "evidence": "current-session skill catalog"
+      }
+    },
+    {
+      "id": "N-004",
+      "title": "Verify visible routing, fallbacks, wave safety, and coordinator boundaries",
+      "status": "done",
+      "depends_on": [
+        "N-002",
+        "N-003"
+      ],
+      "inputs": [
+        "provider route implementation",
+        "execution-safe wave evaluator",
+        "N-001 contract"
+      ],
+      "outputs": [
+        "focused regression tests",
+        "updated compatibility/execution guidance",
+        "verification receipt and deferred list"
+      ],
+      "acceptance": [
+        "tests cover visible provider selection and Ada fallback",
+        "tests cover direct-mode cost and unsafe-wave serialisation",
+        "tests prove no hidden provider discovery or auto-install occurs",
+        "full plugin test suite passes",
+        "final review removes unsupported safety and future-reuse behavior"
+      ],
+      "blocking_questions": [],
+      "requirement_ids": [
+        "R-REGRESSION",
+        "R-SCOPE-BUDGET"
+      ],
+      "contract_refs": [],
+      "design_refs": [],
+      "interaction_refs": [],
+      "impacted_modules": [],
+      "posture_ref": {
+        "kind": "reusable_internal",
+        "posture_hash": "a37d46e35353f9ec853c7fa273e2eef18f25132dd0c2f66352957a6db668c4e2",
+        "source_ref": "GUIDE.md#posture"
+      },
+      "scope_provenance": [
+        {
+          "kind": "approved_contract",
+          "ref": "N-001",
+          "behavior_id": "focused-verification"
+        }
+      ],
+      "behavior_budget": {
+        "required": [
+          "focused-verification"
+        ],
+        "excluded": [
+          "telemetry",
+          "deployment",
+          "ha"
+        ],
+        "deferred_candidates": []
+      },
+      "deferred_candidates": [],
+      "parallelization": {
+        "candidate": false,
+        "wave": "serial",
+        "owned_paths": [
+          "plugins/adaptive-writing-plans/tests/**",
+          "plugins/adaptive-writing-plans/skills/adaptive-writing-plans/references/**",
+          "plugins/adaptive-writing-plans/scripts/lib/stdio.mjs",
+          "plugins/adaptive-writing-plans/scripts/* entrypoints",
+          "plugins/adaptive-writing-plans/hooks/record-event.mjs"
+        ],
+        "shared_resources": [],
+        "independent_verification": [
+          "npm test --prefix plugins/adaptive-writing-plans"
+        ],
+        "reason": "integration verification must observe both implementation branches; boundary I/O support was admitted only after reproducible host spawn failures and remains local to command entrypoints"
+      },
+      "readiness": {
+        "ready": true,
+        "blockers": [],
+        "node_id": "N-004"
+      },
+      "skill_binding": {
+        "capability": "review",
+        "visible_skill": "finalise-plan + verification-before-completion",
+        "role": "coordinator-review",
+        "fallback": "schema checks plus focused test commands",
+        "evidence": "current-session skill catalog"
+      }
+    }
+  ],
+  "created_at": "2026-09-01T15:47:53.447Z",
+  "updated_at": "2026-09-02T01:20:00.000Z",
+  "engineering_posture": {
+    "schema_version": "2.1",
+    "kind": "reusable_internal",
+    "source": {
+      "kind": "approved_guide",
+      "ref": "GUIDE.md#posture"
+    },
+    "objective": "Provide a stable local contract for repeated use inside the project.",
+    "required_evidence": [
+      "compatibility_evidence",
+      "integration_tests",
+      "stable_local_contract"
+    ],
+    "allowed_capabilities": [
+      "ada-fallback-routing",
+      "execution-safe-wave",
+      "focused-verification",
+      "visible-skill-routing"
+    ],
+    "excluded_capabilities": [
+      "auto-install",
+      "deployment",
+      "ha",
+      "hidden-provider-discovery",
+      "rollback-framework",
+      "telemetry"
+    ],
+    "safety_floor": [
+      "bound_runaway_resource_cost",
+      "fail_loud_on_invalid_results",
+      "prevent_credential_exposure",
+      "prevent_destructive_data_loss"
+    ],
+    "promotion_policy": "Promotion requires explicit user approval and re-enters design and architecture synchronization.",
+    "posture_hash": "a37d46e35353f9ec853c7fa273e2eef18f25132dd0c2f66352957a6db668c4e2"
+  },
+  "posture_evidence": [
+    "conversation:visible-skills-and-fallbacks",
+    "GUIDE.md#constraints"
+  ]
+}

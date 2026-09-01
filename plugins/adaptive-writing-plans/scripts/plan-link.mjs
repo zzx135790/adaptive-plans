@@ -9,6 +9,7 @@ import {
   linkArchitectureSnapshot,
   recordArchitectureImpact,
 } from './lib/planning-engine.mjs';
+import { writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -38,9 +39,8 @@ try {
     if (!args.impact) throw new Error('--impact is required');
     result = await recordArchitectureImpact(root, await readJson(path.resolve(args.impact)), args.artifact_path ?? null);
   }
-  console.log(JSON.stringify(result, null, 2));
+  writeJson(result);
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;
 }
-

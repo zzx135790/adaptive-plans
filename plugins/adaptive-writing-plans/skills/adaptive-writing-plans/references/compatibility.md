@@ -4,6 +4,22 @@ The protocol has one canonical artifact model and thin host adapters. Host
 progress, provider invocation, and UI are projections; none is a second plan
 database.
 
+## Visible skill boundary
+
+The current host-visible skill list is the only provider set used for routing.
+The host should pass that list as `VisibleProviderSet`; Ada must not infer
+additional executable providers by scanning an installation directory. A
+discovered file that is not visible in the current session is diagnostic
+evidence, not a selectable provider. This also means host-specific skills do
+not need a separate compatibility blacklist: they are absent when they are not
+visible.
+
+Provider selection is capability-first and role-aware. Explicit metadata beats
+keyword inference, and inference cannot grant execution authority. Each route
+records the selected visible skill, the reason, an acceptance condition, and a
+verification command. If no visible provider matches, use the bounded fallback
+below and record the unavailable provider rather than retrying discovery.
+
 | Capability | Preferred installed provider | Built-in fallback |
 |---|---|---|
 | Clarify intent | `planning-clarification`, `ask-plan-questions` | one bounded question |
@@ -15,6 +31,11 @@ database.
 | Review leaf | `finalise-plan` | schema/DAG checks only |
 | Execute | `executing-plans`, `subagent-driven-development` | user-selected executor |
 | Parallel execution | coordinator-owned subagent wave | sequential execution |
+
+The fallback column is executable Ada behavior, not a request to install or
+invoke another provider. For direct work, no planning provider is required:
+the coordinator follows the normal single-session workflow and only records a
+fallback when a requested capability is actually missing.
 
 Discovery and invocation are separate. A missing provider becomes an
 `unavailable` result; it is never an implicit installation request. Critical

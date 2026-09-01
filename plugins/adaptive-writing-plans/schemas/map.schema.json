@@ -85,7 +85,21 @@
           "interaction_refs": {"type": "array"},
           "impacted_modules": {"type": "array", "items": {"type": "string"}},
           "design_required": {"type": "boolean"},
-          "parallelization": {"type": "object"},
+          "parallelization": {
+            "type": "object",
+            "properties": {
+              "candidate": {"type": "boolean"},
+              "wave": {"type": ["string", "integer"]},
+              "execution_wave": {"type": ["string", "integer", "null"]},
+              "safe_wave": {"type": ["string", "integer", "null"]},
+              "owned_paths": {"type": "array", "items": {"type": "string"}},
+              "shared_resources": {"type": "array"},
+              "independent_verification": {"type": "array", "items": {"type": "string"}},
+              "provider_evidence": {"type": "object"},
+              "reason": {"type": "string"}
+            },
+            "additionalProperties": true
+          },
           "stale_reason": {"type": "string"},
           "revalidation_required": {"type": "boolean"}
           ,

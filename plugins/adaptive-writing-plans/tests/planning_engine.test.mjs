@@ -10,6 +10,7 @@ import {
   ingestProviderResult,
   invalidateFromEvidence,
   addNode,
+  routePlanning,
   triageTask,
 } from '../scripts/lib/planning-engine.mjs';
 import {
@@ -31,6 +32,36 @@ test('triageTask routes blocking ambiguity to guide and high uncertainty to prog
   });
   assert.equal(result.mode, 'map');
   assert.equal(result.strategy, 'progressive');
+});
+
+test('routePlanning keeps direct work cheap and routes map phases through visible providers', () => {
+  const direct = routePlanning({
+    goal_clarity: 'high',
+    scope_clarity: 'low',
+    technical_risk: 'low',
+    dependency_unknown: 'low',
+    domain_familiarity: 'low',
+    requirement_stability: 'low',
+    phase_count: 1,
+  });
+  assert.equal(direct.mode, 'direct');
+  assert.deepEqual(direct.routes, []);
+  assert.deepEqual(direct.planning_artifacts, []);
+
+  const routed = routePlanning({
+    goal_clarity: 'high', phase_count: 3,
+    visible_providers: {
+      providers: [{ id: 'session-explorer', capabilities: ['explore'], roles: ['explorer'], visible: true }],
+    },
+  });
+  assert.equal(routed.mode, 'map');
+  assert.equal(routed.routes.find((route) => route.capability === 'explore').provider, 'session-explorer');
+  const decomposition = routed.routes.find((route) => route.capability === 'decompose');
+  assert.equal(decomposition.status, 'unavailable');
+  assert.ok(decomposition.fallback);
+  assert.ok(decomposition.acceptance);
+  assert.ok(decomposition.verification.length > 0);
+  assert.deepEqual(routed.planning_artifacts, ['map-proposal']);
 });
 
 test('assessNodeReadiness reports blocking questions and stale dependencies', () => {

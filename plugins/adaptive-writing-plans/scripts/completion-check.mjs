@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 
 import { loadMap, validatePlanCompletion } from './lib/plan-protocol.mjs';
+import { writeJson } from './lib/stdio.mjs';
 
 const args = process.argv.slice(2);
 const rootIndex = args.indexOf('--root');
@@ -15,7 +16,7 @@ try {
   let designDocument = null;
   try { designDocument = JSON.parse(await fs.readFile(path.join(root, 'design.json'), 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
   const result = validatePlanCompletion(await loadMap(root), { designDocument });
-  console.log(JSON.stringify(result, null, 2));
+  writeJson(result);
   if (!result.valid) process.exitCode = 1;
 } catch (error) {
   console.error(error.message);

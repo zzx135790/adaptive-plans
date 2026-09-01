@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { discoverProviders, inferCapabilities } from '../scripts/lib/provider-registry.mjs';
+import { discoverProviders, inferCapabilities, selectVisibleProvider } from '../scripts/lib/provider-registry.mjs';
 
 test('provider discovery maps installed skills and MCP servers without executing them', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-providers-'));
@@ -63,6 +63,42 @@ test('provider discovery maps installed skills and MCP servers without executing
 test('capability inference accepts explicit aliases and keeps unknown text conservative', () => {
   assert.deepEqual(inferCapabilities('custom', 'Ask questions and compare alternatives', ['clarification']), ['clarify', 'decide']);
   assert.deepEqual(inferCapabilities('opaque', 'A general helper', []), []);
+});
+
+test('visible provider selection ignores hidden candidates and prefers an exact role match', () => {
+  const result = selectVisibleProvider({
+    capability: 'explore',
+    role: 'explorer',
+    visibleProviders: {
+      providers: [
+        { id: 'hidden-explorer', capabilities: ['explore'], roles: ['explorer'], visible: false },
+        { id: 'visible-general', capabilities: ['explore'], roles: ['reviewer'], visible: true },
+        { id: 'visible-explorer', capabilities: ['explore'], roles: ['explorer'], visible: true },
+      ],
+    },
+  });
+  assert.equal(result.status, 'selected');
+  assert.equal(result.provider, 'visible-explorer');
+  assert.match(result.reason, /visible provider/);
+  assert.ok(result.acceptance);
+  assert.ok(result.verification.length > 0);
+});
+
+test('missing visible providers return a bounded fallback without discovery or invocation', () => {
+  const result = selectVisibleProvider({
+    capability: 'decompose',
+    role: 'mapper',
+    visibleProviders: {
+      providers: [{ id: 'hidden-mapper', capabilities: ['decompose'], visible: false }],
+      fallbacks: { decompose: 'session-progressive-map' },
+    },
+  });
+  assert.equal(result.status, 'unavailable');
+  assert.equal(result.provider, null);
+  assert.equal(result.fallback, 'session-progressive-map');
+  assert.match(result.reason, /no visible provider matched/);
+  assert.ok(result.acceptance);
+  assert.ok(result.verification.length > 0);
 });
 
 test('provider discovery follows symlinked skills and fills empty design metadata from the catalog', async () => {

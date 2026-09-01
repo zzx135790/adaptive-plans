@@ -2,6 +2,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createPlanManifest } from './lib/plan-protocol.mjs';
+import { writeJson, writeStderr } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -52,8 +53,8 @@ try {
     goal: args.goal ?? 'Define and validate the work before implementation.',
     overwrite: Boolean(args.force),
   });
-  console.log(JSON.stringify({ ...manifest, root }, null, 2));
+  writeJson({ ...manifest, root });
 } catch (error) {
-  console.error(error.message);
+  writeStderr(`${error.message}\n`);
   process.exitCode = 1;
 }

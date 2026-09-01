@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { designApprovalBrief, loadDesign } from './lib/design-engine.mjs';
 import { currentThreadRevision, ledgerApprovalBrief } from './lib/design-ledger.mjs';
+import { writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -30,9 +31,8 @@ try {
   } else {
     brief = designApprovalBrief(document);
   }
-  console.log(JSON.stringify(brief, null, 2));
+  writeJson(brief);
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;
 }
-

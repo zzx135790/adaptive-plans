@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import { ingestProviderResult } from './lib/planning-engine.mjs';
+import { writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -27,4 +28,4 @@ const result = await ingestProviderResult(path.resolve(args.root), {
   source: args.source,
   status: 'unavailable',
 });
-console.log(JSON.stringify(result, null, 2));
+writeJson(result);

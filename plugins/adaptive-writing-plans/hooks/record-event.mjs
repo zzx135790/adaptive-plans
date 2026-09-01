@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import { appendEvent, makeEventId } from '../scripts/lib/plan-protocol.mjs';
+import { readStdin, writeJson } from '../scripts/lib/stdio.mjs';
 
 const args = process.argv.slice(2);
 const rootIndex = args.indexOf('--root');
 const root = path.resolve(rootIndex >= 0 ? args[rootIndex + 1] : process.env.ADAPTIVE_PLAN_ROOT ?? '.');
 
-let input = '';
-for await (const chunk of process.stdin) input += chunk;
+const input = await readStdin();
 if (!input.trim()) process.exit(0);
 
 try {
@@ -29,7 +29,7 @@ try {
     }),
   };
   const result = await appendEvent(root, event);
-  process.stdout.write(`${JSON.stringify(result)}\n`);
+  writeJson(result, 0);
 } catch (error) {
   // Hooks must not block the main task when a plan root or event is unavailable.
   console.error(`adaptive-writing-plans hook skipped: ${error.message}`);

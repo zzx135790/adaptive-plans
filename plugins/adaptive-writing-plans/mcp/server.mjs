@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import fs from 'node:fs';
 import path from 'node:path';
 import {
   appendEvent,
@@ -18,6 +19,7 @@ import {
   linkApprovedDesign,
   linkArchitectureSnapshot,
   recordArchitectureImpact,
+  routePlanning,
   triageTask,
 } from '../scripts/lib/planning-engine.mjs';
 import {
@@ -197,6 +199,19 @@ const tools = [
     inputSchema: {
       type: 'object',
       properties: { signals: { type: 'object', additionalProperties: true } },
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
+    name: 'plan_route',
+    description: 'Route planning phases through providers visible in the current Codex session, with bounded Ada fallbacks.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        signals: { type: 'object', additionalProperties: true },
+        visible_providers: { type: 'object', additionalProperties: true },
+      },
       additionalProperties: false,
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
@@ -449,6 +464,8 @@ async function callTool(name, input = {}) {
       return success(assessNodeReadiness(map, input.node_id));
     case 'plan_triage':
       return success(triageTask(input.signals ?? {}));
+    case 'plan_route':
+      return success(routePlanning(input.signals ?? {}, input.visible_providers ?? input.signals?.visible_providers));
     case 'plan_add_node':
       if (!input.node || typeof input.node !== 'object') return failure('node object is required', 'INVALID_NODE');
       return success(await addNode(planRoot, input.node));
@@ -573,9 +590,9 @@ function emit(response, framed) {
   const serialized = JSON.stringify(response);
   if (framed) {
     const bytes = Buffer.byteLength(serialized, 'utf8');
-    process.stdout.write(`Content-Length: ${bytes}\r\n\r\n${serialized}`);
+    fs.writeSync(process.stdout.fd, `Content-Length: ${bytes}\r\n\r\n${serialized}`);
   } else {
-    process.stdout.write(`${serialized}\n`);
+    fs.writeSync(process.stdout.fd, `${serialized}\n`);
   }
 }
 
@@ -635,10 +652,13 @@ async function drain() {
 }
 
 let drainQueue = Promise.resolve();
-process.stdin.on('data', (chunk) => {
+// Node 24 can miss buffered data on process.stdin when a spawned stdio fd is
+// socket-backed; attach a fresh stream to fd 0 so startup writes are retained.
+const input = fs.createReadStream(null, { fd: process.stdin.fd, autoClose: false });
+input.on('data', (chunk) => {
   inputBuffer = Buffer.concat([inputBuffer, chunk]);
   drainQueue = drainQueue.then(() => drain()).catch((error) => {
     console.error(`MCP drain error: ${error.message}`);
   });
 });
-process.stdin.on('error', (error) => console.error(`MCP stdin error: ${error.message}`));
+input.on('error', (error) => console.error(`MCP stdin error: ${error.message}`));

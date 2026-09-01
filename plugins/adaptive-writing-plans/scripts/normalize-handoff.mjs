@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { normalizeHandoff, validateHandoff } from './lib/plan-protocol.mjs';
+import { readStdin, writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -14,8 +15,7 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-let input = '';
-for await (const chunk of process.stdin) input += chunk;
+const input = await readStdin();
 let value;
 try {
   value = JSON.parse(input || '{}');
@@ -34,14 +34,14 @@ const candidate = value && typeof value === 'object' && !Array.isArray(value)
 if (args.strict) {
   const before = validateHandoff(candidate, { partial: true });
   if (!before.valid) {
-    process.stdout.write(`${JSON.stringify(before, null, 2)}\n`);
+    writeJson(before);
     process.exit(1);
   }
 }
 const normalized = normalizeHandoff(value, defaults);
 const validation = validateHandoff(normalized, { strict: Boolean(args.strict) });
 if (!validation.valid) {
-  process.stdout.write(`${JSON.stringify(validation, null, 2)}\n`);
+  writeJson(validation);
   process.exit(1);
 }
-process.stdout.write(`${JSON.stringify(normalized, null, 2)}\n`);
+writeJson(normalized);

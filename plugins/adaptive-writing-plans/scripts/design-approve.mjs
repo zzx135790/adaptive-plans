@@ -2,6 +2,7 @@
 import path from 'node:path';
 
 import { approveDesign } from './lib/design-engine.mjs';
+import { writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -27,7 +28,7 @@ try {
     briefHash: args.brief_hash,
     waiver: args.waiver ? { reason: args.waiver } : null,
   });
-  console.log(JSON.stringify(result, null, 2));
+  writeJson(result);
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;

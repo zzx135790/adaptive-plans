@@ -2,6 +2,7 @@
 import path from 'node:path';
 
 import { updateDesignRevision } from './lib/design-engine.mjs';
+import { readStdin, writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -17,15 +18,13 @@ if (!args.root || !args.expected_hash) {
   console.error('Usage: adaptive-plan design update --root <plan-folder> --expected-hash <hash> < updates.json');
   process.exit(2);
 }
-let input = '';
-for await (const chunk of process.stdin) input += chunk;
+const input = await readStdin();
 try {
   const updates = JSON.parse(input || '{}');
-  console.log(JSON.stringify(await updateDesignRevision(path.resolve(args.root), updates, {
+  writeJson(await updateDesignRevision(path.resolve(args.root), updates, {
     expectedHash: args.expected_hash,
-  }), null, 2));
+  }));
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;
 }
-

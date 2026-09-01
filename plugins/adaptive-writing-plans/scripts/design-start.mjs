@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { discoverProviders } from './lib/provider-registry.mjs';
 import { createDesignDocument, selectDesignProviders, triageDesign, writeDesign } from './lib/design-engine.mjs';
+import { readStdin, writeJson } from './lib/stdio.mjs';
 
 function values(argv, flag) {
   const result = [];
@@ -17,8 +18,7 @@ if (rootIndex < 0 || !argv[rootIndex + 1]) {
   process.exit(2);
 }
 
-let input = '';
-for await (const chunk of process.stdin) input += chunk;
+const input = await readStdin();
 try {
   const request = JSON.parse(input || '{}');
   const profile = triageDesign(request);
@@ -26,7 +26,7 @@ try {
   const providerSelection = await selectDesignProviders(profile, registry);
   const document = createDesignDocument({ ...request, profile, provider_selection: providerSelection });
   const written = await writeDesign(path.resolve(argv[rootIndex + 1]), document);
-  console.log(JSON.stringify(written, null, 2));
+  writeJson(written);
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;

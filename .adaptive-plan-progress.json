@@ -1,0 +1,70 @@
+{
+  "plan_id": "visible-skill-routing",
+  "plan_root": "docs/superpowers/plans/2026-09-01-visible-skill-routing",
+  "stage": "completed",
+  "posture_ref": {
+    "kind": "reusable_internal",
+    "posture_hash": "a37d46e35353f9ec853c7fa273e2eef18f25132dd0c2f66352957a6db668c4e2",
+    "source_ref": "GUIDE.md#posture"
+  },
+  "items": [
+    {
+      "id": "N-001",
+      "result": "visible-provider contract and Ada fallback table",
+      "affected_paths": [
+        "plugins/adaptive-writing-plans/skills/adaptive-writing-plans/references/provider-contract.md",
+        "plugins/adaptive-writing-plans/skills/adaptive-writing-plans/references/compatibility.md"
+      ],
+      "status": "completed",
+      "blocker": null,
+      "verification": [
+        "node --test plugins/adaptive-writing-plans/tests/skill_contract.test.mjs"
+      ]
+    },
+    {
+      "id": "N-002",
+      "result": "visible provider routing and bounded fallback behavior",
+      "affected_paths": [
+        "plugins/adaptive-writing-plans/scripts/lib/provider-registry.mjs",
+        "plugins/adaptive-writing-plans/scripts/lib/planning-engine.mjs",
+        "plugins/adaptive-writing-plans/scripts/route-task.mjs",
+        "plugins/adaptive-writing-plans/mcp/server.mjs"
+      ],
+      "status": "completed",
+      "blocker": null,
+      "verification": [
+        "node --test plugins/adaptive-writing-plans/tests/provider_registry.test.mjs plugins/adaptive-writing-plans/tests/planning_engine.test.mjs plugins/adaptive-writing-plans/tests/mcp_server.test.mjs"
+      ]
+    },
+    {
+      "id": "N-003",
+      "result": "execution-safe parallel wave evaluation",
+      "affected_paths": [
+        "plugins/adaptive-writing-plans/scripts/lib/plan-protocol.mjs",
+        "plugins/adaptive-writing-plans/scripts/lib/execution-protocol.mjs",
+        "plugins/adaptive-writing-plans/schemas/map.schema.json"
+      ],
+      "status": "completed",
+      "blocker": null,
+      "verification": [
+        "node --test plugins/adaptive-writing-plans/tests/plan_protocol.test.mjs plugins/adaptive-writing-plans/tests/execution_protocol.test.mjs"
+      ]
+    },
+    {
+      "id": "N-004",
+      "result": "integration verification and subtractive scope review",
+      "affected_paths": [
+        "plugins/adaptive-writing-plans/tests/**",
+        "plugins/adaptive-writing-plans/skills/adaptive-writing-plans/references/**",
+        "plugins/adaptive-writing-plans/scripts/lib/stdio.mjs",
+        "plugins/adaptive-writing-plans/scripts/* entrypoints",
+        "plugins/adaptive-writing-plans/hooks/record-event.mjs"
+      ],
+      "status": "completed",
+      "blocker": null,
+      "verification": [
+        "npm test --prefix plugins/adaptive-writing-plans"
+      ]
+    }
+  ]
+}

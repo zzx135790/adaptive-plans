@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import { ingestProviderResult } from './lib/planning-engine.mjs';
+import { readStdin, writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -18,8 +19,7 @@ if (!args.root || !args.provider || !args.capability) {
   console.error('Usage: node scripts/ingest-provider.mjs --root <plan-folder> --provider <id> --capability <slot> [JSON on stdin]');
   process.exit(2);
 }
-let input = '';
-for await (const chunk of process.stdin) input += chunk;
+const input = await readStdin();
 let value;
 try { value = JSON.parse(input || 'null'); } catch { value = input; }
 const result = await ingestProviderResult(path.resolve(args.root), value, {
@@ -27,4 +27,4 @@ const result = await ingestProviderResult(path.resolve(args.root), value, {
   capability: args.capability,
   source: args.source,
 });
-console.log(JSON.stringify(result, null, 2));
+writeJson(result);

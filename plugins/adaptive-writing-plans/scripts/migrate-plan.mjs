@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 
 import { applyPlanMigration, previewPlanMigration, recoverPlanMigration } from './lib/migration-protocol.mjs';
+import { writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -34,7 +35,7 @@ try {
       ? await applyPlanMigration(root, proposal, { expectedProposalHash: args.expected_hash })
       : proposal;
   }
-  console.log(JSON.stringify(result, null, 2));
+  writeJson(result);
 } catch (error) {
   console.error(JSON.stringify({ code: error.code ?? 'MIGRATION_ERROR', message: error.message }));
   process.exitCode = 1;

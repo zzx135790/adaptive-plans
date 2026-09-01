@@ -36,6 +36,43 @@ fields supported by evidence.
 Schema v1 handoffs remain readable. Normalizing to v2 must leave design and
 architecture gates unknown unless explicit evidence is supplied.
 
+## VisibleProviderSet v1
+
+The host supplies the provider candidates visible in the current session. This
+envelope is the routing boundary; filesystem discovery is diagnostic evidence
+only and must never enlarge the candidate set implicitly.
+
+```json
+{
+  "schema_version": "1.0",
+  "source": "codex-session",
+  "providers": [
+    {
+      "id": "skill-id",
+      "capabilities": ["explore"],
+      "roles": ["explorer"],
+      "visible": true,
+      "invocation": "host-selected",
+      "verification": ["focused command or acceptance check"]
+    }
+  ],
+  "fallbacks": {
+    "explore": "repository-search-and-evidence-event"
+  }
+}
+```
+
+Selection precedence is explicit: an exact capability and role match wins;
+an explicit capability without a role is next; name or description inference is
+only a conservative hint and can never promote a provider to execution. A
+provider is selectable only when `visible` is true. An empty or missing set
+uses the named Ada fallback and records `status: "unavailable"`; it does not
+search hidden roots, install a provider, or pretend that one was invoked.
+
+Every selected provider or fallback must carry a reason, acceptance condition,
+and verification command. The coordinator may use the result only after the
+declared evidence is observed and persisted according to the provider contract.
+
 ## ProviderResult v2
 
 ```json
