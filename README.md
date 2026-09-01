@@ -76,7 +76,7 @@ Add MCP server to `~/.claude/settings.json`:
   "mcpServers": {
     "adaptive-planning": {
       "command": "node",
-      "args": ["~/.claude/plugins/adaptive-writing-plans/mcp/server-sdk.mjs"],
+      "args": ["~/.claude/plugins/adaptive-writing-plans/mcp/server.mjs"],
       "tool_timeout_sec": 120
     }
   }
@@ -94,7 +94,26 @@ cd adaptive-plans
 ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.codex/plugins/adaptive-writing-plans
 ```
 
-Codex discovers MCP metadata automatically from the plugin directory.
+Codex discovers MCP metadata automatically from `.codex-plugin/manifest.json` in the plugin directory.
+
+To enable event hooks, add to `~/.codex/config.toml`:
+
+```toml
+[hooks.tool]
+PostToolUse = [
+  { matcher = "mcp__adaptive-planning__.*", path = "~/.codex/plugins/adaptive-writing-plans/hooks/events.example.json" }
+]
+
+[hooks.compact]
+PostCompact = [
+  { path = "~/.codex/plugins/adaptive-writing-plans/hooks/events.example.json" }
+]
+
+[hooks.turn]
+Stop = [
+  { path = "~/.codex/plugins/adaptive-writing-plans/hooks/events.example.json" }
+]
+```
 
 ## Usage
 
@@ -155,4 +174,4 @@ MIT
 
 ## Version
 
-0.3.0 — Context-scoped MCP, host-neutral packaging, provider composition
+0.3.1 — Claude Code hook support, Codex MCP path fix, complete cross-platform compatibility

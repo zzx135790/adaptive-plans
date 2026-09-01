@@ -76,7 +76,7 @@ ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.claude/plugins/adaptive-writing
   "mcpServers": {
     "adaptive-planning": {
       "command": "node",
-      "args": ["~/.claude/plugins/adaptive-writing-plans/mcp/server-sdk.mjs"],
+      "args": ["~/.claude/plugins/adaptive-writing-plans/mcp/server.mjs"],
       "tool_timeout_sec": 120
     }
   }
@@ -94,7 +94,26 @@ cd adaptive-plans
 ln -s "$(pwd)/plugins/adaptive-writing-plans" ~/.codex/plugins/adaptive-writing-plans
 ```
 
-Codex 会自动从插件目录发现 MCP 元数据。
+Codex 会自动从插件目录的 `.codex-plugin/manifest.json` 发现 MCP 元数据。
+
+如需启用事件钩子，在 `~/.codex/config.toml` 中添加：
+
+```toml
+[hooks.tool]
+PostToolUse = [
+  { matcher = "mcp__adaptive-planning__.*", path = "~/.codex/plugins/adaptive-writing-plugins/hooks/events.example.json" }
+]
+
+[hooks.compact]
+PostCompact = [
+  { path = "~/.codex/plugins/adaptive-writing-plans/hooks/events.example.json" }
+]
+
+[hooks.turn]
+Stop = [
+  { path = "~/.codex/plugins/adaptive-writing-plans/hooks/events.example.json" }
+]
+```
 
 ## 使用
 
@@ -155,4 +174,4 @@ MIT
 
 ## 版本
 
-0.3.0 — 上下文作用域 MCP、宿主中立打包、Provider 组合
+0.3.1 — Claude Code hook 支持、Codex MCP 路径修复、完全跨平台兼容
