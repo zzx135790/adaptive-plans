@@ -6,8 +6,8 @@ description: Orchestrate implementation planning when requirements, architecture
 # Adaptive Writing Plans
 
 Turn a request or approved handoff into an implementation-ready path without
-hiding uncertainty in one large plan. Preserve `writing-plans` as the leaf plan
-generator; this skill decides when a leaf is ready.
+hiding uncertainty in one large plan. Use installed leaf plan generators (such
+as `writing-plans`) when appropriate; this skill decides when a leaf is ready.
 
 ## Operating model
 
@@ -39,19 +39,28 @@ At planning entry and after material new evidence:
 Read [architecture-memory.md](references/architecture-memory.md) when a task
 touches an existing project or module boundary. Read
 [design-gate.md](references/design-gate.md) whenever DesignProfile triage is
-required or design becomes stale.
+required or design becomes stale. For high-impact designs requiring multiple
+options, use an installed decision analysis skill (such as `meta-decision-analysis`)
+to structure alternatives; for risk assessment, use an installed risk analysis
+skill (such as `risk-assessment` or `meta-scenario-planning`).
 
 ## Route selection
 
 - `guide`: intent is not yet approved. Maintain Goal, Scope, Constraints, and
-  Success Criteria in `GUIDE.md`; ask only questions whose answers cannot be
-  established.
+  Success Criteria in `GUIDE.md`. Use an installed intent clarification skill
+  (such as `planning-clarification` or `ask-plan-questions`) for structured
+  requirements gathering; ask only questions whose answers cannot be established
+  from the codebase or existing artifacts.
 - `map`: multiple phases, cross-subsystem work, uncertain dependencies, or a
-  long-running effort. Start with visible bootstrap node `N-000`, then create a
-  complete DAG and node briefs; do not flatten it into one document.
+  long-running effort. Use an installed code exploration skill (such as `explore`
+  or `codebase-analyzer`) when repository evidence is needed. Start with visible
+  bootstrap node `N-000`, then create a complete DAG and node briefs; do not
+  flatten it into one document.
 - `plan`: one bounded phase has stable inputs, outputs, contracts, design refs,
   acceptance criteria, verification, and a current posture-bound leaf handoff.
-  Invoke `writing-plans` for that leaf and verify its persisted artifact.
+  Use an installed leaf plan generator (such as `writing-plans`) for that leaf,
+  then use an installed plan review skill (such as `finalise-plan`) to verify
+  the persisted artifact before execution.
 - `direct`: a small task can finish in one session, touches at most one or two
   components, has no uncertain dependency, and does not require design.
 
@@ -67,10 +76,10 @@ For `map`, initialize the adaptive folder with `scripts/init-plan.mjs` under
 Do not use `--force` over an existing `map.json`. For `guide` and `direct`, do
 not create an adaptive planning folder merely because the project is new.
 
-For `plan`, preserve the `writing-plans` output at
-`docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`. Link it to its map node
-with an append-only `artifact_linked` event; do not copy it into a second
-canonical format. Consume upstream specs and handoffs in place.
+For `plan`, use the installed leaf plan generator (such as `writing-plans`) and
+preserve its output at `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`.
+Link it to its map node with an append-only `artifact_linked` event; do not copy
+it into a second canonical format. Consume upstream specs and handoffs in place.
 
 `map.json` is the topology source of truth and `MAP.md` is its generated view.
 At every map handoff, final response, or status report, show both:
