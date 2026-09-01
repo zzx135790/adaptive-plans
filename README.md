@@ -9,6 +9,7 @@ Adaptive planning workflow for multi-phase uncertain work — turns discussions,
 - **Context-scoped MCP**: Concurrent multi-project serving without global state
 - **Host-neutral**: Portable plugin for both Codex and Claude Code
 - **Provider composition**: Validates workflow outcomes, never auto-installs
+- **Automatic event hooks**: Records tool completions, context compaction, and turn endings to audit trail
 
 ## Installation
 
@@ -108,6 +109,22 @@ The skill routes to:
 - **map**: create DAG topology for multi-phase or long-running work
 - **plan**: generate leaf plan for a single ready node
 - **direct**: proceed immediately for small, clear tasks
+
+## Event Hooks
+
+The plugin automatically records events to `events.jsonl` for audit trails and cross-session recovery:
+
+- **Claude Code**: Hooks are automatically configured via `hooks/hooks.json` (no setup needed)
+- **Codex**: Requires manual configuration in `~/.codex/config.toml`
+
+**Recorded events**:
+- Tool completions (success/failure)
+- Context compaction
+- Turn endings
+
+See [hooks/README.md](plugins/adaptive-writing-plans/hooks/README.md) for detailed configuration and troubleshooting.
+
+Hook failures never block the main workflow.
 
 ## Migration from 0.2.x
 

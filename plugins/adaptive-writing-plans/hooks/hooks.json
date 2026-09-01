@@ -1,0 +1,121 @@
+{
+  "$schema": "https://code.claude.com/schemas/hooks.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "mcp__adaptive-planning__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs",
+              "--root",
+              "${tool_input.context.project_root}/${tool_input.context.plan_path}"
+            ],
+            "stdin": {
+              "event": {
+                "type": "tool_completed",
+                "source": "claude-code-hook",
+                "message": "MCP tool ${tool_name} completed",
+                "payload": {
+                  "tool": "${tool_name}",
+                  "status": "success",
+                  "context": "${tool_input.context}"
+                }
+              }
+            },
+            "timeout": 5,
+            "ignoreFailure": true
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "mcp__adaptive-planning__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs",
+              "--root",
+              "${tool_input.context.project_root}/${tool_input.context.plan_path}"
+            ],
+            "stdin": {
+              "event": {
+                "type": "tool_failed",
+                "source": "claude-code-hook",
+                "message": "MCP tool ${tool_name} failed: ${error_message}",
+                "payload": {
+                  "tool": "${tool_name}",
+                  "status": "failed",
+                  "error": "${error_message}",
+                  "context": "${tool_input.context}"
+                }
+              }
+            },
+            "timeout": 5,
+            "ignoreFailure": true
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs",
+              "--root",
+              "${CLAUDE_PROJECT_DIR}"
+            ],
+            "stdin": {
+              "event": {
+                "type": "context_compaction",
+                "source": "claude-code-hook",
+                "message": "Context compaction occurred",
+                "payload": {
+                  "turn_count": "${turn_count}",
+                  "compaction_type": "${compaction_type}"
+                }
+              }
+            },
+            "timeout": 5,
+            "ignoreFailure": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs",
+              "--root",
+              "${CLAUDE_PROJECT_DIR}"
+            ],
+            "stdin": {
+              "event": {
+                "type": "turn_ended",
+                "source": "claude-code-hook",
+                "message": "Turn completed",
+                "payload": {
+                  "turn_count": "${turn_count}"
+                }
+              }
+            },
+            "timeout": 5,
+            "ignoreFailure": true
+          }
+        ]
+      }
+    ]
+  }
+}
