@@ -40,11 +40,26 @@ test('triageTask routes direct first and promotes only stated planning triggers'
   assert.equal(result.mode, 'map');
   assert.equal(result.strategy, 'progressive');
   assert.equal(triageTask({ goal_clarity: 'high', dependency_unknown: 'high' }).mode, 'map');
-  assert.equal(triageTask({ goal_clarity: 'high', phase_count: 2 }).mode, 'map');
-  assert.equal(triageTask({ goal_clarity: 'high', long_running: true }).mode, 'map');
+  assert.equal(triageTask({ goal_clarity: 'high', phase_count: 2, domain_familiarity: 'low' }).mode, 'map');
+  assert.equal(triageTask({ goal_clarity: 'high', long_running: true, requirement_stability: 'low' }).mode, 'map');
   assert.equal(triageTask({ goal_clarity: 'high', cross_subsystem: true }).mode, 'map');
   assert.equal(triageTask({ goal_clarity: 'high', domain_familiarity: 'low', requirement_stability: 'low' }).mode, 'direct');
   assert.equal(triageTask({ goal_clarity: 'high', domain_familiarity: 'high', requirement_stability: 'high' }).uncertainty, 'low');
+});
+
+test('triageTask keeps clear stable multi-phase and long-running work direct', () => {
+  const stable = {
+    goal_clarity: 'high',
+    scope_clarity: 'high',
+    success_criteria_clarity: 'high',
+    now_later_boundary: 'high',
+    technical_risk: 'low',
+    dependency_unknown: 'low',
+    domain_familiarity: 'high',
+    requirement_stability: 'high',
+  };
+  assert.equal(triageTask({ ...stable, phase_count: 3 }).mode, 'direct');
+  assert.equal(triageTask({ ...stable, long_running: true }).mode, 'direct');
 });
 
 test('routePlanning keeps direct work cheap and routes map phases through visible providers', () => {
@@ -55,7 +70,7 @@ test('routePlanning keeps direct work cheap and routes map phases through visibl
   assert.equal(direct.gates.architecture_sync.status, 'not_required');
 
   const routed = routePlanning({
-    goal_clarity: 'high', phase_count: 3,
+    goal_clarity: 'high', phase_count: 3, technical_risk: 'high',
     visible_providers: {
       providers: [{ id: 'session-explorer', capabilities: ['explore'], roles: ['explorer'], visible: true }],
     },

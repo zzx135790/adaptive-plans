@@ -66,11 +66,12 @@ export function triageTask(signals = {}) {
       next_skill: 'writing-plans',
     };
   }
-  if (phaseCount > 1 || highCount >= 1 || signals.long_running === true || signals.cross_subsystem === true) {
+  const coordinationNeedsMap = (phaseCount > 1 || signals.long_running === true) && uncertaintyScore > 0;
+  if (coordinationNeedsMap || highCount >= 1 || signals.cross_subsystem === true) {
     const strategy = highCount >= 2 || uncertaintyScore >= 3 ? 'progressive' : 'direct';
     reasons.push(
-      phaseCount > 1 ? 'multiple phases'
-        : signals.long_running === true ? 'long-running work'
+      coordinationNeedsMap && phaseCount > 1 ? 'multiple phases with uncertainty'
+        : coordinationNeedsMap && signals.long_running === true ? 'long-running work with uncertainty'
           : signals.cross_subsystem === true ? 'cross-subsystem coordination'
             : 'material uncertainty',
     );
