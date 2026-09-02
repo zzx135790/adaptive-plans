@@ -95,6 +95,19 @@ test('MCP tools/list exposes read-only and append-event tools', async () => {
   ]);
 });
 
+test('MCP initialize reports the current plugin protocol version', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'adaptive-mcp-version-'));
+  const response = await callServer(root, {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'initialize',
+    params: { protocolVersion: '2025-03-26' },
+  });
+
+  assert.equal(response.result.serverInfo.name, 'adaptive-writing-plans');
+  assert.equal(response.result.serverInfo.version, '0.3.4');
+});
+
 test('MCP architecture, design, overview, resources, and completion tools form a stateful v2 workflow', async () => {
   const project = await mkdtemp(path.join(os.tmpdir(), 'adaptive-mcp-v2-project-'));
   const planRoot = path.join(project, 'docs', 'superpowers', 'plans', 'v2');

@@ -9,12 +9,12 @@
     {
       "name": "adaptive-writing-plans",
       "description": "Adaptive planning workflow for multi-phase uncertain work — turns discussions, approved designs, and specifications into implementation plans with durable project state.",
-      "version": "0.3.3",
+      "version": "0.3.4",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/zzx135790/adaptive-plans.git",
         "path": "plugins/adaptive-writing-plans",
-        "ref": "v0.3.3"
+        "ref": "v0.3.4"
       },
       "author": {
         "name": "zzx135790",

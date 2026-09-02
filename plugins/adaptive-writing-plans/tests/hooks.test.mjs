@@ -7,6 +7,14 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const hookPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'hooks', 'record-event.mjs');
+const hooksConfigPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'hooks', 'hooks.json');
+
+test('hooks config uses the host-neutral Codex schema shape', async () => {
+  const config = JSON.parse(await readFile(hooksConfigPath, 'utf8'));
+  assert.deepEqual(Object.keys(config), ['hooks']);
+  assert.equal('$schema' in config, false);
+  assert.equal(typeof config.hooks.PostToolUse, 'object');
+});
 
 test('record-event hook appends facts and never changes map status', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'adaptive-hook-'));
