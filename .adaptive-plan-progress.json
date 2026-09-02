@@ -1,7 +1,7 @@
 {
   "plan_id": "adaptive-writing-plans-v0.4.0",
   "plan_root": "conversation-approved-v0.4.0-plan",
-  "stage": "executing",
+  "stage": "completed",
   "items": [
     {
       "id": "integration",
@@ -73,7 +73,7 @@
         "git master",
         "git tag v0.4.0"
       ],
-      "status": "in_progress",
+      "status": "completed",
       "blocker": null,
       "verification": [
         "codex doctor --summary",
