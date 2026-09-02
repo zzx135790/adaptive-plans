@@ -1,0 +1,40 @@
+{
+  "name": "adaptive-plans-local",
+  "description": "Adaptive planning plugins for direct execution and optional governance.",
+  "owner": {
+    "name": "zzx135790",
+    "url": "https://github.com/zzx135790"
+  },
+  "plugins": [
+    {
+      "name": "adaptive-writing-plans",
+      "description": "Lean adaptive planning with direct-first routing and safe parallel dispatch.",
+      "version": "0.4.0",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/zzx135790/adaptive-plans.git",
+        "path": "plugins/adaptive-writing-plans",
+        "ref": "v0.4.0"
+      },
+      "author": {
+        "name": "zzx135790",
+        "url": "https://github.com/zzx135790"
+      }
+    },
+    {
+      "name": "adaptive-planning-governance",
+      "description": "Optional governance controls for adaptive planning workflows.",
+      "version": "0.4.0",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/zzx135790/adaptive-plans.git",
+        "path": "plugins/adaptive-planning-governance",
+        "ref": "v0.4.0"
+      },
+      "author": {
+        "name": "zzx135790",
+        "url": "https://github.com/zzx135790"
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "adaptive-plans-local",
+  "interface": {
+    "displayName": "Adaptive Plans"
+  },
+  "plugins": [
+    {
+      "name": "adaptive-writing-plans",
+      "source": {
+        "source": "local",
+        "path": "./plugins/adaptive-writing-plans"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "adaptive-planning-governance",
+      "source": {
+        "source": "local",
+        "path": "./plugins/adaptive-planning-governance"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
