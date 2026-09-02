@@ -64,7 +64,11 @@ export function routePlanning(signals = {}, visibleProviders = signals.visible_p
       reason: 'stable work stays direct; no planning artifact is created',
     };
   }
-  const routes = (PHASE_ROUTES[triage.mode] ?? []).map(({ capability, role }) =>
+  const phaseRoutes = PHASE_ROUTES[triage.mode] ?? [];
+  const requestedRoutes = triage.strategy === 'design-first'
+    ? [{ capability: 'design', role: 'designer' }, ...phaseRoutes]
+    : phaseRoutes;
+  const routes = requestedRoutes.map(({ capability, role }) =>
     selectVisibleProvider({ capability, role, visibleProviders }));
   return {
     ...triage,

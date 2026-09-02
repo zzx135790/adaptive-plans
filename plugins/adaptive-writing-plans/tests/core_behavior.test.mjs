@@ -5,7 +5,14 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { evaluateExecutionSafeWaves } from '../scripts/lib/execution-protocol.mjs';
-import { loadMap, topologicalWaves, validateMap, writeMap } from '../scripts/lib/plan-protocol.mjs';
+import {
+  loadMap,
+  renderMapMarkdown,
+  topologicalWaves,
+  validateMap,
+  writeMap,
+  writeNodeBrief,
+} from '../scripts/lib/plan-protocol.mjs';
 import { routePlanning, triageTask } from '../scripts/lib/planning-engine.mjs';
 import { selectVisibleProvider } from '../scripts/lib/provider-registry.mjs';
 import {
@@ -48,6 +55,31 @@ test('provider choice uses only visible skills and otherwise names the Ada fallb
   const fallback = selectVisibleProvider({ capability: 'review', visibleProviders: { providers: [] } });
   assert.equal(fallback.status, 'unavailable');
   assert.match(fallback.fallback, /^ada:/);
+});
+
+test('design-first planning selects a visible design provider before decomposition and review', () => {
+  const routed = routePlanning({
+    public_api: true,
+    visible_providers: { providers: [
+      { id: 'design-options', kind: 'skill', visible: true, capabilities: ['design'], roles: ['designer'] },
+    ] },
+  });
+
+  assert.deepEqual(routed.routes.map((route) => route.capability), ['design', 'decompose', 'review']);
+  assert.equal(routed.routes[0].provider, 'design-options');
+  assert.equal(routed.provider, 'design-options');
+});
+
+test('design-first planning names the Ada design fallback when no design provider is visible', () => {
+  const routed = routePlanning({ public_api: true, visible_providers: { providers: [] } });
+
+  assert.equal(routed.routes[0].capability, 'design');
+  assert.equal(routed.routes[0].fallback, 'ada:compare-explicit-options');
+  assert.deepEqual(routed.fallback, [
+    'ada:compare-explicit-options',
+    'ada:build-dag',
+    'ada:validate-core-contracts',
+  ]);
 });
 
 test('behavior budgets retain all four safety floors and defer excluded or unapproved work', () => {
@@ -94,6 +126,20 @@ test('v1 and v2 maps remain readable without rewriting unknown extension fields'
     await writeMap(root, loaded);
     assert.deepEqual(JSON.parse(await fs.readFile(path.join(root, 'map.json'), 'utf8')), source);
   }
+});
+
+test('node brief paths encode traversal ids and never write outside the plan root', async () => {
+  const sandbox = await fs.mkdtemp(path.join(os.tmpdir(), 'ada-node-path-'));
+  const planRoot = path.join(sandbox, 'plan');
+  const node = { id: '../../escape', title: 'Stay contained', status: 'ready', depends_on: [] };
+
+  await writeNodeBrief(planRoot, node);
+
+  const encodedRelative = 'nodes/..%2F..%2Fescape.md';
+  await assert.doesNotReject(fs.access(path.join(planRoot, encodedRelative)));
+  await assert.rejects(fs.access(path.join(sandbox, 'escape.md')), { code: 'ENOENT' });
+  assert.match(renderMapMarkdown({ schema_version: '2.0', plan_id: 'path-test', nodes: [node] }),
+    /\[\.\.\/\.\.\/escape\]\(nodes\/\.\.%2F\.\.%2Fescape\.md\)/);
 });
 
 test('execution partitions path/resource conflicts deterministically and never gates on token cost', () => {

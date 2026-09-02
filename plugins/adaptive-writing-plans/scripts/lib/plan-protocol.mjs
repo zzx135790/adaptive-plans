@@ -145,7 +145,7 @@ export function renderMapMarkdown(map) {
   if (blocked.length > 0) lines.push('', `Blocked topology: ${blocked.map((item) => `${item.node_id} (${item.reason})`).join(' | ')}`);
   lines.push('', '## Nodes', '', '| ID | Status | Dependencies | Title |', '|---|---|---|---|');
   for (const node of asArray(map.nodes).sort((left, right) => String(left.id).localeCompare(String(right.id)))) {
-    lines.push(`| ${node.id} | ${node.status ?? 'pending'} | ${asArray(node.depends_on).join(', ') || '-'} | ${node.title} |`);
+    lines.push(`| [${node.id}](nodes/${encodeURIComponent(node.id)}.md) | ${node.status ?? 'pending'} | ${asArray(node.depends_on).join(', ') || '-'} | ${node.title} |`);
   }
   return `${lines.join('\n')}\n`;
 }
@@ -183,7 +183,7 @@ export async function writeNodeBrief(root, node) {
     ...(asArray(node.acceptance).length > 0 ? node.acceptance.map((item) => `- ${item}`) : ['- Not specified']),
     '',
   ].join('\n');
-  await writeTextAtomic(path.join(path.resolve(root), 'nodes', `${node.id}.md`), content);
+  await writeTextAtomic(path.join(path.resolve(root), 'nodes', `${encodeURIComponent(node.id)}.md`), content);
 }
 
 export async function createPlanManifest(root, input = {}) {
