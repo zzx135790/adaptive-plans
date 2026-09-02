@@ -19,17 +19,16 @@ export function topologicalWaves(map) {
   const remaining = new Map(nodes.map((node) => [node.id, node]));
   const completed = new Set();
   const waves = [];
-  const blocked = [];
+  const blockedReasons = new Map();
 
   for (const node of nodes) {
     const unknown = asArray(node.depends_on).filter((dependency) => !ids.has(dependency));
-    if (unknown.length > 0) blocked.push({ node_id: node.id, reason: `unknown dependency: ${unknown.join(', ')}` });
+    if (unknown.length > 0) blockedReasons.set(node.id, `unknown dependency: ${unknown.join(', ')}`);
   }
-  const blockedIds = new Set(blocked.map((item) => item.node_id));
 
   while (remaining.size > 0) {
     const wave = [...remaining.values()].filter((node) =>
-      !blockedIds.has(node.id) && asArray(node.depends_on).every((dependency) => completed.has(dependency)));
+      !blockedReasons.has(node.id) && asArray(node.depends_on).every((dependency) => completed.has(dependency)));
     if (wave.length === 0) break;
     wave.sort((left, right) => left.id.localeCompare(right.id));
     waves.push(wave);
@@ -39,9 +38,25 @@ export function topologicalWaves(map) {
     }
   }
 
-  for (const node of [...remaining.values()].sort((left, right) => left.id.localeCompare(right.id))) {
-    if (!blockedIds.has(node.id)) blocked.push({ node_id: node.id, reason: 'dependency cycle' });
+  const pending = [...remaining.values()].sort((left, right) => left.id.localeCompare(right.id));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const node of pending) {
+      if (blockedReasons.has(node.id)) continue;
+      const blockedDependency = asArray(node.depends_on).find((dependency) => blockedReasons.has(dependency));
+      if (blockedDependency) {
+        blockedReasons.set(node.id, `blocked dependency: ${blockedDependency}`);
+        changed = true;
+      }
+    }
   }
+  for (const node of pending) {
+    if (!blockedReasons.has(node.id)) blockedReasons.set(node.id, 'dependency cycle');
+  }
+  const blocked = [...blockedReasons.entries()]
+    .map(([node_id, reason]) => ({ node_id, reason }))
+    .sort((left, right) => left.node_id.localeCompare(right.node_id));
   return { waves, blocked };
 }
 

@@ -10,10 +10,11 @@ const scripts = {
   add: 'add-node.mjs',
   validate: 'validate-plan.mjs',
   overview: 'overview.mjs',
+  waves: 'execution-waves.mjs',
 };
 const selected = scripts[command];
 if (!selected) {
-  console.error('Usage: adaptive-plan route|init|add|validate|overview');
+  console.error('Usage: adaptive-plan route|init|add|validate|overview|waves');
   process.exit(2);
 }
 const scriptRoot = path.dirname(fileURLToPath(import.meta.url));

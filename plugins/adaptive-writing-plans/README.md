@@ -30,4 +30,5 @@ adaptive-plan init --root <folder> --id <id>
 adaptive-plan add --root <folder> --id <node> --title <title>
 adaptive-plan validate --root <folder>
 adaptive-plan overview --root <folder>
+adaptive-plan waves --root <folder> [--statuses '{"N-001":"done"}']
 ```

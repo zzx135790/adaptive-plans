@@ -1,17 +1,20 @@
 import { asArray, isObject } from './io-utils.mjs';
-import { topologicalWaves } from './plan-protocol.mjs';
 
 const EXECUTABLE = new Set(['ready', 'in_progress', 'awaiting_validation']);
+const COMPLETED = new Set(['done', 'completed']);
 
 function pathOverlaps(left, right) {
-  const a = String(left).replaceAll('\\', '/').replace(/^\.\//, '');
-  const b = String(right).replaceAll('\\', '/').replace(/^\.\//, '');
+  const normalize = (value) => String(value).replaceAll('\\', '/').replace(/^\.\//, '').replace(/\/$/, '');
+  const a = normalize(left);
+  const b = normalize(right);
   if (a === b) return true;
+  if (!a.includes('*') && !b.includes('*')) return a.startsWith(`${b}/`) || b.startsWith(`${a}/`);
   const prefix = (value) => value.includes('*') ? value.slice(0, value.indexOf('*')) : null;
+  const overlapsPrefix = (value, candidate) => candidate === value.replace(/\/$/, '') || candidate.startsWith(value);
   const aPrefix = prefix(a);
   const bPrefix = prefix(b);
-  if (aPrefix !== null && (b.startsWith(aPrefix) || (bPrefix !== null && aPrefix.startsWith(bPrefix)))) return true;
-  if (bPrefix !== null && a.startsWith(bPrefix)) return true;
+  if (aPrefix !== null && overlapsPrefix(aPrefix, b)) return true;
+  if (bPrefix !== null && overlapsPrefix(bPrefix, a)) return true;
   return false;
 }
 
@@ -47,10 +50,15 @@ function conflicts(left, right) {
   return false;
 }
 
-function candidateBlockers(node) {
+function candidateBlockers(node, byId) {
   const metadata = node.parallelization ?? {};
   const blockers = [];
   if (!EXECUTABLE.has(node.status)) blockers.push(`node status ${node.status} is not executable`);
+  const unknown = asArray(node.depends_on).filter((dependency) => !byId.has(dependency));
+  if (unknown.length > 0) blockers.push(`unknown dependency: ${unknown.join(', ')}`);
+  const incomplete = asArray(node.depends_on)
+    .filter((dependency) => byId.has(dependency) && !COMPLETED.has(byId.get(dependency).status));
+  if (incomplete.length > 0) blockers.push(`dependency not done: ${incomplete.join(', ')}`);
   if (asArray(metadata.owned_paths).length === 0) blockers.push('missing owned_paths');
   return blockers;
 }
@@ -73,51 +81,41 @@ function partition(nodes) {
 }
 
 export function evaluateExecutionSafeWaves(map) {
-  const topology = topologicalWaves(map);
+  const nodes = asArray(map?.nodes)
+    .filter((node) => isObject(node) && typeof node.id === 'string')
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const byId = new Map(nodes.map((node) => [node.id, node]));
   const executionSafeWaves = [];
   const dispatchBatches = [];
   const serial = [];
+  const candidates = [];
+  for (const node of nodes) {
+    if (COMPLETED.has(node.status)) continue;
+    const blockers = candidateBlockers(node, byId);
+    if (blockers.length > 0) {
+      serial.push({ node_id: node.id, dependency_wave: null, execution_wave: 'blocked', parallel: false, reason: blockers.join('; ') });
+    } else candidates.push(node);
+  }
 
-  topology.waves.forEach((dependencyWave, dependencyIndex) => {
-    const candidates = [];
-    for (const node of dependencyWave) {
-      if (node.status === 'done' || node.status === 'completed') continue;
-      const blockers = candidateBlockers(node);
-      if (blockers.length > 0) {
-        serial.push({
-          node_id: node.id,
-          dependency_wave: dependencyIndex + 1,
-          execution_wave: 'serial',
-          parallel: false,
-          reason: blockers.join('; '),
-        });
-      } else candidates.push(node);
-    }
-
-    partition(candidates).forEach((subwave, subwaveIndex) => {
-      const executionWave = `${dependencyIndex + 1}.${subwaveIndex + 1}`;
-      const entries = subwave.map((node) => ({
-        node_id: node.id,
-        dependency_wave: dependencyIndex + 1,
-        execution_wave: executionWave,
-        parallel: subwave.length > 1,
-        reason: subwave.length > 1
-          ? 'dependency-ready with disjoint ownership and no shared mutable unpartitioned resource'
-          : 'deterministic conflict partition or single dependency-ready leaf',
-      }));
-      executionSafeWaves.push(entries);
-      dispatchBatches.push({
-        dependency_wave: dependencyIndex + 1,
-        subwave: subwaveIndex + 1,
-        node_ids: entries.map((entry) => entry.node_id),
-        mode: entries.length > 1 ? 'parallel' : 'serial',
-      });
+  partition(candidates).forEach((subwave, subwaveIndex) => {
+    const executionWave = `1.${subwaveIndex + 1}`;
+    const entries = subwave.map((node) => ({
+      node_id: node.id,
+      dependency_wave: 1,
+      execution_wave: executionWave,
+      parallel: subwave.length > 1,
+      reason: subwave.length > 1
+        ? 'dependency-ready with disjoint ownership and no shared mutable unpartitioned resource'
+        : 'deterministic conflict partition or single dependency-ready leaf',
+    }));
+    executionSafeWaves.push(entries);
+    dispatchBatches.push({
+      dependency_wave: 1,
+      subwave: subwaveIndex + 1,
+      node_ids: entries.map((entry) => entry.node_id),
+      mode: entries.length > 1 ? 'parallel' : 'serial',
     });
   });
-
-  for (const item of topology.blocked) {
-    serial.push({ node_id: item.node_id, dependency_wave: null, execution_wave: 'blocked', parallel: false, reason: item.reason });
-  }
   return {
     coordinator: 'main_model',
     main_model_takes_leaf_work: false,

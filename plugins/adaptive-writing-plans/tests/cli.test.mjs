@@ -43,6 +43,10 @@ test('core CLI routes directly and creates, validates, and summarizes a DAG', as
   assert.equal(parsed(await run(['validate', '--root', planRoot])).valid, true);
   const overview = parsed(await run(['overview', '--root', planRoot]));
   assert.deepEqual(overview.dependency_waves.map((wave) => wave.node_ids), [['A'], ['B']]);
+  assert.deepEqual(parsed(await run(['waves', '--root', planRoot])).dispatch_batches.map((batch) => batch.node_ids), [['A']]);
+  assert.deepEqual(parsed(await run([
+    'waves', '--root', planRoot, '--statuses', JSON.stringify({ A: 'done' }),
+  ])).dispatch_batches.map((batch) => batch.node_ids), [['B']]);
 });
 
 test('core CLI does not expose governance commands', async () => {

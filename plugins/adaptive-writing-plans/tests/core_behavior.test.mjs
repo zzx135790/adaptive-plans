@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { evaluateExecutionSafeWaves } from '../scripts/lib/execution-protocol.mjs';
-import { loadMap, validateMap, writeMap } from '../scripts/lib/plan-protocol.mjs';
+import { loadMap, topologicalWaves, validateMap, writeMap } from '../scripts/lib/plan-protocol.mjs';
 import { routePlanning, triageTask } from '../scripts/lib/planning-engine.mjs';
 import { selectVisibleProvider } from '../scripts/lib/provider-registry.mjs';
 import {
@@ -124,4 +124,50 @@ test('execution partitions path/resource conflicts deterministically and never g
   ]);
   assert.equal(result.coordinator, 'main_model');
   assert.equal(result.main_model_takes_leaf_work, false);
+});
+
+test('execution dispatches only nodes whose prerequisites are complete at runtime', () => {
+  const parallelization = (ownedPath) => ({ owned_paths: [ownedPath] });
+  const map = { nodes: [
+    { id: 'A', title: 'A', status: 'ready', depends_on: [], parallelization: parallelization('src/a.js') },
+    { id: 'B', title: 'B', status: 'ready', depends_on: ['A'], parallelization: parallelization('src/b.js') },
+    { id: 'C', title: 'C', status: 'blocked', depends_on: [], parallelization: parallelization('src/c.js') },
+    { id: 'D', title: 'D', status: 'ready', depends_on: ['C'], parallelization: parallelization('src/d.js') },
+    { id: 'E', title: 'E', depends_on: [], parallelization: parallelization('src/e.js') },
+    { id: 'F', title: 'F', status: 'ready', depends_on: ['E'], parallelization: parallelization('src/f.js') },
+  ] };
+
+  const result = evaluateExecutionSafeWaves(map);
+
+  assert.deepEqual(result.dispatch_batches.map((batch) => batch.node_ids), [['A']]);
+  assert.match(result.serial.find((node) => node.node_id === 'B').reason, /dependency not done: A/);
+  assert.match(result.serial.find((node) => node.node_id === 'D').reason, /dependency not done: C/);
+  assert.match(result.serial.find((node) => node.node_id === 'F').reason, /dependency not done: E/);
+});
+
+test('ancestor and descendant owned paths are placed in deterministic later subwaves', () => {
+  for (const descendant of ['src/b.js', 'src/*', 'src/**']) {
+    const map = { nodes: [
+      { id: 'C', status: 'ready', depends_on: [], parallelization: { owned_paths: ['test'] } },
+      { id: 'B', status: 'ready', depends_on: [], parallelization: { owned_paths: [descendant] } },
+      { id: 'A', status: 'ready', depends_on: [], parallelization: { owned_paths: ['src'] } },
+    ] };
+
+    assert.deepEqual(evaluateExecutionSafeWaves(map).dispatch_batches.map((batch) => batch.node_ids), [
+      ['A', 'C'],
+      ['B'],
+    ], descendant);
+  }
+});
+
+test('transitive unknown-dependency blockage is not mislabeled as a cycle', () => {
+  const result = topologicalWaves({ nodes: [
+    { id: 'B', depends_on: ['A'] },
+    { id: 'A', depends_on: ['missing'] },
+  ] });
+
+  assert.deepEqual(result.blocked, [
+    { node_id: 'A', reason: 'unknown dependency: missing' },
+    { node_id: 'B', reason: 'blocked dependency: A' },
+  ]);
 });

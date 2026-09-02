@@ -46,4 +46,6 @@ unpartitioned resource. Move conflicts to later subwaves. Token cost is never a
 gate. The main model coordinates and integrates; delegate leaf work, then review
 and combine its results.
 
-Use `adaptive-plan route|init|add|validate|overview` for the deterministic core.
+Use `adaptive-plan route|init|add|validate|overview|waves` for the deterministic
+core. Pass `waves --statuses <json>` when live node status differs from the map;
+the command evaluates that snapshot without rewriting the plan.
