@@ -42,7 +42,7 @@ function rootFromEvent(parsed, wrapped) {
     if (contextRoot) return contextRoot;
   }
 
-  return null;
+  return [wrapped?.cwd, parsed?.cwd].map(nonEmptyString).find(Boolean) ?? null;
 }
 
 const explicitRoot = rootIndex >= 0 ? nonEmptyString(args[rootIndex + 1]) : null;

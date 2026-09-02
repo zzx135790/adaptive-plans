@@ -83,6 +83,22 @@ test('native Codex Stop input emits only empty control JSON and skips without a 
   assert.equal(existsSync(path.join(cwd, 'events.jsonl')), false);
 });
 
+test('native Codex Stop input appends when cwd is a valid plan root', async () => {
+  const root = await createPlanRoot('adaptive-hook-codex-plan-cwd-');
+  const result = await runHook({
+    hook_event_name: 'Stop',
+    session_id: 'session-1',
+    turn_id: 'turn-1',
+    cwd: root,
+  });
+
+  assert.equal(result.exitCode, 0);
+  assert.equal(result.stdout, '{}\n');
+  const [event] = await readEvents(root);
+  assert.equal(event.type, 'Stop');
+  assert.equal(event.source, 'codex-hook');
+});
+
 test('native Codex Stop input appends a sanitized event to an explicit valid plan root', async () => {
   const root = await createPlanRoot();
   const result = await runHook({
