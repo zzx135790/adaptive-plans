@@ -30,6 +30,7 @@
     "provider_id": {"type": "string"},
     "capability": {"type": "string"},
     "status": {"enum": ["ok", "partial", "unavailable", "error", "unstructured"]},
+    "covered_concerns": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "questions": {"type": "array"},
     "assumptions": {"type": "array"},
     "findings": {"type": "array"},

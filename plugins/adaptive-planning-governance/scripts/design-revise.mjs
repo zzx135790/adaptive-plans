@@ -19,15 +19,16 @@ function parseArgs(argv) {
 
 const args = parseArgs(process.argv.slice(2));
 if (!args.root || !args.reason) {
-  console.error('Usage: adaptive-plan design revise --root <plan-folder> --reason <evidence> [--question <blocking-question>] [--details <json>]');
+  console.error('Usage: adaptive-plan design revise --root <plan-folder> [--thread <thread-id>] --reason <evidence> [--question <blocking-question>] [--details <json>]');
   process.exit(2);
 }
 try {
   const root = path.resolve(args.root);
-  const current = currentCanonicalDesignRef(await loadDesignLedger(root));
+  const current = currentCanonicalDesignRef(await loadDesignLedger(root), args.thread);
   const details = args.details ? await readJson(path.resolve(args.details)) : {};
   const revised = await reviseCanonicalDesign(root, {
     ...details,
+    threadId: args.thread,
     reason: args.reason,
     blocking_questions: args.question ? [args.question] : details.blocking_questions,
   });

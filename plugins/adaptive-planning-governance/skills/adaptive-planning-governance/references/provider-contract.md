@@ -81,6 +81,7 @@ declared evidence is observed and persisted according to the provider contract.
   "provider_id": "provider-id",
   "capability": "design",
   "status": "ok|partial|unavailable|error|unstructured",
+  "covered_concerns": [],
   "questions": [],
   "assumptions": [],
   "findings": [],
@@ -101,6 +102,14 @@ Never invent `confidence.score`. Unknown fields remain in `extensions` and the
 single persisted raw record. When `raw_ref` is present, `raw` must be null so a
 handoff cannot duplicate provider output. Plain text is `unstructured`;
 conditional suggestions remain findings or questions, not decisions.
+
+For design evidence, `covered_concerns` names the exact current
+`provider_status.blocking_concerns` addressed by the result. Only an `ok` or
+`partial` result clears its named matches. Unmatched concerns and every
+`composition_blocker` remain blocking; unavailable, error, and unstructured
+results clear nothing. A normalizer may preserve this field under
+`extensions.covered_concerns`, which the ledger treats equivalently. Approval
+needs a provider waiver only while either unresolved blocker list is non-empty.
 
 ## CompositionContract
 

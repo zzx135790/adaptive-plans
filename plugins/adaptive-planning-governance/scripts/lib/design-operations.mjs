@@ -1,4 +1,5 @@
 import {
+  addDesignThread,
   approveDesignThread,
   createDesignLedger,
   currentThreadRevision,
@@ -16,9 +17,9 @@ import {
 } from './design-engine.mjs';
 import { asArray, cloneJson } from './io-utils.mjs';
 
-function rootThread(document) {
-  const thread = asArray(document?.threads).find((candidate) => candidate.thread_id === 'root');
-  if (!thread) throw new Error('root design thread is missing');
+function designThread(document, threadId = 'root') {
+  const thread = asArray(document?.threads).find((candidate) => candidate.thread_id === threadId);
+  if (!thread) throw new Error(`unknown design thread ${threadId}`);
   return thread;
 }
 
@@ -52,9 +53,17 @@ export async function startCanonicalDesign(root, request = {}, selection = {}) {
   return writeDesignLedger(root, createCanonicalDesign(request, selection));
 }
 
+export async function addCanonicalDesignThread(root, input = {}, options = {}) {
+  const document = await loadDesignLedger(root);
+  const next = addDesignThread(document, input, {
+    expectedDocumentStateHash: options.expectedHash,
+  });
+  return writeDesignLedger(root, next, { expectedDocumentStateHash: options.expectedHash });
+}
+
 export async function updateCanonicalDesign(root, updates, options = {}) {
   const document = await loadDesignLedger(root);
-  const thread = rootThread(document);
+  const thread = designThread(document, options.threadId);
   const next = updateDesignThread(document, thread.thread_id, updates, {
     expectedDocumentStateHash: document.document_state_hash,
     expectedThreadStateHash: thread.thread_state_hash,
@@ -65,7 +74,7 @@ export async function updateCanonicalDesign(root, updates, options = {}) {
 
 export async function recordCanonicalDesignProviderResult(root, result, options = {}) {
   const document = await loadDesignLedger(root);
-  const thread = rootThread(document);
+  const thread = designThread(document, options.threadId);
   const next = recordDesignThreadProviderResult(document, thread.thread_id, result, {
     expectedDocumentStateHash: document.document_state_hash,
     expectedThreadStateHash: thread.thread_state_hash,
@@ -76,9 +85,9 @@ export async function recordCanonicalDesignProviderResult(root, result, options 
 
 export async function reviseCanonicalDesign(root, details = {}) {
   const document = await loadDesignLedger(root);
-  const thread = rootThread(document);
+  const thread = designThread(document, details.threadId);
   const current = currentThreadRevision(thread);
-  if (!current) throw new Error('current root design revision is missing');
+  if (!current) throw new Error(`current ${thread.thread_id} design revision is missing`);
   const profile = details.profile ?? (details.request ? triageDesign({
     ...details.request,
     posture_ref: details.request.posture_ref ?? current.posture_ref,
@@ -124,7 +133,7 @@ export function designApprovalBriefForDocument(document, threadId = 'root') {
 
 export async function approveCanonicalDesign(root, input = {}) {
   const document = await loadDesignLedger(root);
-  const thread = rootThread(document);
+  const thread = designThread(document, input.threadId);
   const next = approveDesignThread(document, thread.thread_id, {
     expectedContentHash: input.expectedHash,
     expectedPostureHash: input.expectedPostureHash,
@@ -139,10 +148,10 @@ export async function approveCanonicalDesign(root, input = {}) {
   return writeDesignLedger(root, next, { expectedDocumentStateHash: document.document_state_hash });
 }
 
-export function currentCanonicalDesignRef(document) {
-  const thread = rootThread(document);
+export function currentCanonicalDesignRef(document, threadId = 'root') {
+  const thread = designThread(document, threadId);
   const revision = currentThreadRevision(thread);
-  if (!revision) throw new Error('current root design revision is missing');
+  if (!revision) throw new Error(`current ${thread.thread_id} design revision is missing`);
   return {
     design_id: document.design_id,
     thread_id: thread.thread_id,
@@ -150,7 +159,7 @@ export function currentCanonicalDesignRef(document) {
     design_hash: revision.content_hash,
     content_hash: revision.content_hash,
     status: revision.decision_status,
-    scope: 'root',
+    scope: thread.thread_id === 'root' ? 'root' : 'thread',
     node_id: null,
   };
 }

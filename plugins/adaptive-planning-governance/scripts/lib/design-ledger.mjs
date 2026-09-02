@@ -449,6 +449,26 @@ export function recordDesignThreadProviderResult(document, threadId, providerRes
   if (!asArray(current.provider_refs).some((result) => stableHash(result) === stableHash(providerResult))) {
     current.provider_refs.push(cloneJson(providerResult));
   }
+  const blockingConcerns = uniqueStrings(current.provider_status?.blocking_concerns);
+  const compositionBlockers = uniqueStrings(current.provider_status?.composition_blockers);
+  const coveredConcerns = new Set(uniqueStrings([
+    ...asArray(providerResult?.covered_concerns),
+    ...asArray(providerResult?.extensions?.covered_concerns),
+  ]));
+  const successful = ['ok', 'partial'].includes(providerResult?.status);
+  const remainingConcerns = successful
+    ? blockingConcerns.filter((concern) => !coveredConcerns.has(concern))
+    : blockingConcerns;
+  current.provider_status = {
+    ...(isObject(current.provider_status) ? cloneJson(current.provider_status) : {}),
+    status: remainingConcerns.length > 0 || compositionBlockers.length > 0
+      ? 'blocked'
+      : successful && coveredConcerns.size > 0
+        ? 'ready'
+        : current.provider_status?.status ?? 'unknown',
+    blocking_concerns: remainingConcerns,
+    composition_blockers: compositionBlockers,
+  };
   delete current.updated_at;
   delete thread.updated_at;
   delete next.updated_at;
@@ -558,7 +578,8 @@ export function approveDesignThread(document, threadId, input = {}, options = {}
   if (input.expectedContentHash !== revision.content_hash) throw Object.assign(new Error('design thread content changed'), { code: 'DESIGN_CONFLICT' });
   if (input.expectedPostureHash !== revision.posture_ref.posture_hash) throw Object.assign(new Error('design thread posture changed'), { code: 'DESIGN_POSTURE_CONFLICT' });
   if (input.briefHash !== brief.brief_hash) throw Object.assign(new Error('approval brief changed; regenerate it before approval'), { code: 'APPROVAL_BRIEF_CONFLICT' });
-  const providerBlocked = revision.provider_status?.status === 'blocked';
+  const providerBlocked = asArray(revision.provider_status?.blocking_concerns).length > 0
+    || asArray(revision.provider_status?.composition_blockers).length > 0;
   if (providerBlocked && !input.waiver) throw new Error('blocked provider coverage requires an explicit waiver');
   if (!input.approval) throw new Error('explicit approval evidence is required');
   const contentHash = revision.content_hash;

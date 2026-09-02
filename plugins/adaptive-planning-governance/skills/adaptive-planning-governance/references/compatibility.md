@@ -96,10 +96,15 @@ The portable command bridge is:
 adaptive-plan overview|migrate
 adaptive-plan posture assess|check|promote
 adaptive-plan architecture bootstrap|check|propose|apply
-adaptive-plan design start|update|record|approve|revise|brief
+adaptive-plan design start|add-thread|update|record|approve|revise|brief
 adaptive-plan plan link-architecture|link-design|record-impact
 adaptive-plan completion check
 ```
+
+Design update, record, approve, revise, and brief commands accept
+`--thread <thread-id>` and default to `root`. Link a child design with both
+`--thread <thread-id>` and `--node <node-id>`; root linking remains
+project-scoped.
 
 ## Version compatibility
 

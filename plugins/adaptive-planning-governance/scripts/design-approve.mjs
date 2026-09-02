@@ -17,12 +17,13 @@ function parseArgs(argv) {
 
 const args = parseArgs(process.argv.slice(2));
 if (!args.root || !args.approval || !args.expected_hash) {
-  console.error('Usage: node scripts/design-approve.mjs --root <plan-folder> --approval <statement> --expected-hash <hash> [--expected-posture-hash <hash>] [--brief-hash <hash>] [--waiver <reason>]');
+  console.error('Usage: node scripts/design-approve.mjs --root <plan-folder> [--thread <thread-id>] --approval <statement> --expected-hash <hash> [--expected-posture-hash <hash>] [--brief-hash <hash>] [--waiver <reason>]');
   process.exit(2);
 }
 try {
   const result = await approveCanonicalDesign(path.resolve(args.root), {
     expectedHash: args.expected_hash,
+    threadId: args.thread,
     approval: { source: 'user', statement: args.approval },
     expectedPostureHash: args.expected_posture_hash,
     briefHash: args.brief_hash,

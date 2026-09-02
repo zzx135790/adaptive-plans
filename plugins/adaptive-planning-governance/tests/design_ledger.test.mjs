@@ -15,6 +15,7 @@ import {
   ledgerApprovalBrief,
   loadDesignLedger,
   recordContractEvidence,
+  recordDesignThreadProviderResult,
   reenterDesignThreads,
   reviseDesignThread,
   validateDesignLedger,
@@ -226,6 +227,128 @@ test('ledger approval briefs bind content and posture while approval changes sta
   assert.equal(after.content_hash, before.content_hash);
   assert.notEqual(after.state_hash, before.state_hash);
   assert.equal(after.approval.approval_brief_hash, brief.brief_hash);
+});
+
+test('provider evidence clears only explicitly covered unresolved concerns', () => {
+  let ledger = createDesignLedger({
+    design_id: 'provider-reconciliation',
+    posture_ref: postureRef,
+    selected_option: { id: 'bounded' },
+    provider_status: {
+      status: 'blocked',
+      blocking_concerns: ['security', 'failure_semantics'],
+      composition_blockers: [],
+    },
+  });
+
+  const record = (result) => {
+    const thread = ledger.threads[0];
+    const revision = currentThreadRevision(thread);
+    ledger = recordDesignThreadProviderResult(ledger, 'root', result, {
+      expectedDocumentStateHash: ledger.document_state_hash,
+      expectedThreadStateHash: thread.thread_state_hash,
+      expectedContentHash: revision.content_hash,
+    });
+    return currentThreadRevision(ledger.threads[0]);
+  };
+
+  let revision = record({
+    schema_version: '2.0',
+    provider_id: 'failed-security-review',
+    capability: 'design',
+    status: 'error',
+    covered_concerns: ['security'],
+  });
+  assert.deepEqual(revision.provider_status.blocking_concerns, ['security', 'failure_semantics']);
+  assert.equal(revision.provider_status.status, 'blocked');
+
+  revision = record({
+    schema_version: '2.0',
+    provider_id: 'security-review',
+    capability: 'design',
+    status: 'partial',
+    covered_concerns: ['security'],
+  });
+  assert.deepEqual(revision.provider_status.blocking_concerns, ['failure_semantics']);
+  assert.equal(revision.provider_status.status, 'blocked');
+
+  let brief = ledgerApprovalBrief(ledger, 'root');
+  assert.throws(() => approveDesignThread(ledger, 'root', {
+    expectedContentHash: revision.content_hash,
+    expectedPostureHash: postureRef.posture_hash,
+    briefHash: brief.brief_hash,
+    approval: { source: 'user', statement: 'approve without a waiver' },
+  }, {
+    expectedDocumentStateHash: ledger.document_state_hash,
+    expectedThreadStateHash: ledger.threads[0].thread_state_hash,
+  }), /requires an explicit waiver/i);
+
+  revision = record({
+    schema_version: '2.0',
+    provider_id: 'failure-review',
+    capability: 'design',
+    status: 'ok',
+    extensions: { covered_concerns: ['failure_semantics'] },
+  });
+  assert.deepEqual(revision.provider_status.blocking_concerns, []);
+  assert.equal(revision.provider_status.status, 'ready');
+  brief = ledgerApprovalBrief(ledger, 'root');
+  ledger = approveDesignThread(ledger, 'root', {
+    expectedContentHash: revision.content_hash,
+    expectedPostureHash: postureRef.posture_hash,
+    briefHash: brief.brief_hash,
+    approval: { source: 'user', statement: 'approve reconciled evidence' },
+  }, {
+    expectedDocumentStateHash: ledger.document_state_hash,
+    expectedThreadStateHash: ledger.threads[0].thread_state_hash,
+  });
+  assert.equal(currentThreadRevision(ledger.threads[0]).decision_status, 'approved');
+
+  let compositionBlocked = createDesignLedger({
+    design_id: 'composition-blocked',
+    posture_ref: postureRef,
+    selected_option: { id: 'bounded' },
+    provider_status: {
+      status: 'blocked',
+      blocking_concerns: ['security'],
+      composition_blockers: ['security-provider'],
+    },
+  });
+  const compositionThread = compositionBlocked.threads[0];
+  compositionBlocked = recordDesignThreadProviderResult(compositionBlocked, 'root', {
+    schema_version: '2.0',
+    provider_id: 'independent-security-review',
+    capability: 'design',
+    status: 'ok',
+    covered_concerns: ['security'],
+  }, {
+    expectedDocumentStateHash: compositionBlocked.document_state_hash,
+    expectedThreadStateHash: compositionThread.thread_state_hash,
+    expectedContentHash: currentThreadRevision(compositionThread).content_hash,
+  });
+  const compositionRevision = currentThreadRevision(compositionBlocked.threads[0]);
+  assert.deepEqual(compositionRevision.provider_status.blocking_concerns, []);
+  assert.deepEqual(compositionRevision.provider_status.composition_blockers, ['security-provider']);
+  assert.equal(compositionRevision.provider_status.status, 'blocked');
+
+  const staleStatus = createDesignLedger({
+    design_id: 'stale-provider-status',
+    posture_ref: postureRef,
+    selected_option: { id: 'bounded' },
+    provider_status: { status: 'blocked', blocking_concerns: [], composition_blockers: [] },
+  });
+  const staleStatusRevision = currentThreadRevision(staleStatus.threads[0]);
+  const staleStatusBrief = ledgerApprovalBrief(staleStatus, 'root');
+  const approvedStaleStatus = approveDesignThread(staleStatus, 'root', {
+    expectedContentHash: staleStatusRevision.content_hash,
+    expectedPostureHash: postureRef.posture_hash,
+    briefHash: staleStatusBrief.brief_hash,
+    approval: { source: 'user', statement: 'approve without unresolved blockers' },
+  }, {
+    expectedDocumentStateHash: staleStatus.document_state_hash,
+    expectedThreadStateHash: staleStatus.threads[0].thread_state_hash,
+  });
+  assert.equal(currentThreadRevision(approvedStaleStatus.threads[0]).decision_status, 'approved');
 });
 
 test('posture re-entry creates successors and impact evidence only for exact threads', () => {

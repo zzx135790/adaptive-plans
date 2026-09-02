@@ -37,6 +37,7 @@ import {
   triageDesign,
 } from '../scripts/lib/design-engine.mjs';
 import {
+  addCanonicalDesignThread,
   approveCanonicalDesign,
   currentCanonicalDesignRef,
   designApprovalBriefForDocument,
@@ -271,7 +272,11 @@ const toolDefinitions = [
   {
     name: 'plan_link_design',
     description: 'Bind the map or one node to the approved current design revision.',
-    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    inputSchema: {
+      type: 'object',
+      properties: { thread_id: { type: 'string', minLength: 1 }, node_id: { type: 'string', minLength: 1 } },
+      additionalProperties: false,
+    },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
@@ -339,9 +344,29 @@ const toolDefinitions = [
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   },
   {
+    name: 'design_add_thread',
+    description: 'Append one child design thread using the exact current document state hash.',
+    inputSchema: {
+      type: 'object',
+      required: ['thread', 'expected_hash'],
+      properties: { thread: { type: 'object' }, expected_hash: { type: 'string', minLength: 1 } },
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  },
+  {
     name: 'design_update',
     description: 'Update the exact current in-progress design revision using optimistic hash matching.',
-    inputSchema: { type: 'object', required: ['updates', 'expected_hash'], properties: { updates: { type: 'object' }, expected_hash: { type: 'string' } }, additionalProperties: false },
+    inputSchema: {
+      type: 'object',
+      required: ['updates', 'expected_hash'],
+      properties: {
+        thread_id: { type: 'string', minLength: 1 },
+        updates: { type: 'object' },
+        expected_hash: { type: 'string' },
+      },
+      additionalProperties: false,
+    },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
@@ -352,6 +377,7 @@ const toolDefinitions = [
       required: ['reason'],
       properties: {
         reason: { type: 'string' },
+        thread_id: { type: 'string', minLength: 1 },
         blocking_questions: { type: 'array', items: { type: 'string' } },
         request: { type: 'object' },
         provider_selection: { type: 'object' },
@@ -363,13 +389,26 @@ const toolDefinitions = [
   {
     name: 'design_record_result',
     description: 'Attach one provider contribution to the current design revision without granting it state authority.',
-    inputSchema: { type: 'object', required: ['result'], properties: { result: { type: 'object' }, expected_hash: { type: 'string' } }, additionalProperties: false },
+    inputSchema: {
+      type: 'object',
+      required: ['result', 'expected_hash'],
+      properties: {
+        thread_id: { type: 'string', minLength: 1 },
+        result: { type: 'object' },
+        expected_hash: { type: 'string' },
+      },
+      additionalProperties: false,
+    },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
     name: 'design_approval_brief',
     description: 'Render the current exact design ApprovalBrief for inline terminal confirmation.',
-    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    inputSchema: {
+      type: 'object',
+      properties: { thread_id: { type: 'string', minLength: 1 } },
+      additionalProperties: false,
+    },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
@@ -380,6 +419,7 @@ const toolDefinitions = [
       required: ['expected_hash', 'expected_posture_hash', 'brief_hash', 'approval'],
       properties: {
         expected_hash: { type: 'string', minLength: 1 },
+        thread_id: { type: 'string', minLength: 1 },
         expected_posture_hash: { type: ['string', 'null'] },
         brief_hash: { type: 'string', minLength: 1 },
         approval: {},
@@ -508,7 +548,10 @@ async function callTool(name, input = {}) {
     case 'plan_link_architecture':
       return success(await linkArchitectureSnapshot(planRoot, await loadArchitecture(architectureRoot)));
     case 'plan_link_design':
-      return success(await linkApprovedDesign(planRoot, await loadDesign(planRoot)));
+      return success(await linkApprovedDesign(planRoot, await loadDesign(planRoot), {
+        threadId: input.thread_id,
+        nodeId: input.node_id,
+      }));
     case 'plan_record_architecture_impact':
       return success(await recordArchitectureImpact(planRoot, input.impact, input.artifact_path));
     case 'architecture_open':
@@ -536,13 +579,19 @@ async function callTool(name, input = {}) {
       const profile = triageDesign(input.request);
       return success(await startCanonicalDesign(planRoot, { ...input.request, profile }, input.provider_selection));
     }
+    case 'design_add_thread':
+      return success(await addCanonicalDesignThread(planRoot, input.thread, { expectedHash: input.expected_hash }));
     case 'design_update':
-      return success(await updateCanonicalDesign(planRoot, input.updates, { expectedHash: input.expected_hash }));
+      return success(await updateCanonicalDesign(planRoot, input.updates, {
+        expectedHash: input.expected_hash,
+        threadId: input.thread_id,
+      }));
     case 'design_revise':
       {
         const currentDocument = await loadDesign(planRoot);
-        const currentRef = currentCanonicalDesignRef(currentDocument);
+        const currentRef = currentCanonicalDesignRef(currentDocument, input.thread_id);
         const revised = await reviseCanonicalDesign(planRoot, {
+          threadId: input.thread_id,
           reason: input.reason,
           blocking_questions: input.blocking_questions,
           request: input.request,
@@ -557,11 +606,15 @@ async function callTool(name, input = {}) {
         return success(revised);
       }
     case 'design_record_result':
-      return success(await recordCanonicalDesignProviderResult(planRoot, input.result, { expectedHash: input.expected_hash }));
+      return success(await recordCanonicalDesignProviderResult(planRoot, input.result, {
+        expectedHash: input.expected_hash,
+        threadId: input.thread_id,
+      }));
     case 'design_approval_brief':
-      return success(designApprovalBriefForDocument(await loadDesign(planRoot)));
+      return success(designApprovalBriefForDocument(await loadDesign(planRoot), input.thread_id));
     case 'design_approve':
       return success(await approveCanonicalDesign(planRoot, {
+        threadId: input.thread_id,
         expectedHash: input.expected_hash,
         expectedPostureHash: input.expected_posture_hash,
         briefHash: input.brief_hash,

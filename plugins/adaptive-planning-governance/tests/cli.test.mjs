@@ -318,6 +318,97 @@ test('top-level CLI completes and re-enters the design gate without replacing hi
   assert.equal(JSON.parse(await fs.readFile(path.join(root, 'map.json'), 'utf8')).gates.design.status, 'stale');
 });
 
+test('top-level CLI targets child design threads and invalidates only their linked nodes', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-design-child-cli-'));
+  const map = json(await runNode('init-plan.mjs', [
+    '--root', root, '--id', 'child-design-map', '--title', 'Child designs', '--goal', 'Exercise child design threads',
+  ]));
+  map.nodes = [
+    { id: 'N-001', title: 'First task', status: 'idea', depends_on: [], design_refs: [] },
+    { id: 'N-002', title: 'Second task', status: 'idea', depends_on: [], design_refs: ['task-designs'] },
+  ];
+  await fs.writeFile(path.join(root, 'map.json'), `${JSON.stringify(map, null, 2)}\n`, 'utf8');
+  const posture = createEngineeringPosture('reusable_internal', {
+    source: { kind: 'explicit_assessment', ref: 'decision://cli-child-design-posture' },
+    allowed_capabilities: ['task-contract'],
+    excluded_capabilities: ['deployment'],
+  });
+  let document = json(await runNode('adaptive-plan.mjs', [
+    'design', 'start', '--root', root,
+  ], JSON.stringify({
+    design_id: 'task-designs',
+    requirements: ['Keep task decisions isolated'],
+    posture_ref: postureRef(posture),
+  })));
+
+  const threadIds = ['task:N-001:implementation', 'task:N-002:implementation'];
+  for (const [index, threadId] of threadIds.entries()) {
+    document = json(await runNode('adaptive-plan.mjs', [
+      'design', 'add-thread', '--root', root, '--expected-hash', document.document_state_hash,
+    ], JSON.stringify({
+      thread_id: threadId,
+      kind: 'task',
+      subject_ref: `N-00${index + 1}`,
+      purpose: 'implementation',
+      parent_refs: [{ thread_id: 'root' }],
+      posture_ref: postureRef(posture),
+      provider_status: { status: 'ready', blocking_concerns: [], composition_blockers: [] },
+    })));
+  }
+
+  for (const [index, threadId] of threadIds.entries()) {
+    let revision = currentLedgerRevision(document, threadId);
+    document = json(await runNode('adaptive-plan.mjs', [
+      'design', 'update', '--root', root, '--thread', threadId, '--expected-hash', revision.content_hash,
+    ], JSON.stringify({
+      options: [{ id: `option-${index + 1}` }],
+      selected_option: { id: `option-${index + 1}` },
+      interfaces: [`Task${index + 1}.run()`],
+    })));
+    revision = currentLedgerRevision(document, threadId);
+    document = json(await runNode('adaptive-plan.mjs', [
+      'design', 'record', '--root', root, '--thread', threadId,
+      '--expected-hash', revision.content_hash, '--provider', `reviewer-${index + 1}`, '--capability', 'design',
+    ], JSON.stringify({ status: 'ok', findings: [`Task ${index + 1} is bounded`] })));
+    const brief = json(await runNode('adaptive-plan.mjs', [
+      'design', 'brief', '--root', root, '--thread', threadId,
+    ]));
+    assert.equal(brief.subject.thread_id, threadId);
+    document = json(await runNode('adaptive-plan.mjs', [
+      'design', 'approve', '--root', root, '--thread', threadId,
+      '--expected-hash', brief.exact_content_hash,
+      '--expected-posture-hash', brief.exact_posture_hash,
+      '--brief-hash', brief.brief_hash,
+      '--approval', `Approve task ${index + 1}`,
+    ]));
+    assert.equal(currentLedgerRevision(document, threadId).decision_status, 'approved');
+  }
+
+  let linked = json(await runNode('adaptive-plan.mjs', [
+    'plan', 'link-design', '--root', root, '--thread', threadIds[0], '--node', 'N-001',
+  ]));
+  linked = json(await runNode('adaptive-plan.mjs', [
+    'plan', 'link-design', '--root', root, '--thread', threadIds[1], '--node', 'N-002',
+  ]));
+  assert.equal(linked.gates.design.status, 'not_required');
+  assert.equal(linked.nodes.find((node) => node.id === 'N-001').design_refs.find(
+    (ref) => ref.thread_id === threadIds[0],
+  ).thread_id, threadIds[0]);
+  const secondNodeRefs = linked.nodes.find((node) => node.id === 'N-002').design_refs;
+  assert.equal(secondNodeRefs.includes('task-designs'), true);
+  assert.equal(secondNodeRefs.find((ref) => ref.thread_id === threadIds[1]).thread_id, threadIds[1]);
+
+  const revised = json(await runNode('adaptive-plan.mjs', [
+    'design', 'revise', '--root', root, '--thread', threadIds[0], '--reason', 'First task contract changed',
+  ]));
+  assert.equal(currentLedgerRevision(revised, threadIds[0]).decision_status, 'in_progress');
+  assert.equal(currentLedgerRevision(revised, threadIds[1]).decision_status, 'approved');
+  const invalidated = JSON.parse(await fs.readFile(path.join(root, 'map.json'), 'utf8'));
+  assert.equal(invalidated.nodes.find((node) => node.id === 'N-001').status, 'stale');
+  assert.equal(invalidated.nodes.find((node) => node.id === 'N-002').status, 'idea');
+  assert.equal(invalidated.gates.design.status, 'not_required');
+});
+
 test('top-level design update, approve, and link accept a migrated v2.1 ledger', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-design-migrated-cli-'));
   json(await runNode('init-plan.mjs', [

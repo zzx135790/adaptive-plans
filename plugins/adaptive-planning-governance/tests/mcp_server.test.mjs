@@ -106,6 +106,7 @@ test('MCP tools/list exposes read-only and append-event tools', async () => {
     'architecture_open',
     'architecture_check_diff',
     'design_triage',
+    'design_add_thread',
     'design_update',
     'design_revise',
     'design_approval_brief',
@@ -124,6 +125,9 @@ test('MCP tools/list exposes read-only and append-event tools', async () => {
   assert.equal(response.result.tools.find((tool) => tool.name === 'posture_promotion_apply').annotations.readOnlyHint, false);
   assert.deepEqual(response.result.tools.find((tool) => tool.name === 'design_approve').inputSchema.required, [
     'context', 'expected_hash', 'expected_posture_hash', 'brief_hash', 'approval',
+  ]);
+  assert.deepEqual(response.result.tools.find((tool) => tool.name === 'design_record_result').inputSchema.required, [
+    'context', 'result', 'expected_hash',
   ]);
 });
 
@@ -279,6 +283,81 @@ test('MCP architecture, design, overview, resources, and completion tools form a
   assert.deepEqual(revisedRoot.revisions[1].blocking_questions, ['Cursor or offset?']);
   const staleOverview = await call('plan_overview');
   assert.equal(staleOverview.result.structuredContent.gates.design.status, 'stale');
+});
+
+test('MCP design tools target a child thread and keep its node invalidation local', async () => {
+  const project = await mkdtemp(path.join(os.tmpdir(), 'adaptive-mcp-child-design-project-'));
+  const planRoot = path.join(project, 'plan');
+  const map = await createPlanManifest(planRoot, {
+    planId: 'child-design', title: 'Child design', goal: 'Exercise child design MCP tools',
+  });
+  map.nodes = [{ id: 'N-001', title: 'Child task', status: 'idea', depends_on: [], design_refs: [] }];
+  await writeMap(planRoot, map);
+  const call = (name, input = {}) => callServer(planRoot, {
+    jsonrpc: '2.0', id: Math.floor(Math.random() * 1_000_000), method: 'tools/call', params: { name, arguments: input },
+  }, false, ['--project-root', project]);
+  const posture = createEngineeringPosture('reusable_internal', {
+    source: { kind: 'explicit_assessment', ref: 'decision://mcp-child-design-posture' },
+    allowed_capabilities: ['task-contract'],
+    excluded_capabilities: ['deployment'],
+  });
+  let document = (await call('design_start', {
+    request: {
+      design_id: 'mcp-child-design', requirements: ['Keep task design local'], posture_ref: postureRef(posture),
+    },
+    provider_selection: { selected: [] },
+  })).result.structuredContent;
+  const rootHash = currentLedgerRevision(document).content_hash;
+  const threadId = 'task:N-001:implementation';
+  document = (await call('design_add_thread', {
+    expected_hash: document.document_state_hash,
+    thread: {
+      thread_id: threadId,
+      kind: 'task',
+      subject_ref: 'N-001',
+      purpose: 'implementation',
+      parent_refs: [{ thread_id: 'root' }],
+      posture_ref: postureRef(posture),
+      provider_status: { status: 'ready', blocking_concerns: [], composition_blockers: [] },
+    },
+  })).result.structuredContent;
+  let revision = currentLedgerRevision(document, threadId);
+  document = (await call('design_update', {
+    thread_id: threadId,
+    expected_hash: revision.content_hash,
+    updates: { options: [{ id: 'local' }], selected_option: { id: 'local' }, interfaces: ['Task.run()'] },
+  })).result.structuredContent;
+  revision = currentLedgerRevision(document, threadId);
+  document = (await call('design_record_result', {
+    thread_id: threadId,
+    expected_hash: revision.content_hash,
+    result: {
+      schema_version: '2.0', provider_id: 'task-reviewer', capability: 'design', status: 'ok', findings: ['bounded'],
+    },
+  })).result.structuredContent;
+  const brief = (await call('design_approval_brief', { thread_id: threadId })).result.structuredContent;
+  assert.equal(brief.subject.thread_id, threadId);
+  document = (await call('design_approve', {
+    thread_id: threadId,
+    expected_hash: brief.exact_content_hash,
+    expected_posture_hash: brief.exact_posture_hash,
+    brief_hash: brief.brief_hash,
+    approval: { source: 'user', statement: 'Approve child task design' },
+  })).result.structuredContent;
+  assert.equal(currentLedgerRevision(document, threadId).decision_status, 'approved');
+  assert.equal(currentLedgerRevision(document).content_hash, rootHash);
+
+  const linked = (await call('plan_link_design', { thread_id: threadId, node_id: 'N-001' })).result.structuredContent;
+  assert.equal(linked.gates.design.status, 'not_required');
+  assert.equal(linked.nodes[0].design_refs[0].thread_id, threadId);
+  document = (await call('design_revise', {
+    thread_id: threadId,
+    reason: 'Child task interface changed',
+  })).result.structuredContent;
+  assert.equal(currentLedgerRevision(document, threadId).decision_status, 'in_progress');
+  const invalidated = (await call('plan_open')).result.structuredContent;
+  assert.equal(invalidated.nodes[0].status, 'stale');
+  assert.equal(invalidated.gates.design.status, 'not_required');
 });
 
 test('MCP posture tools preserve read/apply parity and exact promotion hashes', async () => {

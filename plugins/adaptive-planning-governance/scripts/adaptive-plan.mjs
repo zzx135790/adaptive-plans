@@ -15,6 +15,7 @@ const scripts = {
   'architecture:propose': ['architecture-delta.mjs', ['propose', ...args.slice(2)]],
   'architecture:apply': ['architecture-delta.mjs', ['apply', ...args.slice(2)]],
   'design:start': ['design-start.mjs', args.slice(2)],
+  'design:add-thread': ['design-add-thread.mjs', args.slice(2)],
   'design:update': ['design-update.mjs', args.slice(2)],
   'design:record': ['design-record-result.mjs', args.slice(2)],
   'design:revise': ['design-revise.mjs', args.slice(2)],
@@ -28,7 +29,7 @@ const scripts = {
 const key = ['architecture', 'design', 'plan', 'posture', 'completion'].includes(args[0]) ? `${args[0]}:${args[1]}` : args[0];
 const selected = scripts[key];
 if (!selected) {
-  console.error('Usage: adaptive-plan overview|migrate|posture <assess|check|promote>|architecture <bootstrap|check|propose|apply>|design <start|update|record|revise|approve|brief>|plan <link-architecture|link-design|record-impact>|completion check');
+  console.error('Usage: adaptive-plan overview|migrate|posture <assess|check|promote>|architecture <bootstrap|check|propose|apply>|design <start|add-thread|update|record|revise|approve|brief>|plan <link-architecture|link-design|record-impact>|completion check');
   process.exit(2);
 }
 const scriptRoot = path.dirname(fileURLToPath(import.meta.url));

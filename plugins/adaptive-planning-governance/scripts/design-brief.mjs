@@ -2,7 +2,7 @@
 import path from 'node:path';
 
 import { designApprovalBrief, loadDesign } from './lib/design-engine.mjs';
-import { currentThreadRevision, ledgerApprovalBrief } from './lib/design-ledger.mjs';
+import { ledgerApprovalBrief } from './lib/design-ledger.mjs';
 import { writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
@@ -24,9 +24,7 @@ try {
   const document = await loadDesign(path.resolve(args.root));
   let brief;
   if (Array.isArray(document.threads)) {
-    const threadId = args.thread
-      ?? document.threads.find((thread) => currentThreadRevision(thread)?.decision_status === 'in_progress')?.thread_id
-      ?? 'root';
+    const threadId = args.thread ?? 'root';
     brief = ledgerApprovalBrief(document, threadId);
   } else {
     brief = designApprovalBrief(document);

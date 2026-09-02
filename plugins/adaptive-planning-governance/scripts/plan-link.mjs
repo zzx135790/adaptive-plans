@@ -34,7 +34,10 @@ try {
     if (!args.architecture_root) throw new Error('--architecture-root is required');
     result = await linkArchitectureSnapshot(root, await loadArchitecture(path.resolve(args.architecture_root)));
   } else if (action === 'design') {
-    result = await linkApprovedDesign(root, await loadDesign(root));
+    result = await linkApprovedDesign(root, await loadDesign(root), {
+      threadId: args.thread,
+      nodeId: args.node,
+    });
   } else {
     if (!args.impact) throw new Error('--impact is required');
     result = await recordArchitectureImpact(root, await readJson(path.resolve(args.impact)), args.artifact_path ?? null);

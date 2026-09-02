@@ -73,6 +73,15 @@ The v2.1 Design Ledger is canonical. `DESIGN.md` is its graph/index and
 consumer-blocking until verified. Failure invalidates only its declared
 consumers; wider invalidation needs explicit evidence.
 
+Append a child with `adaptive-plan design add-thread` and the exact
+`--expected-hash <document-state-hash>`, then pass its exact
+`--thread <thread-id>` to update, record, brief, approve, and revise operations.
+Link an approved child with `adaptive-plan plan link-design`,
+`--thread <thread-id>`, and `--node <node-id>`. MCP clients use the corresponding
+`thread_id` and `node_id` fields. Child links are node-scoped and do not replace
+the root design gate. Revision invalidation matches the exact design, thread,
+and revision, so sibling threads at the same revision remain current.
+
 ## Approval contract
 
 An approvable revision includes requirements, alternatives when required, a
@@ -88,8 +97,10 @@ one confirmation prompt. Artifact paths are optional audit references, never
 the approval interface.
 
 Approval names the exact content hash, posture hash, and brief hash the user
-reviewed. Any mismatch fails and requires a freshly rendered brief. Approval
-changes lifecycle state only; reviewed content identity remains unchanged.
+reviewed. Any mismatch fails and requires a freshly rendered brief. Provider
+waivers are required only while blocking concerns or composition blockers
+remain unresolved. Approval changes lifecycle state only; reviewed content
+identity remains unchanged.
 Architecture deltas remain separately human-approved even when their design
 revision is approved.
 

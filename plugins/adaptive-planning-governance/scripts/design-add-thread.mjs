@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 
-import { updateCanonicalDesign } from './lib/design-operations.mjs';
+import { addCanonicalDesignThread } from './lib/design-operations.mjs';
 import { readStdin, writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
@@ -15,15 +15,14 @@ function parseArgs(argv) {
 
 const args = parseArgs(process.argv.slice(2));
 if (!args.root || !args.expected_hash) {
-  console.error('Usage: adaptive-plan design update --root <plan-folder> [--thread <thread-id>] --expected-hash <hash> < updates.json');
+  console.error('Usage: adaptive-plan design add-thread --root <plan-folder> --expected-hash <document-state-hash> < thread.json');
   process.exit(2);
 }
-const input = await readStdin();
+
 try {
-  const updates = JSON.parse(input || '{}');
-  writeJson(await updateCanonicalDesign(path.resolve(args.root), updates, {
+  const input = JSON.parse(await readStdin() || '{}');
+  writeJson(await addCanonicalDesignThread(path.resolve(args.root), input, {
     expectedHash: args.expected_hash,
-    threadId: args.thread,
   }));
 } catch (error) {
   console.error(error.message);

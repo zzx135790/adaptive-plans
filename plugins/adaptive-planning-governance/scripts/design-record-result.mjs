@@ -16,7 +16,7 @@ function parseArgs(argv) {
 
 const args = parseArgs(process.argv.slice(2));
 if (!args.root || !args.expected_hash || !args.provider || !args.capability) {
-  console.error('Usage: adaptive-plan design record --root <plan-folder> --expected-hash <hash> --provider <id> --capability design < result.json');
+  console.error('Usage: adaptive-plan design record --root <plan-folder> [--thread <thread-id>] --expected-hash <hash> --provider <id> --capability design < result.json');
   process.exit(2);
 }
 const input = await readStdin();
@@ -28,6 +28,7 @@ try {
   });
   writeJson(await recordCanonicalDesignProviderResult(path.resolve(args.root), normalized, {
     expectedHash: args.expected_hash,
+    threadId: args.thread,
   }));
 } catch (error) {
   console.error(error.message);
