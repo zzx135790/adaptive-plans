@@ -7,18 +7,6 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs\"",
-            "stdin": {
-              "event": {
-                "type": "tool_completed",
-                "source": "claude-code-hook",
-                "message": "MCP tool ${tool_name} completed",
-                "payload": {
-                  "tool": "${tool_name}",
-                  "status": "success",
-                  "context": "${tool_input.context}"
-                }
-              }
-            },
             "timeout": 5,
             "ignoreFailure": true
           }
@@ -32,19 +20,6 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs\"",
-            "stdin": {
-              "event": {
-                "type": "tool_failed",
-                "source": "claude-code-hook",
-                "message": "MCP tool ${tool_name} failed: ${error_message}",
-                "payload": {
-                  "tool": "${tool_name}",
-                  "status": "failed",
-                  "error": "${error_message}",
-                  "context": "${tool_input.context}"
-                }
-              }
-            },
             "timeout": 5,
             "ignoreFailure": true
           }
@@ -57,17 +32,6 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs\"",
-            "stdin": {
-              "event": {
-                "type": "context_compaction",
-                "source": "claude-code-hook",
-                "message": "Context compaction occurred",
-                "payload": {
-                  "turn_count": "${turn_count}",
-                  "compaction_type": "${compaction_type}"
-                }
-              }
-            },
             "timeout": 5,
             "ignoreFailure": true
           }
@@ -80,16 +44,6 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs\"",
-            "stdin": {
-              "event": {
-                "type": "turn_ended",
-                "source": "claude-code-hook",
-                "message": "Turn completed",
-                "payload": {
-                  "turn_count": "${turn_count}"
-                }
-              }
-            },
             "timeout": 5,
             "ignoreFailure": true
           }

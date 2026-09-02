@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import path from 'node:path';
-import { appendEvent, makeEventId } from '../scripts/lib/plan-protocol.mjs';
+import { appendEvent, loadMap, makeEventId, validateMap } from '../scripts/lib/plan-protocol.mjs';
 import { readStdin, writeJson } from '../scripts/lib/stdio.mjs';
 
 const args = process.argv.slice(2);
@@ -42,50 +42,62 @@ function rootFromEvent(parsed, wrapped) {
     if (contextRoot) return contextRoot;
   }
 
-  const eventRootCandidates = [
-    wrapped?.cwd,
-    parsed?.cwd,
-    wrapped?.project_root,
-    parsed?.project_root,
-    wrapped?.payload?.cwd,
-    parsed?.payload?.cwd,
-  ];
-  return eventRootCandidates.map(nonEmptyString).find(Boolean) ?? null;
+  return null;
 }
 
 const explicitRoot = rootIndex >= 0 ? nonEmptyString(args[rootIndex + 1]) : null;
 
-try {
-  const input = await readStdin();
-  if (!input.trim()) process.exit(0);
+async function isValidPlanRoot(root) {
+  if (!root) return false;
+  try {
+    return validateMap(await loadMap(root)).valid;
+  } catch {
+    return false;
+  }
+}
+
+function identityValue(parsed, wrapped, key) {
+  return nonEmptyString(wrapped?.[key]) ?? nonEmptyString(parsed?.[key]);
+}
+
+async function recordInput(input) {
+  if (!input.trim()) return;
 
   const parsed = JSON.parse(input);
   const wrapped = parsed && typeof parsed === 'object' && parsed.event && typeof parsed.event === 'object'
     ? parsed.event
     : parsed;
   if (!wrapped || typeof wrapped !== 'object' || Array.isArray(wrapped)) throw new TypeError('hook payload must be an object');
-  const root = path.resolve(
+  const candidateRoot =
     explicitRoot
       ?? rootFromEvent(parsed, wrapped)
-      ?? process.env.ADAPTIVE_PLAN_ROOT
-      ?? '.',
-  );
+      ?? nonEmptyString(process.env.ADAPTIVE_PLAN_ROOT);
+  if (!candidateRoot) return;
+  const root = path.resolve(candidateRoot);
+  if (!await isValidPlanRoot(root)) return;
   const type = String(wrapped.type ?? parsed.event_type ?? parsed.event_name ?? parsed.hook_event_name ?? 'fact');
+  const source = String(wrapped.source ?? 'codex-hook');
   const event = {
-    ...wrapped,
     type,
-    source: wrapped.source ?? 'codex-hook',
+    source,
     event_id: wrapped.event_id ?? makeEventId('hook', {
       type,
-      source: wrapped.source ?? 'codex-hook',
-      message: wrapped.message ?? '',
-      payload: wrapped.payload ?? wrapped.result ?? wrapped.data ?? null,
+      source,
+      event_id: identityValue(parsed, wrapped, 'event_id'),
+      session_id: identityValue(parsed, wrapped, 'session_id'),
+      turn_id: identityValue(parsed, wrapped, 'turn_id'),
+      tool_name: identityValue(parsed, wrapped, 'tool_name'),
     }),
   };
-  const result = await appendEvent(root, event);
-  writeJson(result, 0);
+  await appendEvent(root, event);
+}
+
+try {
+  await recordInput(await readStdin());
 } catch (error) {
   // Hooks must not block the main task when a plan root or event is unavailable.
   console.error(`adaptive-writing-plans hook skipped: ${error.message}`);
-  process.exitCode = 0;
+} finally {
+  // Codex Stop hooks require a valid control object, never an audit result.
+  writeJson({}, 0);
 }
