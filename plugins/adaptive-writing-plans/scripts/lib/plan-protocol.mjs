@@ -3,6 +3,12 @@ import path from 'node:path';
 
 import { asArray, cloneJson, ensureDir, isObject, readJson, writeJsonAtomic, writeTextAtomic } from './io-utils.mjs';
 import { normalizeBehaviorBudget } from './scope-budget.mjs';
+import {
+  normalizeSkillBindings,
+  renderSkillBindings,
+  renderSkillRouteLine,
+  validateSkillBindings,
+} from './skill-bindings.mjs';
 
 export const SCHEMA_VERSION = '2.0';
 export const READABLE_SCHEMA_VERSIONS = Object.freeze(['1.0', '2.0']);
@@ -85,6 +91,11 @@ export function validateMap(map) {
     if (node.depends_on !== undefined && !Array.isArray(node.depends_on)) {
       errors.push({ code: 'invalid_dependencies', message: `${node.id ?? index} depends_on must be an array` });
     }
+    if (node.skill_bindings !== undefined) {
+      for (const error of validateSkillBindings(node.skill_bindings)) {
+        errors.push({ ...error, message: `${node.id ?? index}: ${error.message}` });
+      }
+    }
   }
 
   if (Array.isArray(map.nodes)) {
@@ -143,6 +154,12 @@ export function renderMapMarkdown(map) {
   const edges = asArray(map.nodes).flatMap((node) => asArray(node.depends_on).map((dependency) => `${dependency} -> ${node.id}`));
   lines.push('', `Edges: ${edges.join(' | ') || 'none'}`);
   if (blocked.length > 0) lines.push('', `Blocked topology: ${blocked.map((item) => `${item.node_id} (${item.reason})`).join(' | ')}`);
+  lines.push('', '## Skill routing', '');
+  const skillRoutes = asArray(map.nodes).flatMap((node) => {
+    const line = renderSkillRouteLine(node.skill_bindings ?? []);
+    return line ? [`- ${node.id}: ${line.slice('Skill route: '.length)}`] : [];
+  });
+  lines.push(...(skillRoutes.length > 0 ? skillRoutes : ['No skill routes.']));
   lines.push('', '## Nodes', '', '| ID | Status | Dependencies | Title |', '|---|---|---|---|');
   for (const node of asArray(map.nodes).sort((left, right) => String(left.id).localeCompare(String(right.id)))) {
     lines.push(`| [${node.id}](nodes/${encodeURIComponent(node.id)}.md) | ${node.status ?? 'pending'} | ${asArray(node.depends_on).join(', ') || '-'} | ${node.title} |`);
@@ -181,6 +198,10 @@ export async function writeNodeBrief(root, node) {
     '## Acceptance',
     '',
     ...(asArray(node.acceptance).length > 0 ? node.acceptance.map((item) => `- ${item}`) : ['- Not specified']),
+    '',
+    '## Skill bindings',
+    '',
+    renderSkillBindings(node.skill_bindings ?? []),
     '',
   ].join('\n');
   await writeTextAtomic(path.join(path.resolve(root), 'nodes', `${encodeURIComponent(node.id)}.md`), content);
@@ -225,6 +246,7 @@ export async function addNode(root, input = {}) {
     acceptance: asArray(input.acceptance),
     blocking_questions: asArray(input.blocking_questions),
     behavior_budget: normalizeBehaviorBudget(input.behavior_budget ?? map.behavior_budget),
+    ...(input.skill_bindings === undefined ? {} : { skill_bindings: normalizeSkillBindings(input.skill_bindings) }),
     parallelization: {
       candidate: input.parallelization?.candidate === true,
       owned_paths: asArray(input.parallelization?.owned_paths).map(String),
@@ -267,6 +289,8 @@ export async function buildPlanOverview(root) {
     blocked_topology: topology.blocked,
     next_nodes: getNextNodes(map).map((node) => node.id),
     status_counts: statusCounts,
+    skill_routes: asArray(map.nodes).flatMap((node) => normalizeSkillBindings(node.skill_bindings ?? [])
+      .map((binding) => ({ node_id: node.id, ...binding }))),
     artifacts: files,
   };
 }

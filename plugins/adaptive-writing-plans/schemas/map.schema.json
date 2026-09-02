@@ -2,6 +2,39 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "adaptive-writing-plans/map.schema.json",
   "type": "object",
+  "$defs": {
+    "skillBinding": {
+      "type": "object",
+      "required": ["behavior", "purpose", "selection_reason", "execution_order"],
+      "properties": {
+        "behavior": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "selection_reason": {"type": "string", "minLength": 1},
+        "execution_order": {"type": "integer", "minimum": 1},
+        "selected_skill": {"type": "string", "minLength": 1},
+        "ada_fallback": {"type": "string", "minLength": 1},
+        "alternatives": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["skill", "not_selected_reason"],
+            "properties": {
+              "skill": {"type": "string", "minLength": 1},
+              "not_selected_reason": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": true
+          }
+        },
+        "override_reason": {"type": "string", "minLength": 1}
+      },
+      "oneOf": [
+        {"required": ["selected_skill"], "not": {"required": ["ada_fallback"]}},
+        {"required": ["ada_fallback"], "not": {"required": ["selected_skill"]}}
+      ],
+      "additionalProperties": true
+    }
+  },
   "required": ["schema_version", "plan_id", "nodes"],
   "properties": {
     "schema_version": {"enum": ["1.0", "2.0"]},
@@ -29,6 +62,7 @@
           "title": {"type": "string", "minLength": 1},
           "status": {"type": "string"},
           "depends_on": {"type": "array", "items": {"type": "string"}},
+          "skill_bindings": {"type": "array", "items": {"$ref": "#/$defs/skillBinding"}},
           "behavior_budget": {"type": "object"},
           "parallelization": {
             "type": "object",

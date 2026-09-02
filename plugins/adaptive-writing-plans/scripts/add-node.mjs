@@ -18,11 +18,10 @@ function list(value, separator = '|') {
 }
 
 const args = parseArgs(process.argv.slice(2));
-if (!args.root || !args.id || !args.title) {
-  console.error('Usage: adaptive-plan add --root <folder> --id <id> --title <title> [--depends-on A,B]');
-  process.exit(2);
-}
-try {
+if (!args.root || !args.id || !args.title || args.skill_bindings === undefined) {
+  console.error("Usage: adaptive-plan add --root <folder> --id <id> --title <title> --skill-bindings '<json-array>' [--depends-on A,B]");
+  process.exitCode = 2;
+} else try {
   const result = await addNode(path.resolve(args.root), {
     id: args.id,
     title: args.title,
@@ -32,6 +31,7 @@ try {
     acceptance: list(args.acceptance),
     blocking_questions: list(args.blocking_questions),
     behavior_budget: args.behavior_budget ? JSON.parse(args.behavior_budget) : undefined,
+    skill_bindings: JSON.parse(args.skill_bindings),
     parallelization: {
       candidate: args.parallel !== 'false',
       owned_paths: list(args.owned_paths),

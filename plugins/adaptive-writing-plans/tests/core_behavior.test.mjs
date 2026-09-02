@@ -102,11 +102,133 @@ test('behavior budgets retain all four safety floors and defer excluded or unapp
     { behavior_id: 'requested' },
     { behavior_id: 'production-hardening' },
     { behavior_id: 'speculative' },
-    { behavior_id: 'credentials', capability: 'prevent_credential_exposure' },
+    {
+      behavior_id: 'credentials',
+      capability: 'prevent_credential_exposure',
+      safety_case: {
+        threat: 'A generated diagnostic could expose a credential.',
+        evidence: ['The task handles an authenticated diagnostic payload.'],
+        impact: 'A credential could be disclosed in output.',
+        smaller_control: 'Redact only credential-bearing fields at the output boundary.',
+        verification: ['Exercise the output path with a synthetic credential.'],
+        reversibility: 'Remove the boundary redaction without migrating stored data.',
+        cost: 'One focused boundary check.',
+      },
+    },
   ]);
   assert.deepEqual(result.required.map((item) => item.behavior_id), ['requested', 'credentials']);
   assert.deepEqual(result.excluded.map((item) => item.behavior_id), ['production-hardening']);
   assert.deepEqual(result.deferred_candidates.map((item) => item.behavior_id), ['later', 'speculative']);
+});
+
+test('new safety-floor candidates require a complete safety case', () => {
+  const result = partitionBehaviorCandidates({}, [
+    { behavior_id: 'missing', capability: 'prevent_credential_exposure' },
+    {
+      behavior_id: 'incomplete',
+      capability: 'fail_loud_on_invalid_results',
+      safety_case: {
+        threat: 'Invalid output may be consumed.',
+        evidence: [],
+        impact: 'The caller may act on invalid output.',
+        smaller_control: 'Validate the task output once at the integration boundary.',
+        verification: ['Pass an invalid fixture.'],
+        reversibility: 'Remove the boundary validation.',
+        cost: 'One integration assertion.',
+      },
+    },
+    {
+      behavior_id: 'complete',
+      capability: 'prevent_destructive_data_loss',
+      safety_case: {
+        threat: 'The requested operation can overwrite user data.',
+        evidence: ['The target path already exists in the task fixture.'],
+        impact: 'Existing user data could be lost.',
+        smaller_control: 'Require an explicit overwrite decision for that target.',
+        verification: ['Verify refusal without the decision.'],
+        reversibility: 'The control is local to the overwrite branch.',
+        cost: 'One conditional at the destructive boundary.',
+      },
+    },
+  ]);
+
+  assert.deepEqual(result.required.map((item) => item.behavior_id), ['complete']);
+  assert.deepEqual(result.deferred_candidates.map((item) => ({
+    behavior_id: item.behavior_id,
+    reason: item.reason,
+  })), [
+    { behavior_id: 'missing', reason: 'missing_safety_case' },
+    { behavior_id: 'incomplete', reason: 'missing_safety_case' },
+  ]);
+});
+
+test('map validation accepts normalized arbitrary skill names and rejects invalid binding contracts', () => {
+  const binding = {
+    behavior: 'review a research paper',
+    purpose: 'Assess the paper methodology.',
+    selection_reason: 'The visible skill directly reviews one paper.',
+    execution_order: 1,
+    selected_skill: 'academic-paper-review',
+    alternatives: [
+      { skill: 'pdf', not_selected_reason: 'PDF parsing alone does not review methodology.' },
+      { skill: 'plugin-creator', not_selected_reason: 'Plugin scaffolding is unrelated.' },
+    ],
+  };
+  const makeMap = (skillBindings) => ({
+    schema_version: '2.0',
+    plan_id: 'skill-contract',
+    nodes: [{ id: 'A', title: 'Review', depends_on: [], skill_bindings: skillBindings }],
+  });
+
+  assert.equal(validateMap(makeMap([binding])).valid, true);
+  const invalidCases = [
+    ['invalid_skill_bindings', null],
+    ['missing_skill_route', [{ ...binding, selected_skill: undefined, ada_fallback: undefined }]],
+    ['multiple_skill_routes', [{ ...binding, ada_fallback: 'ada:review-paper' }]],
+    ['invalid_execution_order', [{ ...binding, execution_order: 0 }]],
+    ['too_many_skill_alternatives', [{ ...binding, alternatives: [...binding.alternatives, { skill: 'other', not_selected_reason: 'Less specific.' }] }]],
+    ['invalid_skill_alternative', [{ ...binding, alternatives: [{ skill: '', not_selected_reason: 'No name.' }] }]],
+    ['invalid_override_reason', [{ ...binding, override_reason: '   ' }]],
+    ['duplicate_skill_behavior', [binding, { ...binding, execution_order: 2, selected_skill: 'pdf' }]],
+    ['duplicate_skill_execution_order', [binding, { ...binding, behavior: 'extract the PDF', selected_skill: 'pdf' }]],
+  ];
+  for (const [code, skillBindings] of invalidCases) {
+    const validation = validateMap(makeMap(skillBindings));
+    assert.equal(validation.valid, false, code);
+    assert.equal(validation.errors.some((error) => error.code === code), true, code);
+  }
+});
+
+test('direct routing echoes selected bindings as one skill route line without guessing when absent', () => {
+  const bindings = [
+    {
+      behavior: 'inspect the PDF',
+      purpose: 'Read the supplied artifact.',
+      selection_reason: 'The host-visible PDF skill matches the artifact.',
+      execution_order: 1,
+      selected_skill: 'pdf',
+    },
+    {
+      behavior: 'summarize unsupported metadata',
+      purpose: 'Keep the direct task bounded.',
+      selection_reason: 'No visible skill covers the remaining behavior.',
+      execution_order: 2,
+      ada_fallback: 'ada:summarize-metadata',
+    },
+  ];
+
+  const routed = routePlanning({ skill_bindings: bindings });
+  assert.deepEqual(routed.skill_bindings, [
+    { ...bindings[0], alternatives: [] },
+    { ...bindings[1], alternatives: [] },
+  ]);
+  assert.equal(routed.skill_route_line,
+    'Skill route: inspect the PDF -> pdf (The host-visible PDF skill matches the artifact.); summarize unsupported metadata -> ada:summarize-metadata (No visible skill covers the remaining behavior.)');
+  assert.equal(routed.skill_route_line.includes('\n'), false);
+
+  const unbound = routePlanning({ phase_count: 2 });
+  assert.equal('skill_bindings' in unbound, false);
+  assert.equal('skill_route_line' in unbound, false);
 });
 
 test('v1 and v2 maps remain readable without rewriting unknown extension fields', async () => {

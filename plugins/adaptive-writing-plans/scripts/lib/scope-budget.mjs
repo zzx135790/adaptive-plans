@@ -15,6 +15,17 @@ function candidateId(candidate) {
   return String(candidate?.behavior_id ?? candidate?.capability ?? candidate ?? '');
 }
 
+function nonEmptyString(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function completeSafetyCase(value) {
+  return isObject(value)
+    && ['threat', 'impact', 'smaller_control', 'reversibility', 'cost'].every((field) => nonEmptyString(value[field]))
+    && ['evidence', 'verification'].every((field) =>
+      Array.isArray(value[field]) && value[field].length > 0 && value[field].every(nonEmptyString));
+}
+
 export function normalizeBehaviorBudget(input = {}) {
   const budget = isObject(input) ? input : {};
   const required = uniqueStrings([...asArray(budget.required), ...SAFETY_FLOORS]);
@@ -39,7 +50,16 @@ export function partitionBehaviorCandidates(inputBudget = {}, candidates = []) {
     const candidate = isObject(source) ? cloneJson(source) : { behavior_id: String(source) };
     const id = candidateId(candidate);
     const capability = String(candidate.capability ?? id);
-    if (requiredIds.has(id) || requiredIds.has(capability)) required.push(candidate);
+    const claimsSafetyFloor = SAFETY_FLOORS.includes(id) || SAFETY_FLOORS.includes(capability);
+    if (claimsSafetyFloor && !completeSafetyCase(candidate.safety_case)) {
+      const existingIndex = deferred.findIndex((item) => candidateId(item) === id);
+      const delayed = { ...(existingIndex >= 0 ? deferred[existingIndex] : {}), ...candidate, reason: 'missing_safety_case' };
+      if (existingIndex >= 0) deferred[existingIndex] = delayed;
+      else {
+        deferred.push(delayed);
+        alreadyDeferred.add(id);
+      }
+    } else if (requiredIds.has(id) || requiredIds.has(capability)) required.push(candidate);
     else if (excludedIds.has(id) || excludedIds.has(capability)) {
       excluded.push({ ...candidate, reason: candidate.reason ?? 'excluded_by_behavior_budget' });
     } else if (!alreadyDeferred.has(id)) {

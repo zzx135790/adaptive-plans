@@ -1,5 +1,6 @@
 import { partitionBehaviorCandidates } from './scope-budget.mjs';
 import { selectVisibleProvider } from './provider-registry.mjs';
+import { normalizeSkillBindings, renderSkillRouteLine } from './skill-bindings.mjs';
 
 const LOW_CLARITY = ['goal_clarity', 'scope_clarity', 'success_criteria_clarity', 'now_later_boundary'];
 const DESIGN_SIGNALS = [
@@ -55,7 +56,7 @@ const PHASE_ROUTES = {
 export function routePlanning(signals = {}, visibleProviders = signals.visible_providers) {
   const triage = triageTask(signals);
   if (triage.mode === 'direct') {
-    return {
+    const result = {
       ...triage,
       routes: [],
       provider: null,
@@ -63,6 +64,14 @@ export function routePlanning(signals = {}, visibleProviders = signals.visible_p
       planning_artifacts: [],
       reason: 'stable work stays direct; no planning artifact is created',
     };
+    if (signals.skill_bindings !== undefined) {
+      const skillBindings = normalizeSkillBindings(signals.skill_bindings);
+      if (skillBindings.length > 0) {
+        result.skill_bindings = skillBindings;
+        result.skill_route_line = renderSkillRouteLine(skillBindings);
+      }
+    }
+    return result;
   }
   const phaseRoutes = PHASE_ROUTES[triage.mode] ?? [];
   const requestedRoutes = triage.strategy === 'design-first'

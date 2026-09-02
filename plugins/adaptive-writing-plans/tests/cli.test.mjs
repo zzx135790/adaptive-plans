@@ -35,10 +35,10 @@ test('core CLI routes directly and creates, validates, and summarizes a DAG', as
   const planRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'ada-cli-'));
   parsed(await run(['init', '--root', planRoot, '--id', 'core', '--title', 'Core', '--goal', 'Ship core']));
   parsed(await run([
-    'add', '--root', planRoot, '--id', 'A', '--title', 'First', '--owned-paths', 'src/a.mjs', '--verification', 'test A',
+    'add', '--root', planRoot, '--id', 'A', '--title', 'First', '--skill-bindings', '[]', '--owned-paths', 'src/a.mjs', '--verification', 'test A',
   ]));
   parsed(await run([
-    'add', '--root', planRoot, '--id', 'B', '--title', 'Second', '--depends-on', 'A', '--owned-paths', 'src/b.mjs', '--verification', 'test B',
+    'add', '--root', planRoot, '--id', 'B', '--title', 'Second', '--skill-bindings', '[]', '--depends-on', 'A', '--owned-paths', 'src/b.mjs', '--verification', 'test B',
   ]));
   assert.equal(parsed(await run(['validate', '--root', planRoot])).valid, true);
   const overview = parsed(await run(['overview', '--root', planRoot]));
@@ -47,6 +47,48 @@ test('core CLI routes directly and creates, validates, and summarizes a DAG', as
   assert.deepEqual(parsed(await run([
     'waves', '--root', planRoot, '--statuses', JSON.stringify({ A: 'done' }),
   ])).dispatch_batches.map((batch) => batch.node_ids), [['B']]);
+});
+
+test('core CLI requires and persists behavior-level skill bindings in every rendered view', async () => {
+  const planRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'ada-cli-skills-'));
+  parsed(await run(['init', '--root', planRoot, '--id', 'skills', '--title', 'Skills']));
+
+  const missing = await run(['add', '--root', planRoot, '--id', 'A', '--title', 'Missing']);
+  assert.equal(missing.code, 2);
+
+  const skillBindings = [{
+    behavior: 'create a Codex plugin',
+    purpose: 'Scaffold the requested plugin.',
+    selection_reason: 'The host-visible skill owns plugin creation.',
+    execution_order: 1,
+    selected_skill: 'plugin-creator',
+    alternatives: [{ skill: 'pdf', not_selected_reason: 'PDF handling is unrelated.' }],
+    override_reason: 'The user explicitly requested a plugin artifact.',
+  }];
+  const node = parsed(await run([
+    'add', '--root', planRoot, '--id', 'A', '--title', 'Create plugin',
+    '--skill-bindings', JSON.stringify(skillBindings),
+  ]));
+  assert.deepEqual(node.skill_bindings, skillBindings);
+
+  const map = JSON.parse(await fs.readFile(path.join(planRoot, 'map.json'), 'utf8'));
+  assert.deepEqual(map.nodes[0].skill_bindings, skillBindings);
+  const mapMarkdown = await fs.readFile(path.join(planRoot, 'MAP.md'), 'utf8');
+  assert.match(mapMarkdown, /## Skill routing/);
+  assert.match(mapMarkdown, /A: create a Codex plugin -> plugin-creator/);
+  const brief = await fs.readFile(path.join(planRoot, 'nodes', 'A.md'), 'utf8');
+  for (const value of [
+    'create a Codex plugin',
+    'Scaffold the requested plugin.',
+    'The host-visible skill owns plugin creation.',
+    'plugin-creator',
+    'pdf',
+    'PDF handling is unrelated.',
+    'The user explicitly requested a plugin artifact.',
+  ]) assert.match(brief, new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+
+  const overview = parsed(await run(['overview', '--root', planRoot]));
+  assert.deepEqual(overview.skill_routes, [{ node_id: 'A', ...skillBindings[0] }]);
 });
 
 test('core CLI does not expose governance commands', async () => {

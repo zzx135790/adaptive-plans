@@ -1,9 +1,9 @@
 {
   "name": "adaptive-writing-plans",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
-  "description": "Direct-first planning, DAG validation, and deterministic execution waves.",
+  "description": "Direct-first planning with behavior-level visible skill routing and deterministic execution waves.",
   "bin": {
     "adaptive-plan": "./scripts/adaptive-plan.mjs"
   },

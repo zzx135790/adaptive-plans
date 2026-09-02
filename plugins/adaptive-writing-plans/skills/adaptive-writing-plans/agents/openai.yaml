@@ -1,4 +1,4 @@
 interface:
   display_name: "Adaptive Writing Plans"
-  short_description: "Direct-first plans and fast DAG execution"
-  default_prompt: "Use $adaptive-writing-plans to choose the lightest safe route and expose dependency-ready parallel work."
+  short_description: "Direct-first plans with visible skill routing"
+  default_prompt: "Use $adaptive-writing-plans to choose the lightest safe route, bind substantive behaviors to currently visible skills, and expose dependency-ready work."

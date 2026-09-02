@@ -14,14 +14,14 @@ async function absent(relative) {
   await assert.rejects(fs.access(path.join(root, relative)), { code: 'ENOENT' });
 }
 
-test('0.4.0 manifests advertise only the dependency-free planning core', async () => {
+test('0.5.0 manifests advertise only the dependency-free planning core', async () => {
   const pkg = await json('package.json');
   const codex = await json('.codex-plugin/plugin.json');
   const claude = await json('.claude-plugin/plugin.json');
 
-  assert.equal(pkg.version, '0.4.0');
-  assert.equal(codex.version, '0.4.0');
-  assert.equal(claude.version, '0.4.0');
+  assert.equal(pkg.version, '0.5.0');
+  assert.equal(codex.version, '0.5.0');
+  assert.equal(claude.version, '0.5.0');
   assert.deepEqual(pkg.dependencies ?? {}, {});
   assert.equal('mcpServers' in codex, false);
   assert.equal('hooks' in codex, false);
