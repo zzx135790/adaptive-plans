@@ -649,7 +649,7 @@ async function handle(request) {
     return {
       protocolVersion: request.params?.protocolVersion ?? '2025-03-26',
       capabilities: { tools: {}, resources: {} },
-      serverInfo: { name: 'adaptive-planning-governance', version: '0.4.0' },
+      serverInfo: { name: 'adaptive-planning-governance', version: '0.5.0' },
       instructions: 'Use plan_overview and plan_validate before acting. Project architecture, design revisions, and plans are separate canonical states; audit events never change them automatically.',
     };
   }

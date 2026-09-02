@@ -5,6 +5,7 @@ import {
   MANDATORY_SAFETY_FLOOR,
   createEngineeringPosture,
   normalizeEngineeringPosture,
+  partitionBehaviorCandidates,
   postureContentHash,
   postureRef,
   validateEngineeringPosture,
@@ -104,4 +105,48 @@ test('scope control rejects missing provenance and deferred executable work', ()
   assert.equal(invalid.valid, false);
   assert.ok(invalid.errors.some((error) => error.code === 'missing_scope_provenance'));
   assert.ok(invalid.errors.some((error) => error.code === 'deferred_behavior_executable'));
+});
+
+test('mandatory safety candidates need a complete safety case without bypassing scope', () => {
+  const posture = createEngineeringPosture('spike', {
+    source,
+    allowed_capabilities: ['probe'],
+  });
+  const provenance = [{
+    kind: 'safety_floor',
+    ref: 'mandatory:resource-cost',
+    behavior_id: 'cost-bound',
+  }];
+  const candidate = {
+    behavior_id: 'cost-bound',
+    capability: 'bound_runaway_resource_cost',
+    provenance,
+  };
+  const missing = partitionBehaviorCandidates(posture, [candidate]);
+  assert.deepEqual(missing.required, []);
+  assert.equal(missing.deferred_candidates[0].reason, 'missing_safety_case');
+
+  const safetyCase = {
+    threat: 'An unbounded probe can exhaust shared compute capacity',
+    evidence: ['The probe accepts an unconstrained iteration count'],
+    impact: 'Other workloads can be starved',
+    smaller_control: 'Cap this probe at the approved iteration count',
+    verification: ['Run the boundary test and observe termination at the cap'],
+    reversibility: 'Remove the local cap with the probe code',
+    cost: 'One boundary check in the probe loop',
+  };
+  const admitted = partitionBehaviorCandidates(posture, [{ ...candidate, safety_case: safetyCase }]);
+  assert.deepEqual(admitted.required, ['cost-bound']);
+  assert.equal(admitted.deferred_candidates.length, 0);
+
+  const emptyEvidence = partitionBehaviorCandidates(posture, [{
+    ...candidate,
+    safety_case: { ...safetyCase, evidence: [''] },
+  }]);
+  assert.deepEqual(emptyEvidence.required, []);
+  assert.equal(emptyEvidence.deferred_candidates[0].reason, 'missing_safety_case');
+
+  const unscoped = partitionBehaviorCandidates(posture, [{ ...candidate, provenance: [], safety_case: safetyCase }]);
+  assert.deepEqual(unscoped.required, []);
+  assert.equal(unscoped.deferred_candidates[0].reason, 'missing_provenance');
 });

@@ -70,6 +70,17 @@ waves when they are established. A titled node is not ready until its inputs,
 outputs, dependency gates, contract/design refs, acceptance, and blocking
 questions are explicit.
 
+For a governance map, bind each substantive behavior to its execution route in
+the node's `skill_bindings`; omit administrative bookkeeping that does not
+change delivered behavior. The host model selects semantically from the skill
+names and descriptions visible in the current session. Record one ordered row
+per behavior with its purpose and selection reason, either the selected visible
+skill or a specifically named Ada direct-work fallback, and at most two visible
+alternatives with reasons they were not selected. Do not persist a skill
+catalog, scan or install skills, or extend the fixed planning-provider registry
+for behavior-level routing. The scripts only validate, normalize, preserve, and
+render the host model's decision.
+
 ## Artifact boundary
 
 For `map`, initialize the adaptive folder with `scripts/init-plan.mjs` under
@@ -131,6 +142,18 @@ architecture refs. Stop and replan on material evidence. Finalisation is
 subtractive first: remove unsupported or above-budget behavior before checking
 the remaining approved behavior for completeness. A hypothetical future reuse
 case never authorizes production hardening.
+
+When execution changes a recorded skill route, preserve the new route and use
+`override_reason` to name the old route, the new route, and the evidence-based
+reason for replacing it. Never silently substitute a fallback or a different
+visible skill.
+
+Trust standard-library behavior, mature dependencies, and operations already
+verified in the repository by default. Add a wrapper, guard, substitute
+implementation, or repeated check only when task-specific evidence establishes
+the corresponding failure or control requirement. A candidate claiming a
+mandatory safety-floor capability is admitted only with its scoped provenance
+and a complete `safety_case`; the safety label cannot expand product scope.
 
 Treat posture profiles as distinct definitions of done, never as an automatic
 maturity ladder. A spike needs its bounded question and result validity; an

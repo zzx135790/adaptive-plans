@@ -114,8 +114,8 @@ test('plugin manifests exist for both hosts', async () => {
   const codex = JSON.parse(await fs.readFile(codexManifest, 'utf-8'));
   const claude = JSON.parse(await fs.readFile(claudeManifest, 'utf-8'));
 
-  strictEqual(codex.version.split('+', 1)[0], '0.4.0');
-  strictEqual(claude.version, '0.4.0');
+  strictEqual(codex.version.split('+', 1)[0], '0.5.0');
+  strictEqual(claude.version, '0.5.0');
 });
 
 console.log('✅ All canary tests passed');

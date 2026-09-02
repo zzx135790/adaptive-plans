@@ -23,6 +23,11 @@ import {
   validateScopeControl,
 } from './engineering-posture.mjs';
 import { selectVisibleProvider } from './provider-registry.mjs';
+import {
+  normalizeSkillBindings,
+  renderSkillRouteLine,
+  validateSkillBindings,
+} from './skill-bindings.mjs';
 
 const HIGH = new Set(['high', 'critical']);
 const LOW = new Set(['low']);
@@ -96,12 +101,20 @@ const PHASE_ROUTES = {
 export function routePlanning(signals = {}, visibleProviders = signals.visible_providers) {
   const triage = triageTask(signals);
   if (triage.mode === 'direct') {
-    return {
+    const result = {
       ...triage,
       routes: [],
       planning_artifacts: [],
       reason: 'direct work is stable and does not require full planning provider invocation',
     };
+    if (signals.skill_bindings !== undefined) {
+      const skillBindings = normalizeSkillBindings(signals.skill_bindings);
+      if (skillBindings.length > 0) {
+        result.skill_bindings = skillBindings;
+        result.skill_route_line = renderSkillRouteLine(skillBindings);
+      }
+    }
+    return result;
   }
   const routes = (PHASE_ROUTES[triage.mode] ?? []).map(({ capability, role }) =>
     selectVisibleProvider({ capability, role, visibleProviders }));
@@ -214,6 +227,12 @@ export async function addNode(root, input = {}) {
     if (!input.id || !input.title) throw new Error('node id and title are required');
     if (input.status === 'done') throw new Error('addNode cannot mark a new node done; use an explicit completion transition');
     if (map.nodes.some((node) => node.id === input.id)) throw new Error(`Node ${input.id} already exists`);
+    if (input.skill_bindings !== undefined) {
+      const skillBindingsErrors = validateSkillBindings(input.skill_bindings);
+      if (skillBindingsErrors.length > 0) {
+        throw new Error(`invalid skill_bindings: ${skillBindingsErrors.map((error) => error.message).join('; ')}`);
+      }
+    }
     let inheritedPostureRef = input.posture_ref;
     if (!inheritedPostureRef && map.engineering_posture
       && validateEngineeringPosture(map.engineering_posture).valid
@@ -239,6 +258,9 @@ export async function addNode(root, input = {}) {
       scope_provenance: Array.isArray(input.scope_provenance) ? input.scope_provenance : [],
       behavior_budget: input.behavior_budget,
       deferred_candidates: Array.isArray(input.deferred_candidates) ? input.deferred_candidates : [],
+      ...(input.skill_bindings !== undefined
+        ? { skill_bindings: normalizeSkillBindings(input.skill_bindings) }
+        : {}),
       parallelization: input.parallelization ?? {
         candidate: false, wave: 'serial', owned_paths: [], shared_resources: [], independent_verification: [], reason: 'not assessed',
       },

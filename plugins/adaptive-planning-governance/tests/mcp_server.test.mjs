@@ -147,7 +147,7 @@ test('MCP initialize reports the current plugin protocol version', async () => {
   });
 
   assert.equal(response.result.serverInfo.name, 'adaptive-planning-governance');
-  assert.equal(response.result.serverInfo.version, '0.4.0');
+  assert.equal(response.result.serverInfo.version, '0.5.0');
 });
 
 test('MCP architecture, design, overview, resources, and completion tools form a stateful v2 workflow', async () => {

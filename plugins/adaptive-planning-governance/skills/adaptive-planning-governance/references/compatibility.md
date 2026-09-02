@@ -41,6 +41,21 @@ Discovery and invocation are separate. A missing provider becomes an
 `unavailable` result; it is never an implicit installation request. Critical
 design coverage follows the block-or-explicit-waiver rule.
 
+Behavior-level routing in governance map nodes does not use or extend this
+planning-provider catalog. The host model compares the current session's
+injected skill names and descriptions with the substantive behavior, then
+records exactly one `selected_skill` or a named `ada_fallback`, its purpose and
+selection reason, a positive execution order, and no more than two alternatives
+with non-selection reasons. Skill names are open strings because visibility is
+session-owned; deterministic adapters validate, store, and render the decision
+without scanning an installation, maintaining a persistent catalog, or
+installing anything. Administrative map operations need no binding.
+
+If execution replaces the recorded route, `override_reason` identifies the old
+route, new route, and reason. Standard libraries, mature dependencies, and
+repository-verified operations remain trusted unless task evidence justifies a
+wrapper, guard, substitute implementation, or repeated verification.
+
 Invocation is owned by the provider's host. The adapter validates the returned
 PlanningHandoff and CompositionContract, then compares declared expected
 artifact refs with host-observed refs:

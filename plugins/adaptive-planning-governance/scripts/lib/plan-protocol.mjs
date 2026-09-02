@@ -12,6 +12,12 @@ import {
 import { currentDesignRevision, designApprovalBrief, validateCompositionContract } from './design-engine.mjs';
 import { currentThreadRevision, ledgerApprovalBrief } from './design-ledger.mjs';
 import { validateSafePath } from '../../mcp/context.mjs';
+import {
+  normalizeSkillBindings,
+  renderSkillBindingTableRows,
+  renderSkillBindings,
+  validateSkillBindings,
+} from './skill-bindings.mjs';
 
 export const SCHEMA_VERSION = '2.0';
 export const LEGACY_SCHEMA_VERSION = '1.0';
@@ -153,6 +159,18 @@ export function renderMapMarkdown(map) {
     }
   }
   if (!lines.at(-1)?.trim()) lines.push('- No blocking questions recorded.');
+  lines.push(
+    '',
+    '## Skill routing',
+    '',
+    '| Node | Order | Behavior | Route | Purpose | Selection reason | Alternatives | Override reason |',
+    '|---|---:|---|---|---|---|---|---|',
+  );
+  const skillRouteRows = asArray(map.nodes).flatMap((node) => renderSkillBindingTableRows(
+    node?.skill_bindings ?? [],
+    node?.id,
+  ));
+  lines.push(...(skillRouteRows.length > 0 ? skillRouteRows : ['| - | - | None recorded | - | - | - | - | - |']));
   lines.push('', '## Gates', '');
   for (const [gate, value] of Object.entries(map.gates ?? {})) {
     lines.push(`- **${gate}:** ${typeof value === 'string' ? value : value?.status ?? 'unknown'}`);
@@ -193,6 +211,10 @@ export function renderNodeMarkdown(node) {
     '## Blocking questions',
     '',
     list(node.blocking_questions),
+    '',
+    '## Skill bindings',
+    '',
+    renderSkillBindings(node.skill_bindings ?? []),
     '',
     '## Parallelization assessment',
     '',
@@ -356,6 +378,12 @@ export function validateMap(map, options = {}) {
     for (const field of ['blocking_questions', 'inputs', 'outputs', 'acceptance', 'requirement_ids', 'contract_refs', 'design_refs', 'interaction_refs']) {
       if (node[field] !== undefined && !Array.isArray(node[field])) {
         errors.push({ code: `invalid_${field}`, message: `${node.id}.${field} must be an array` });
+      }
+    }
+    if (node.skill_bindings !== undefined) {
+      const skillBindingsErrors = validateSkillBindings(node.skill_bindings);
+      for (const error of skillBindingsErrors) {
+        errors.push({ ...error, code: `node_${error.code}`, message: `${node.id}: ${error.message}` });
       }
     }
     const productWork = node.kind !== 'control' && node.id !== 'N-000';
@@ -1033,6 +1061,8 @@ export async function buildPlanOverview(root, options = {}) {
       deferred_candidates: cloneJson(asArray(node.deferred_candidates)),
       readiness: readiness.find((entry) => entry.node_id === node.id),
     })),
+    skill_routes: asArray(map.nodes).filter(isPlainObject).flatMap((node) => normalizeSkillBindings(node.skill_bindings ?? [])
+      .map((binding) => ({ node_id: node.id, ...binding }))),
     readiness,
     readiness_blockers: readiness.flatMap((entry) => entry.blockers.map((blocker) => ({ node_id: entry.node_id, ...blocker }))),
     provider_status: providerStatusForOverview(designDocument),

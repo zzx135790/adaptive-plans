@@ -162,6 +162,15 @@ test('finalisation is subtractive before completeness and retains safety floors'
       behavior_id: 'cost-guard',
       capability: 'bound_runaway_resource_cost',
       provenance: [{ kind: 'safety_floor', ref: 'mandatory', behavior_id: 'cost-guard' }],
+      safety_case: {
+        threat: 'The experiment can consume unbounded shared compute',
+        evidence: ['The runner accepts an unconstrained iteration count'],
+        impact: 'Other workloads can be starved',
+        smaller_control: 'Cap this experiment at its approved iteration count',
+        verification: ['Exercise the cap boundary and observe termination'],
+        reversibility: 'Remove the local cap with the experiment',
+        cost: 'One boundary check per iteration',
+      },
     },
   ];
   const review = reviewLeafForFinalisation(posture, leaf, candidates);

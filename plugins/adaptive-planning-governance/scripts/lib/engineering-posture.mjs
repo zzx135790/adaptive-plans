@@ -208,6 +208,17 @@ function deferredCandidate(candidate, reason, posture) {
   };
 }
 
+function hasCompleteSafetyCase(value) {
+  if (!isObject(value)) return false;
+  for (const field of ['threat', 'impact', 'smaller_control', 'reversibility', 'cost']) {
+    if (typeof value[field] !== 'string' || value[field].trim().length === 0) return false;
+  }
+  return ['evidence', 'verification'].every((field) =>
+    Array.isArray(value[field])
+    && value[field].length > 0
+    && value[field].every((item) => typeof item === 'string' && item.trim().length > 0));
+}
+
 export function partitionBehaviorCandidates(posture, candidates = []) {
   const validation = validateEngineeringPosture(posture);
   if (!validation.valid || posture?.status === 'unknown_legacy') {
@@ -243,6 +254,11 @@ export function partitionBehaviorCandidates(posture, candidates = []) {
         deferred.push(deferredCandidate(candidate, 'provider_not_persisted', posture));
         continue;
       }
+    }
+
+    if (safety.has(capability) && !hasCompleteSafetyCase(candidate?.safety_case)) {
+      deferred.push(deferredCandidate(candidate, 'missing_safety_case', posture));
+      continue;
     }
 
     const safetyFloor = safety.has(capability)

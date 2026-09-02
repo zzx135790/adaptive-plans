@@ -69,6 +69,18 @@ test('routePlanning keeps direct work cheap and routes map phases through visibl
   assert.deepEqual(direct.planning_artifacts, []);
   assert.equal(direct.gates.architecture_sync.status, 'not_required');
 
+  const skillBindings = [{
+    behavior: 'inspect the PDF',
+    purpose: 'Read the supplied artifact',
+    selection_reason: 'The PDF skill is visible in this session',
+    execution_order: 1,
+    selected_skill: 'pdf',
+  }];
+  const boundDirect = routePlanning({ skill_bindings: skillBindings });
+  assert.deepEqual(boundDirect.skill_bindings, [{ ...skillBindings[0], alternatives: [] }]);
+  assert.equal(boundDirect.skill_route_line,
+    'Skill route: inspect the PDF -> pdf (The PDF skill is visible in this session)');
+
   const routed = routePlanning({
     goal_clarity: 'high', phase_count: 3, technical_risk: 'high',
     visible_providers: {
@@ -244,6 +256,15 @@ test('provider candidates require structured persisted evidence and safety floor
       behavior_id: 'cost-guard',
       capability: 'bound_runaway_resource_cost',
       provenance: [{ kind: 'safety_floor', ref: 'mandatory:cost', behavior_id: 'cost-guard' }],
+      safety_case: {
+        threat: 'The probe can consume unbounded shared compute',
+        evidence: ['The probe accepts an unconstrained iteration count'],
+        impact: 'Other workloads can be starved',
+        smaller_control: 'Cap this probe at its approved iteration count',
+        verification: ['Exercise the cap boundary and observe termination'],
+        reversibility: 'Remove the local cap with the probe',
+        cost: 'One boundary check per iteration',
+      },
     },
   ]);
   assert.deepEqual(assessment.required, ['provider-report', 'cost-guard']);

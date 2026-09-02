@@ -1,4 +1,4 @@
 interface:
   display_name: "Adaptive Planning Governance"
   short_description: "Optional advanced planning governance"
-  default_prompt: "Use $adaptive-planning-governance for advanced governance with architecture memory, a Design Gate, a DAG, and an artifact index."
+  default_prompt: "Use $adaptive-planning-governance only when advanced governance is explicitly needed for architecture memory, a Design Gate, a DAG, and an artifact index. Bind substantive map behaviors to semantically matching skills visible in this session or a named Ada fallback, while trusting mature dependencies unless task evidence requires an added control."

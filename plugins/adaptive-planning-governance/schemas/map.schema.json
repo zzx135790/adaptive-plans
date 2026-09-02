@@ -37,14 +37,61 @@
       },
       "additionalProperties": false
     },
+    "skill_binding": {
+      "type": "object",
+      "required": ["behavior", "purpose", "selection_reason", "execution_order"],
+      "oneOf": [
+        {"required": ["selected_skill"], "not": {"required": ["ada_fallback"]}},
+        {"required": ["ada_fallback"], "not": {"required": ["selected_skill"]}}
+      ],
+      "properties": {
+        "behavior": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "selection_reason": {"type": "string", "minLength": 1},
+        "execution_order": {"type": "integer", "minimum": 1},
+        "selected_skill": {"type": "string", "minLength": 1},
+        "ada_fallback": {"type": "string", "minLength": 1},
+        "alternatives": {
+          "type": "array",
+          "default": [],
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["skill", "not_selected_reason"],
+            "properties": {
+              "skill": {"type": "string", "minLength": 1},
+              "not_selected_reason": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "override_reason": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "safety_case": {
+      "type": "object",
+      "required": ["threat", "evidence", "impact", "smaller_control", "verification", "reversibility", "cost"],
+      "properties": {
+        "threat": {"type": "string", "minLength": 1},
+        "evidence": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "impact": {"type": "string", "minLength": 1},
+        "smaller_control": {"type": "string", "minLength": 1},
+        "verification": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "reversibility": {"type": "string", "minLength": 1},
+        "cost": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
     "deferred_candidate": {
       "type": "object",
       "required": ["behavior_id", "capability", "reason", "evidence"],
       "properties": {
         "behavior_id": {"type": "string", "minLength": 1},
         "capability": {"type": "string", "minLength": 1},
-        "reason": {"enum": ["excluded_by_posture", "not_allowed_by_posture", "missing_provenance", "provider_not_persisted", "provider_not_structured"]},
-        "evidence": {"type": "array"}
+        "reason": {"enum": ["excluded_by_posture", "not_allowed_by_posture", "missing_provenance", "provider_not_persisted", "provider_not_structured", "missing_safety_case"]},
+        "evidence": {"type": "array"},
+        "safety_case": {"$ref": "#/$defs/safety_case"}
       },
       "additionalProperties": true
     }
@@ -83,6 +130,10 @@
           "contract_refs": {"type": "array"},
           "design_refs": {"type": "array"},
           "interaction_refs": {"type": "array"},
+          "skill_bindings": {
+            "type": "array",
+            "items": {"$ref": "#/$defs/skill_binding"}
+          },
           "impacted_modules": {"type": "array", "items": {"type": "string"}},
           "design_required": {"type": "boolean"},
           "parallelization": {

@@ -109,6 +109,23 @@ adapter may only translate envelopes and verify expected persistence. Missing
 dependencies, digest drift, failed invocation, or unwritten expected artifacts
 stay visible; the plugin does not silently reimplement the provider.
 
+Governance maps also expose behavior-level skill routing. For each substantive
+behavior, the host model selects from skill names and descriptions visible in
+the current session and records one ordered `selected_skill` or named Ada
+fallback, the purpose and selection reason, and at most two rejected
+alternatives. `MAP.md`, node briefs, and `adaptive-plan overview` render that
+decision. The plugin does not scan or install skills or maintain a persistent
+skill catalog; its deterministic code only validates, stores, and renders the
+host's semantic choice. Route replacements record old route, new route, and
+reason in `override_reason`.
+
+The engineering default is to trust standard libraries, mature dependencies,
+and repository-verified operations. Wrappers, guards, alternate
+implementations, and repeated checks require task evidence. Mandatory
+safety-floor claims additionally require scoped provenance and a complete,
+minimal `safety_case`; otherwise they remain deferred as
+`missing_safety_case`.
+
 ## Verification
 
 ```bash

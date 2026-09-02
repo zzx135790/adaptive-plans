@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import { addNode } from './lib/planning-engine.mjs';
-import { writeJson } from './lib/stdio.mjs';
+import { writeJson, writeStderr } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
   const result = {};
@@ -15,8 +15,8 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-if (!args.root || !args.id || !args.title) {
-  console.error('Usage: node scripts/add-node.mjs --root <plan-folder> --id N-001 --title <title> [--depends-on N-000]');
+if (!args.root || !args.id || !args.title || !args.skill_bindings) {
+  writeStderr("Usage: node scripts/add-node.mjs --root <plan-folder> --id N-001 --title <title> --skill-bindings '<json-array>' [--depends-on N-000]\n");
   process.exit(2);
 }
 const node = {
@@ -37,6 +37,7 @@ const node = {
   scope_provenance: args.scope_provenance ? JSON.parse(args.scope_provenance) : [],
   behavior_budget: args.behavior_budget ? JSON.parse(args.behavior_budget) : undefined,
   deferred_candidates: args.deferred_candidates ? JSON.parse(args.deferred_candidates) : [],
+  skill_bindings: JSON.parse(args.skill_bindings),
   parallelization: {
     candidate: args.parallel === 'true' || args.parallel === true,
     wave: args.wave ?? 'serial',

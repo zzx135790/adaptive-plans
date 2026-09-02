@@ -36,6 +36,8 @@ do not become state merely because they were appended.
 
 - stage, work shape, gates, architecture snapshot, and design refs;
 - the full ASCII DAG, edges, node statuses, and blocking reasons;
+- the full-map `Skill routing` summary and flat `skill_routes` overview for
+  every recorded substantive behavior;
 - every node brief and linked artifact path.
 
 Never hand off only `MAP.md` or one leaf filename. Inline the overview DAG and
@@ -63,6 +65,16 @@ A node may be `ready` only when it has a stable objective/non-goals, declared
 inputs/outputs, current dependencies, requirement IDs, module contract refs,
 required design refs, testable acceptance/verification, and no blocking
 question. Hooks and providers can propose but cannot apply a transition.
+
+Newly authored substantive behavior routes use optional node
+`skill_bindings`. Each binding has unique `behavior` and positive
+`execution_order` values, purpose and selection rationale, exactly one visible
+`selected_skill` or named `ada_fallback`, and at most two alternatives with
+non-selection reasons. Node briefs render every field, including an
+`override_reason` when execution replaces a route. Legacy v1 or v2 maps without
+the field remain readable, and unknown map or node extensions remain intact.
+Do not create bindings for control-node bookkeeping or other non-behavioral
+map maintenance.
 
 ## Replanning
 

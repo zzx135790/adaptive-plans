@@ -89,8 +89,19 @@ test('CLI lifecycle initializes, adds, validates, invalidates, and ingests', asy
       required: ['constraint-discovery'], excluded: ['deployment'], deferred_candidates: [],
     }),
     '--deferred-candidates', '[]',
+    '--skill-bindings', JSON.stringify([{
+      behavior: 'constraint-discovery',
+      purpose: 'Inspect the repository constraints',
+      selection_reason: 'This specialized skill is visible in the current session',
+      execution_order: 1,
+      selected_skill: 'cuda-repository-inspector',
+      alternatives: [
+        { skill: 'codebase-analyzer', not_selected_reason: 'Broader than the bounded inspection' },
+      ],
+    }]),
   ]));
   assert.equal(first.status, 'ready');
+  assert.equal(first.skill_bindings[0].selected_skill, 'cuda-repository-inspector');
 
   const second = json(await runNode('add-node.mjs', [
     '--root', root, '--id', 'N-002', '--title', 'Implement adapter',
@@ -103,8 +114,16 @@ test('CLI lifecycle initializes, adds, validates, invalidates, and ingests', asy
       required: ['adapter'], excluded: ['deployment'], deferred_candidates: [],
     }),
     '--deferred-candidates', '[]',
+    '--skill-bindings', JSON.stringify([{
+      behavior: 'adapter',
+      purpose: 'Implement the approved adapter behavior',
+      selection_reason: 'No visible specialist is a better semantic match',
+      execution_order: 1,
+      ada_fallback: 'Implement the bounded adapter directly',
+    }]),
   ]));
   assert.equal(second.status, 'blocked');
+  assert.deepEqual(second.skill_bindings[0].alternatives, []);
 
   const valid = json(await runNode('validate-plan.mjs', ['--root', root]));
   assert.equal(valid.valid, true);
@@ -139,6 +158,31 @@ test('CLI lifecycle initializes, adds, validates, invalidates, and ingests', asy
   const events = await fs.readFile(path.join(root, 'events.jsonl'), 'utf8');
   assert.match(events, /Legacy contract changed/);
   assert.match(events, /Ask infra about retention/);
+
+  const saved = JSON.parse(await fs.readFile(mapPath, 'utf8'));
+  assert.equal(saved.nodes[0].skill_bindings[0].selected_skill, 'cuda-repository-inspector');
+  const mapView = await fs.readFile(path.join(root, 'MAP.md'), 'utf8');
+  assert.match(mapView, /## Skill routing/);
+  assert.match(mapView, /cuda-repository-inspector/);
+  const nodeView = await fs.readFile(path.join(root, 'nodes', 'N-001.md'), 'utf8');
+  assert.match(nodeView, /Broader than the bounded inspection/);
+  const overview = json(await runNode('overview.mjs', ['--root', root, '--project-root', root]));
+  assert.deepEqual(overview.skill_routes.map((route) => [route.node_id, route.behavior, route.execution_order]), [
+    ['N-001', 'constraint-discovery', 1],
+    ['N-002', 'adapter', 1],
+  ]);
+});
+
+test('add-node CLI requires an explicit skill-bindings array', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-cli-skill-bindings-'));
+  json(await runNode('init-plan.mjs', [
+    '--root', root, '--id', 'bindings', '--title', 'Bindings', '--goal', 'Require routing',
+  ]));
+  const result = await runNode('add-node.mjs', [
+    '--root', root, '--id', 'N-001', '--title', 'Missing routing decision',
+  ]);
+  assert.equal(result.code, 2);
+  assert.match(result.stderr, /--skill-bindings/);
 });
 
 test('normalize-handoff CLI emits a validated envelope and rejects malformed input', async () => {

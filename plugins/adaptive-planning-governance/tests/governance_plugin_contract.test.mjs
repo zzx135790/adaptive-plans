@@ -104,7 +104,7 @@ function startServer(options = {}) {
   };
 }
 
-test('plugin, skill, package, and MCP server expose the governance identity at v0.4.0', async () => {
+test('plugin, skill, package, and MCP server expose the governance identity at v0.5.0', async () => {
   const manifestPath = path.join(pluginRoot, '.codex-plugin', 'plugin.json');
   assert.equal(await exists(manifestPath), true, 'governance manifest must exist');
   const manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
@@ -116,9 +116,9 @@ test('plugin, skill, package, and MCP server expose the governance identity at v
   const mcp = JSON.parse(await fs.readFile(path.join(pluginRoot, '.mcp.json'), 'utf8'));
 
   assert.equal(manifest.name, 'adaptive-planning-governance');
-  assert.equal(manifest.version, '0.4.0');
+  assert.equal(manifest.version, '0.5.0');
   assert.equal(pkg.name, 'adaptive-planning-governance');
-  assert.equal(pkg.version, '0.4.0');
+  assert.equal(pkg.version, '0.5.0');
   assert.match(skill, /^name: adaptive-planning-governance$/m);
   assert.match(skill, /^description: Use when .*optional advanced planning governance/m);
   assert.match(skill, /Do not use for ordinary implementation planning/);
@@ -130,7 +130,7 @@ test('plugin, skill, package, and MCP server expose the governance identity at v
     const response = await server.request('initialize', { protocolVersion: '2025-03-26' });
     assert.deepEqual(response.result.serverInfo, {
       name: 'adaptive-planning-governance',
-      version: '0.4.0',
+      version: '0.5.0',
     });
   } finally {
     server.close();

@@ -22,7 +22,14 @@ test('v2 map overview exposes topology, gates, architecture, design, and every n
   map.architecture_snapshot = { project_id: 'project', revision: 2, architecture_hash: 'abc123' };
   map.design_refs = [{ design_id: 'd', revision: 1, status: 'approved' }];
   map.nodes = [
-    { id: 'N-001', title: 'Design API', status: 'done', depends_on: [], inputs: ['x'], outputs: ['y'], acceptance: ['z'], blocking_questions: [] },
+    {
+      id: 'N-001', title: 'Design API', status: 'done', depends_on: [], inputs: ['x'], outputs: ['y'], acceptance: ['z'], blocking_questions: [],
+      skill_bindings: [{
+        behavior: 'design-api', purpose: 'Select the API boundary',
+        selection_reason: 'The visible decision skill matches the behavior', execution_order: 1,
+        selected_skill: 'domain-api-decision', alternatives: [],
+      }],
+    },
     { id: 'N-002', title: 'Implement API', status: 'blocked', depends_on: ['N-001'], inputs: ['x'], outputs: ['y'], acceptance: ['z'], blocking_questions: ['contract missing'] },
   ];
   const leafPath = path.join(project, 'docs', 'superpowers', 'plans', '2026-08-28-api-leaf.md');
@@ -48,6 +55,8 @@ test('v2 map overview exposes topology, gates, architecture, design, and every n
   assert.match(markdown, /N-001 -> N-002/);
   assert.match(markdown, /Architecture:/);
   assert.match(markdown, /Artifact Index/);
+  assert.match(markdown, /Skill routing/);
+  assert.match(markdown, /domain-api-decision/);
   assert.match(markdown, /nodes\/N-002\.md/);
   const overview = await buildPlanOverview(root, { projectRoot: project });
   assert.equal(overview.status_counts.blocked, 1);
@@ -59,6 +68,15 @@ test('v2 map overview exposes topology, gates, architecture, design, and every n
   assert.equal(overview.artifact_index.find((artifact) => artifact.id === 'leaf-api').exists_in_plan_folder, false);
   assert.equal(overview.artifact_index.find((artifact) => artifact.id === 'leaf-api').exists, true);
   assert.equal(overview.engineering_posture.kind, 'reusable_internal');
+  assert.deepEqual(overview.skill_routes, [{
+    node_id: 'N-001',
+    behavior: 'design-api',
+    purpose: 'Select the API boundary',
+    selection_reason: 'The visible decision skill matches the behavior',
+    execution_order: 1,
+    selected_skill: 'domain-api-decision',
+    alternatives: [],
+  }]);
   assert.ok(overview.node_scope.find((node) => node.node_id === 'N-002').readiness.blockers.some((blocker) => blocker.code === 'dependency_not_done') === false);
   assert.equal(overview.binding.plan_state, 'loaded');
   assert.equal(overview.flow_receipt.workflow, 'adaptive-planning-governance');

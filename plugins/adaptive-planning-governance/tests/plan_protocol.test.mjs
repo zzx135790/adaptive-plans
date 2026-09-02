@@ -135,6 +135,72 @@ test('maps without posture remain readable with an unknown legacy warning', () =
   assert.ok(result.warnings.some((warning) => warning.code === 'unknown_legacy_map_posture'));
 });
 
+test('validateMap accepts visible non-planning skills and rejects ambiguous or duplicate routing', () => {
+  const base = {
+    schema_version: '1.0',
+    plan_id: 'skill-routing',
+    extension_from_future_host: { preserved: true },
+    nodes: [{
+      id: 'N-001', title: 'Tune kernels', status: 'ready', depends_on: [],
+      skill_bindings: [{
+        behavior: 'tune-cuda-kernels',
+        purpose: 'Tune the approved kernels',
+        selection_reason: 'The current session exposes the specialist skill',
+        execution_order: 1,
+        selected_skill: 'cuda-kernel-tuning',
+      }],
+    }],
+  };
+  assert.equal(validateMap(base).valid, true);
+  assert.equal(validateMap({
+    ...base,
+    nodes: [{ ...base.nodes[0], skill_bindings: undefined }],
+  }).valid, true);
+
+  const invalidCases = [
+    {
+      code: 'node_multiple_skill_routes',
+      bindings: [{
+        ...base.nodes[0].skill_bindings[0],
+        ada_fallback: 'perform the bounded work directly',
+      }],
+    },
+    {
+      code: 'node_duplicate_skill_behavior',
+      bindings: [
+        base.nodes[0].skill_bindings[0],
+        { ...base.nodes[0].skill_bindings[0], execution_order: 2, selected_skill: 'another-visible-skill' },
+      ],
+    },
+    {
+      code: 'node_duplicate_skill_execution_order',
+      bindings: [
+        base.nodes[0].skill_bindings[0],
+        { ...base.nodes[0].skill_bindings[0], behavior: 'benchmark-kernels', selected_skill: 'benchmark-suite' },
+      ],
+    },
+    {
+      code: 'node_too_many_skill_alternatives',
+      bindings: [{
+        ...base.nodes[0].skill_bindings[0],
+        alternatives: [
+          { skill: 'generic-profiler', not_selected_reason: 'Less CUDA-specific' },
+          { skill: 'codebase-analyzer', not_selected_reason: 'Analysis only' },
+          { skill: 'risk-assessment', not_selected_reason: 'Wrong behavior' },
+        ],
+      }],
+    },
+  ];
+  for (const { code, bindings } of invalidCases) {
+    const result = validateMap({
+      ...base,
+      nodes: [{ ...base.nodes[0], skill_bindings: bindings }],
+    });
+    assert.equal(result.valid, false, code);
+    assert.ok(result.errors.some((error) => error.code === code), code);
+  }
+});
+
 test('getNextNodes does not expose nodes whose readiness gates are incomplete', () => {
   const map = {
     nodes: [

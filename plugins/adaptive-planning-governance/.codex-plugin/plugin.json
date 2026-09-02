@@ -1,19 +1,20 @@
 {
   "name": "adaptive-planning-governance",
-  "version": "0.4.0",
-  "description": "Optional advanced governance for architecture memory, design approval, posture, migrations, and strict completion.",
+  "version": "0.5.0",
+  "description": "Optional advanced governance with behavior-level visible skill routing, architecture memory, design approval, posture, migrations, and strict completion.",
   "author": {
     "name": "Local developer"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "Adaptive Planning Governance",
-    "shortDescription": "Optional advanced planning governance.",
-    "longDescription": "Add architecture memory, re-entrant Design Gates, engineering posture, recoverable migrations, and strict completion checks when a project explicitly needs governance beyond ordinary implementation planning.",
+    "shortDescription": "Optional governance with visible skill routing",
+    "longDescription": "Add behavior-level visible skill routing, architecture memory, re-entrant Design Gates, engineering posture, recoverable migrations, and strict completion checks only when a project explicitly needs governance beyond ordinary implementation planning.",
     "developerName": "Local developer",
     "category": "Productivity",
     "capabilities": [
       "advanced-planning-governance",
+      "behavior-level-skill-routing",
       "architecture-memory",
       "design-gates",
       "provider-adapters",
@@ -25,7 +26,7 @@
       "recoverable-migrations",
       "local-mcp"
     ],
-    "defaultPrompt": "Use $adaptive-planning-governance for advanced governance with architecture memory, a Design Gate, a DAG, and an artifact index."
+    "defaultPrompt": "Use $adaptive-planning-governance only when advanced governance is explicitly needed. Bind substantive map behaviors to skills visible in this session or named Ada fallbacks, and preserve architecture memory, Design Gates, the DAG, and the artifact index."
   },
   "mcpServers": "./.mcp.json"
 }

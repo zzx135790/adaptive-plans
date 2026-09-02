@@ -19,6 +19,12 @@ Before the first implementation change:
 4. Update progress at each start, verified completion, blocker, scope change,
    or replan. Completion requires the task's verification to succeed.
 
+Read the selected node's ordered `skill_bindings` before execution. Each row is
+one substantive behavior and names either the visible skill to use or the Ada
+direct-work fallback. If current evidence requires another route, update the
+row and set `override_reason` to the old route, new route, and reason before
+performing that behavior; do not silently substitute execution paths.
+
 Context compaction does not authorize a different plan. A new conversation
 must not infer continuation from plan files alone.
 
@@ -65,6 +71,17 @@ Finalise each leaf in this order:
    experimental measurement/reproduction requirements.
 3. Check completeness only for the remaining approved behaviors, then run the
    leaf verification commands.
+
+A new candidate that claims a mandatory safety-floor capability remains
+deferred with `missing_safety_case` until it has scoped provenance and a
+complete case: non-empty `threat`, `impact`, `smaller_control`, `reversibility`,
+and `cost` strings plus non-empty `evidence` and `verification` arrays. The case
+must justify the smallest control and cannot authorize unrelated product scope.
+
+Assume standard-library behavior, mature dependency contracts, and
+repository-verified operations work as established. Do not add wrappers,
+guards, alternate implementations, or duplicate checks without task-specific
+failure or safety evidence.
 
 Do not add telemetry, deployment, HA, compatibility layers, generalized APIs,
 or defensive fallbacks merely because they could be useful in a future

@@ -1,7 +1,7 @@
 {
   "name": "adaptive-planning-governance",
-  "version": "0.4.0",
-  "description": "Optional advanced governance for architecture memory, design approval, posture, migrations, and strict completion.",
+  "version": "0.5.0",
+  "description": "Optional advanced governance with behavior-level visible skill routing, architecture memory, design approval, posture, migrations, and strict completion.",
   "author": {
     "name": "Local developer"
   },
