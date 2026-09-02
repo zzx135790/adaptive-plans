@@ -6,12 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs",
-              "--root",
-              "${tool_input.context.project_root}/${tool_input.context.plan_path}"
-            ],
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs\"",
             "stdin": {
               "event": {
                 "type": "tool_completed",
@@ -36,12 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs",
-              "--root",
-              "${tool_input.context.project_root}/${tool_input.context.plan_path}"
-            ],
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs\"",
             "stdin": {
               "event": {
                 "type": "tool_failed",
@@ -66,12 +56,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs",
-              "--root",
-              "${CLAUDE_PROJECT_DIR}"
-            ],
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs\"",
             "stdin": {
               "event": {
                 "type": "context_compaction",
@@ -94,12 +79,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node",
-            "args": [
-              "${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs",
-              "--root",
-              "${CLAUDE_PROJECT_DIR}"
-            ],
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs\"",
             "stdin": {
               "event": {
                 "type": "turn_ended",

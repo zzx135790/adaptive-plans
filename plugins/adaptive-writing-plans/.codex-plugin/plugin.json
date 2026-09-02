@@ -1,6 +1,6 @@
 {
   "name": "adaptive-writing-plans",
-  "version": "0.3.5+codex.20260902061820",
+  "version": "0.3.6+codex.20260902082216",
   "description": "Architecture-aware adaptive maps, re-entrant design gates, provider handoffs, and completion checks.",
   "author": {
     "name": "Local developer"

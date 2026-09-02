@@ -71,8 +71,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs", ...],
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/record-event.mjs\"",
             "stdin": {
               "event": {
                 "type": "tool_completed",
