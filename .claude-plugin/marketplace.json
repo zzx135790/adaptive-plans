@@ -8,13 +8,13 @@
   "plugins": [
     {
       "name": "adaptive-writing-plans",
-      "description": "Lean adaptive planning with direct-first routing and safe parallel dispatch.",
-      "version": "0.4.0",
+      "description": "Lean adaptive planning with behavior-level visible skill routing and safe parallel dispatch.",
+      "version": "0.5.0",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/zzx135790/adaptive-plans.git",
         "path": "plugins/adaptive-writing-plans",
-        "ref": "v0.4.0"
+        "ref": "v0.5.0"
       },
       "author": {
         "name": "zzx135790",
@@ -23,13 +23,13 @@
     },
     {
       "name": "adaptive-planning-governance",
-      "description": "Optional governance controls for adaptive planning workflows.",
-      "version": "0.4.0",
+      "description": "Optional governance controls with behavior-level visible skill routing.",
+      "version": "0.5.0",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/zzx135790/adaptive-plans.git",
         "path": "plugins/adaptive-planning-governance",
-        "ref": "v0.4.0"
+        "ref": "v0.5.0"
       },
       "author": {
         "name": "zzx135790",

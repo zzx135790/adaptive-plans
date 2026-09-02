@@ -30,7 +30,7 @@ claude plugin update adaptive-planning-governance@adaptive-plans-local
 ### Codex
 
 ```bash
-codex plugin marketplace add https://github.com/zzx135790/adaptive-plans.git --ref v0.4.0
+codex plugin marketplace add https://github.com/zzx135790/adaptive-plans.git --ref v0.5.0
 codex plugin add adaptive-writing-plans@adaptive-plans-local
 # Optional; install separately when governance controls are needed.
 codex plugin add adaptive-planning-governance@adaptive-plans-local
@@ -46,7 +46,11 @@ Start a new Claude Code or Codex session after installing or updating a plugin s
 
 ## Use
 
-Invoke `adaptive-writing-plans` for implementation planning. It begins with direct execution for small, clear work, records a map only when multiple dependent phases need coordination, and makes parallel dispatch explicit whenever two safe independent nodes exist. Its provider choice is visible: use an installed host skill when one fits; otherwise use the bounded Ada fallback rather than installing a provider implicitly.
+Invoke `adaptive-writing-plans` for implementation planning. It begins with direct execution for small, clear work, records a map only when multiple dependent phases need coordination, and makes parallel dispatch explicit whenever two safe independent nodes exist.
+
+Plans use the skill names and descriptions visible in the current session to bind each substantive behavior that changes the execution method or deliverable, for example `diagnose failure -> systematic-debugging` or `review paper -> academic-paper-review`. A missing match is shown as a named Ada fallback; hidden skills are not scanned, installed, or guessed. Direct tasks show one binding line before work and create no plan artifact.
+
+Standard libraries, mature dependencies, and repository operations with existing verification evidence are trusted by default. Add a local check only for an observed failure, version or contract conflict, or concrete security boundary; otherwise do not introduce wrappers, guards, replacement implementations, or duplicate validation.
 
 ## License
 

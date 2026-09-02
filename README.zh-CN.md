@@ -30,7 +30,7 @@ claude plugin update adaptive-planning-governance@adaptive-plans-local
 ### Codex
 
 ```bash
-codex plugin marketplace add https://github.com/zzx135790/adaptive-plans.git --ref v0.4.0
+codex plugin marketplace add https://github.com/zzx135790/adaptive-plans.git --ref v0.5.0
 codex plugin add adaptive-writing-plans@adaptive-plans-local
 # 可选：需要治理控制时单独安装。
 codex plugin add adaptive-planning-governance@adaptive-plans-local
@@ -46,7 +46,11 @@ codex plugin marketplace upgrade adaptive-plans-local
 
 ## 使用
 
-在需要实施规划时调用 `adaptive-writing-plans`。它会先直接执行小型明确任务；只有多个依赖阶段需要协调时才创建 map；当有两个安全且相互独立的节点时，明确采用并行派发。Provider 选择对用户可见：优先使用已安装的宿主技能；没有匹配项时使用受限 Ada fallback，而不会隐式安装 provider。
+在需要实施规划时调用 `adaptive-writing-plans`。它会先直接执行小型明确任务；只有多个依赖阶段需要协调时才创建 map；当有两个安全且相互独立的节点时，明确采用并行派发。
+
+计划会根据当前会话可见的 skill 名称和描述，把会改变执行方式或产物的实质行为显式绑定到 skill，例如 `诊断失败 -> systematic-debugging`、`审阅论文 -> academic-paper-review`。没有匹配项时显示具名 Ada fallback；不会扫描、安装或猜测隐藏 skill。Direct 任务只在开工前显示一行绑定，不创建计划文件。
+
+默认信任标准库、成熟依赖和仓库中已有验证记录的操作。只有观察到失败、版本或契约冲突、或者明确安全边界时，才增加局部验证；否则不自动添加 wrapper、guard、自建替代实现或重复检查。
 
 ## 许可证
 
