@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "adaptive-planning-governance/map.schema.json",
+  "type": "object",
+  "required": ["schema_version", "plan_id", "stage", "work_shape", "gates", "nodes"],
+  "$defs": {
+    "posture_ref": {
+      "type": "object",
+      "required": ["kind", "posture_hash", "source_ref"],
+      "properties": {
+        "kind": {"enum": ["spike", "experiment", "reusable_internal", "production"]},
+        "posture_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "source_ref": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "scope_provenance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "ref", "behavior_id"],
+        "properties": {
+          "kind": {"enum": ["requirement", "approved_design", "approved_contract", "observed_failure", "safety_floor"]},
+          "ref": {"type": "string", "minLength": 1},
+          "behavior_id": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": true
+      }
+    },
+    "behavior_budget": {
+      "type": "object",
+      "required": ["required", "excluded", "deferred_candidates"],
+      "properties": {
+        "required": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "excluded": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "deferred_candidates": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "deferred_candidate": {
+      "type": "object",
+      "required": ["behavior_id", "capability", "reason", "evidence"],
+      "properties": {
+        "behavior_id": {"type": "string", "minLength": 1},
+        "capability": {"type": "string", "minLength": 1},
+        "reason": {"enum": ["excluded_by_posture", "not_allowed_by_posture", "missing_provenance", "provider_not_persisted", "provider_not_structured"]},
+        "evidence": {"type": "array"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "properties": {
+    "schema_version": {"const": "2.0"},
+    "plan_id": {"type": "string", "minLength": 1},
+    "title": {"type": "string"},
+    "goal": {"type": "string"},
+    "status": {"type": "string"},
+    "stage": {"enum": ["intake", "guiding", "designing", "mapping", "leaf_planning", "executing", "validating", "complete"]},
+    "work_shape": {"enum": ["undetermined", "direct", "plan", "map"]},
+    "mode": {"enum": ["guide", "map", "plan", "direct"]},
+    "gates": {"type": "object", "required": ["intent", "design", "architecture_sync"]},
+    "architecture_snapshot": {"type": ["object", "null"]},
+    "design_refs": {"type": "array"},
+    "artifacts": {"type": "array"},
+    "current_node": {"type": ["string", "null"]},
+    "engineering_posture": {"type": "object"},
+    "posture_evidence": {"type": "array", "items": {"oneOf": [{"type": "string", "minLength": 1}, {"type": "object"}]}},
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status", "depends_on"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "status": {"type": "string"},
+          "depends_on": {"type": "array", "items": {"type": "string"}},
+          "inputs": {"type": "array", "items": {"type": "string"}},
+          "outputs": {"type": "array", "items": {"type": "string"}},
+          "blocking_questions": {"type": "array", "items": {"type": "string"}},
+          "acceptance": {"type": "array", "items": {"type": "string"}},
+          "requirement_ids": {"type": "array", "items": {"type": "string"}},
+          "contract_refs": {"type": "array"},
+          "design_refs": {"type": "array"},
+          "interaction_refs": {"type": "array"},
+          "impacted_modules": {"type": "array", "items": {"type": "string"}},
+          "design_required": {"type": "boolean"},
+          "parallelization": {
+            "type": "object",
+            "properties": {
+              "candidate": {"type": "boolean"},
+              "wave": {"type": ["string", "integer"]},
+              "execution_wave": {"type": ["string", "integer", "null"]},
+              "safe_wave": {"type": ["string", "integer", "null"]},
+              "owned_paths": {"type": "array", "items": {"type": "string"}},
+              "shared_resources": {"type": "array"},
+              "independent_verification": {"type": "array", "items": {"type": "string"}},
+              "provider_evidence": {"type": "object"},
+              "reason": {"type": "string"}
+            },
+            "additionalProperties": true
+          },
+          "stale_reason": {"type": "string"},
+          "revalidation_required": {"type": "boolean"}
+          ,
+          "posture_ref": {"$ref": "#/$defs/posture_ref"},
+          "scope_provenance": {"$ref": "#/$defs/scope_provenance"},
+          "behavior_budget": {"$ref": "#/$defs/behavior_budget"},
+          "deferred_candidates": {
+            "type": "array",
+            "items": {"$ref": "#/$defs/deferred_candidate"}
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

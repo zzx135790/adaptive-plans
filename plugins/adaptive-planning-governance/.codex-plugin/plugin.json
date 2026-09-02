@@ -1,0 +1,31 @@
+{
+  "name": "adaptive-planning-governance",
+  "version": "0.4.0",
+  "description": "Optional advanced governance for architecture memory, design approval, posture, migrations, and strict completion.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Adaptive Planning Governance",
+    "shortDescription": "Optional advanced planning governance.",
+    "longDescription": "Add architecture memory, re-entrant Design Gates, engineering posture, recoverable migrations, and strict completion checks when a project explicitly needs governance beyond ordinary implementation planning.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "advanced-planning-governance",
+      "architecture-memory",
+      "design-gates",
+      "provider-adapters",
+      "plan-validation",
+      "completion-gates",
+      "engineering-posture",
+      "scope-provenance",
+      "inline-approval-briefs",
+      "recoverable-migrations",
+      "local-mcp"
+    ],
+    "defaultPrompt": "Use $adaptive-planning-governance for advanced governance with architecture memory, a Design Gate, a DAG, and an artifact index."
+  },
+  "mcpServers": "./.mcp.json"
+}

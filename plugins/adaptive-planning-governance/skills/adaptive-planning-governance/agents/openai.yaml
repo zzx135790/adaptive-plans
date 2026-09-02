@@ -1,0 +1,4 @@
+interface:
+  display_name: "Adaptive Planning Governance"
+  short_description: "Optional advanced planning governance"
+  default_prompt: "Use $adaptive-planning-governance for advanced governance with architecture memory, a Design Gate, a DAG, and an artifact index."

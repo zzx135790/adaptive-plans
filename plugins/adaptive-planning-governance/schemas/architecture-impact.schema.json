@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "adaptive-planning-governance/architecture-impact.schema.json",
+  "type": "object",
+  "required": ["schema_version", "impact_id", "architecture_hash", "changed_paths", "relevant_paths", "impacted_modules", "unmapped_paths", "ambiguous_paths", "surface_changes", "classification", "status", "evidence"],
+  "properties": {
+    "schema_version": {"const": "2.0"},
+    "impact_id": {"type": "string", "minLength": 1},
+    "architecture_hash": {"type": "string"},
+    "changed_paths": {"type": "array", "items": {"type": "string"}},
+    "relevant_paths": {"type": "array", "items": {"type": "string"}},
+    "impacted_modules": {"type": "array", "items": {"type": "string"}},
+    "impacted_zones": {"type": "array", "items": {"type": "string"}},
+    "unmapped_paths": {"type": "array", "items": {"type": "string"}},
+    "ambiguous_paths": {"type": "array"},
+    "surface_changes": {"type": "array"},
+    "classification": {"enum": ["no_contract_change", "contract_delta"]},
+    "status": {"enum": ["pending", "satisfied", "blocked"]},
+    "evidence": {"type": "array"},
+    "delta_ref": {"type": ["string", "null"]},
+    "approval": {}
+  },
+  "additionalProperties": true
+}

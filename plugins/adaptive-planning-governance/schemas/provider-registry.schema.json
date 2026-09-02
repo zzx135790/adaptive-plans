@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "adaptive-planning-governance/provider-registry.schema.json",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "providers", "aliases", "policy"],
+  "properties": {
+    "schema_version": {"const": "2.0"},
+    "generated_at": {"type": "string"},
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "name", "capabilities", "source", "execution", "availability", "identity", "lifecycle"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["skill", "mcp"]},
+          "name": {"type": "string"},
+          "capabilities": {"type": "array", "items": {"type": "string"}},
+          "availability": {"const": "discovered"},
+          "source": {"type": "string"},
+          "execution": {"const": "not-invoked"},
+          "identity": {
+            "type": "object",
+            "required": ["version_or_digest"],
+            "properties": {
+              "version_or_digest": {
+                "type": "string",
+                "pattern": "^(version|sha256):.+"
+              }
+            },
+            "additionalProperties": false
+          },
+          "lifecycle": {
+            "type": "object",
+            "required": ["discovery", "dependency_readiness", "invocation", "persistence"],
+            "properties": {
+              "discovery": {"const": "installed"},
+              "dependency_readiness": {"enum": ["not_checked", "ready", "blocked"]},
+              "invocation": {"enum": ["not_invoked", "invoked", "failed"]},
+              "persistence": {"enum": ["not_verified", "verified", "missing"]}
+            },
+            "additionalProperties": false
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "design": {
+                "type": "object",
+                "properties": {
+                  "roles": {"type": "array"},
+                  "domains": {"type": "array"},
+                  "concerns": {"type": "array"},
+                  "mutability": {"enum": ["read_only", "artifact_write", "external_side_effect", "unknown"]}
+                }
+              },
+              "composition": {
+                "type": "object",
+                "required": ["catalog_match", "dependency_refs", "expected_outputs", "persistence_expectations", "fallback"],
+                "properties": {
+                  "catalog_match": {"type": "boolean"},
+                  "dependency_refs": {"type": "array"},
+                  "expected_outputs": {"type": "array"},
+                  "persistence_expectations": {"type": "string", "minLength": 1},
+                  "fallback": {"type": ["string", "null"]}
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "aliases": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
+    "fallbacks": {"type": "object", "additionalProperties": {"type": "string"}},
+    "warnings": {"type": "array"},
+    "policy": {
+      "type": "object",
+      "required": ["discovery_only", "execution", "installation"],
+      "properties": {
+        "discovery_only": {"const": true},
+        "execution": {"const": "not-invoked"},
+        "installation": {"const": "never-automatic"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "adaptive-planning-governance": {
+      "command": "node",
+      "args": ["./mcp/server.mjs", "--stdio"],
+      "cwd": ".",
+      "tool_timeout_sec": 120
+    }
+  }
+}

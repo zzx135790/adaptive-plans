@@ -1,0 +1,54 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "mcp__adaptive-planning-governance__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/optional-hooks/record-event.mjs\"",
+            "timeout": 5,
+            "ignoreFailure": true
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "mcp__adaptive-planning-governance__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/optional-hooks/record-event.mjs\"",
+            "timeout": 5,
+            "ignoreFailure": true
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/optional-hooks/record-event.mjs\"",
+            "timeout": 5,
+            "ignoreFailure": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/optional-hooks/record-event.mjs\"",
+            "timeout": 5,
+            "ignoreFailure": true
+          }
+        ]
+      }
+    ]
+  }
+}
