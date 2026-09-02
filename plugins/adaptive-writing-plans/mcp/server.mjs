@@ -652,9 +652,9 @@ async function drain() {
 }
 
 let drainQueue = Promise.resolve();
-// Node 24 can miss buffered data on process.stdin when a spawned stdio fd is
-// socket-backed; attach a fresh stream to fd 0 so startup writes are retained.
-const input = fs.createReadStream(null, { fd: process.stdin.fd, autoClose: false });
+// Codex can provide a socket-backed stdin. Use Node's managed stream because
+// opening fd 0 with fs.createReadStream can surface EAGAIN and close transport.
+const input = process.stdin;
 input.on('data', (chunk) => {
   inputBuffer = Buffer.concat([inputBuffer, chunk]);
   drainQueue = drainQueue.then(() => drain()).catch((error) => {
