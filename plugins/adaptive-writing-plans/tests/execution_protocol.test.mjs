@@ -6,6 +6,7 @@ import {
   createExecutionCheckpoint,
   createLeafPlanningHandoff,
   evaluateExecutionContinuation,
+  evaluateExecutionSafeWaves,
   reviewLeafForFinalisation,
   validateExecutionCheckpoint,
 } from '../scripts/lib/execution-protocol.mjs';
@@ -13,6 +14,21 @@ import {
   createEngineeringPosture,
   postureRef,
 } from '../scripts/lib/engineering-posture.mjs';
+
+function executionNode(id, ownedPath, overrides = {}) {
+  return {
+    id,
+    status: 'ready',
+    depends_on: [],
+    parallelization: {
+      candidate: true,
+      owned_paths: [ownedPath],
+      shared_resources: [],
+      independent_verification: [`node --test tests/${id}.test.mjs`],
+    },
+    ...overrides,
+  };
+}
 
 function fixture() {
   const posture = createEngineeringPosture('experiment', {
@@ -154,4 +170,58 @@ test('finalisation is subtractive before completeness and retains safety floors'
   assert.equal(review.deferred_candidates.find((candidate) => candidate.behavior_id === 'deploy').reason, 'excluded_by_posture');
   assert.deepEqual(review.completeness_gaps, []);
   assert.equal(review.mutates_leaf, false);
+});
+
+test('execution evaluator dispatches compatible ready candidates together without provider evidence', () => {
+  const map = { nodes: [
+    executionNode('A', 'src/a.mjs'),
+    executionNode('B', 'src/b.mjs'),
+  ] };
+  const before = structuredClone(map);
+
+  const result = evaluateExecutionSafeWaves(map);
+
+  assert.deepEqual(result.execution_safe_waves.map((wave) => wave.map((node) => node.node_id)), [['A', 'B']]);
+  assert.deepEqual(result.dispatch_batches, [{
+    dependency_wave: 1,
+    subwave: 1,
+    node_ids: ['A', 'B'],
+    mode: 'parallel',
+  }]);
+  assert.deepEqual(result.serial, []);
+  assert.deepEqual(map, before);
+});
+
+test('execution evaluator partitions conflicts into stable maximal dispatch batches', () => {
+  const map = { nodes: [
+    executionNode('B', 'src/shared.mjs'),
+    executionNode('C', 'src/c.mjs'),
+    executionNode('A', 'src/shared.mjs'),
+  ] };
+
+  const result = evaluateExecutionSafeWaves(map);
+
+  assert.deepEqual(result.execution_safe_waves.map((wave) => wave.map((node) => node.node_id)), [['A', 'C']]);
+  assert.deepEqual(result.dispatch_batches, [
+    {
+      dependency_wave: 1,
+      subwave: 1,
+      node_ids: ['A', 'C'],
+      mode: 'parallel',
+    },
+    {
+      dependency_wave: 1,
+      subwave: 2,
+      node_ids: ['B'],
+      mode: 'serial',
+      reason: 'conflicts with nodes in an earlier subwave of dependency wave 1',
+    },
+  ]);
+  assert.deepEqual(result.serial, [{
+    node_id: 'B',
+    dependency_wave: 1,
+    execution_wave: 'serial',
+    parallel: false,
+    reason: 'conflicts with nodes in an earlier subwave of dependency wave 1',
+  }]);
 });

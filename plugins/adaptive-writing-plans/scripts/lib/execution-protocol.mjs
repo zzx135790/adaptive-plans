@@ -64,19 +64,7 @@ function resourceInfo(resource) {
   return { name: match?.[1] ?? value, partition: match?.[2] ?? null };
 }
 
-function providerEvidence(node) {
-  const metadata = node?.parallelization ?? {};
-  const evidence = metadata.provider_evidence ?? metadata.provider ?? metadata.provider_receipt ?? node?.provider_evidence;
-  if (!isObject(evidence)) return { ok: false, reason: 'missing provider dispatchable/visible evidence' };
-  const dispatchable = metadata.provider_dispatchable === true || evidence.dispatchable === true || evidence.status === 'selected'
-    || evidence.status === 'dispatchable';
-  const visible = metadata.provider_visible === true || evidence.visible === true || evidence.visibility === 'visible';
-  if (!dispatchable) return { ok: false, reason: 'provider is not dispatchable' };
-  if (!visible) return { ok: false, reason: 'provider visibility evidence is missing' };
-  return { ok: true };
-}
-
-function assessNodeExecutionSafety(node, peers) {
+function assessNodeExecutionSafety(node) {
   const metadata = node?.parallelization ?? {};
   const reasons = [];
   if (!EXECUTION_READY_STATUSES.has(node.status)) reasons.push(`node status ${node.status} is not executable`);
@@ -84,24 +72,70 @@ function assessNodeExecutionSafety(node, peers) {
   if (asArray(metadata.independent_verification).length === 0) reasons.push('missing independent_verification');
   const shared = asArray(metadata.shared_resources).map(resourceInfo);
   if (shared.some((resource) => !resource.name || !resource.partition)) reasons.push('shared_resources are not empty or partitioned');
-  for (const peer of peers) {
-    for (const resource of shared) {
-      const peerResource = resourceInfo(asArray(peer.parallelization?.shared_resources).find((candidate) => resourceInfo(candidate).name === resource.name));
-      if (peerResource.name === resource.name && (!peerResource.partition || peerResource.partition === resource.partition)) {
-        reasons.push(`shared resource ${resource.name} partition conflicts with ${peer.id}`);
-      }
-    }
-  }
-  const provider = providerEvidence(node);
-  if (!provider.ok) reasons.push(provider.reason);
-  for (const peer of peers) {
-    for (const left of asArray(metadata.owned_paths)) {
-      for (const right of asArray(peer.parallelization?.owned_paths)) {
-        if (pathOverlaps(left, right)) reasons.push(`owned_paths overlap with ${peer.id}`);
-      }
-    }
-  }
   return reasons;
+}
+
+function nodesConflict(leftNode, rightNode) {
+  const left = leftNode.parallelization ?? {};
+  const right = rightNode.parallelization ?? {};
+  for (const leftPath of asArray(left.owned_paths)) {
+    for (const rightPath of asArray(right.owned_paths)) {
+      if (pathOverlaps(leftPath, rightPath)) return true;
+    }
+  }
+  for (const leftResource of asArray(left.shared_resources).map(resourceInfo)) {
+    for (const rightResource of asArray(right.shared_resources).map(resourceInfo)) {
+      if (leftResource.name === rightResource.name && leftResource.partition === rightResource.partition) return true;
+    }
+  }
+  return false;
+}
+
+function partitionConflictGraph(nodes) {
+  const remaining = [...nodes].sort((left, right) => left.id.localeCompare(right.id));
+  const batches = [];
+  while (remaining.length > 0) {
+    const batch = [];
+    for (let index = 0; index < remaining.length;) {
+      const node = remaining[index];
+      if (batch.every((peer) => !nodesConflict(node, peer))) {
+        batch.push(node);
+        remaining.splice(index, 1);
+      } else {
+        index += 1;
+      }
+    }
+    batches.push(batch);
+  }
+  return batches;
+}
+
+function executionResult(node, dependencyWave, executionWave, parallel, reason) {
+  return {
+    node_id: node.id,
+    dependency_wave: dependencyWave,
+    execution_wave: executionWave,
+    parallel,
+    reason,
+  };
+}
+
+function assessCandidate(node) {
+  const reasons = assessNodeExecutionSafety(node);
+  if (node.parallelization?.candidate !== true) reasons.unshift('parallelization candidate is not enabled');
+  return reasons;
+}
+
+function serialResult(node, dependencyWave, reason) {
+  return executionResult(node, dependencyWave, 'serial', false, reason);
+}
+
+function serialReasonForSingleton(dependencyWave) {
+  return `no compatible executable peer in dependency wave ${dependencyWave}`;
+}
+
+function appendSerialCandidate(serial, node, dependencyWave, reasons) {
+  if (reasons.length > 0) serial.push(serialResult(node, dependencyWave, reasons.join('; ')));
 }
 
 /** Evaluate dependency layers independently from execution-safe parallel waves. */
@@ -110,23 +144,47 @@ export function evaluateExecutionSafeWaves(map) {
   const dependency = dependencyWaves(input);
   const safeWaves = [];
   const serial = [];
+  const dispatchBatches = [];
   dependency.waves.forEach((wave, index) => {
-    const safe = [];
+    const dependencyWave = index + 1;
+    const executable = [];
     for (const node of wave) {
       if (node.status === 'done') continue;
-      const reasons = assessNodeExecutionSafety(node, wave.filter((peer) => peer.id !== node.id));
-      const candidate = node.parallelization?.candidate === true;
-      if (!candidate) reasons.unshift('parallelization candidate is not enabled');
-      const result = {
-        node_id: node.id,
-        dependency_wave: index + 1,
-        execution_wave: reasons.length === 0 ? index + 1 : null,
-        parallel: reasons.length === 0,
-        reason: reasons.length === 0 ? 'dependency satisfied and execution safety evidence is complete' : reasons.join('; '),
-      };
-      if (result.parallel) safe.push(result); else serial.push({ ...result, execution_wave: 'serial' });
+      const reasons = assessCandidate(node);
+      if (reasons.length === 0) executable.push(node);
+      else appendSerialCandidate(serial, node, dependencyWave, reasons);
     }
-    if (safe.length > 0) safeWaves.push(safe);
+    const batches = partitionConflictGraph(executable);
+    batches.forEach((batch, batchIndex) => {
+      if (batch.length < 2) {
+        const reason = batchIndex === 0
+          ? serialReasonForSingleton(dependencyWave)
+          : `conflicts with nodes in an earlier subwave of dependency wave ${dependencyWave}`;
+        serial.push(serialResult(batch[0], dependencyWave, reason));
+        dispatchBatches.push({
+          dependency_wave: dependencyWave,
+          subwave: batchIndex + 1,
+          node_ids: batch.map((node) => node.id),
+          mode: 'serial',
+          reason,
+        });
+        return;
+      }
+      const results = batch.map((node) => executionResult(
+        node,
+        dependencyWave,
+        dependencyWave,
+        true,
+        'dependency satisfied and execution safety evidence is complete',
+      ));
+      safeWaves.push(results);
+      dispatchBatches.push({
+        dependency_wave: dependencyWave,
+        subwave: batchIndex + 1,
+        node_ids: batch.map((node) => node.id),
+        mode: 'parallel',
+      });
+    });
   });
   for (const [nodeId, reason] of dependency.blocked) {
     serial.push({ node_id: nodeId, dependency_wave: null, execution_wave: 'serial', parallel: false, reason });
@@ -134,6 +192,7 @@ export function evaluateExecutionSafeWaves(map) {
   return {
     dependency_waves: dependency.waves.map((wave, index) => ({ wave: index + 1, node_ids: wave.map((node) => node.id) })),
     execution_safe_waves: safeWaves,
+    dispatch_batches: dispatchBatches,
     serial,
     mutates_map: false,
   };
