@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { listenStdin } from '../scripts/lib/stdio.mjs';
 import {
   appendEvent,
   buildPlanOverview,
@@ -549,7 +550,7 @@ async function handle(request) {
     return {
       protocolVersion: request.params?.protocolVersion ?? '2025-03-26',
       capabilities: { tools: {}, resources: {} },
-      serverInfo: { name: 'adaptive-writing-plans', version: '0.3.4' },
+      serverInfo: { name: 'adaptive-writing-plans', version: '0.3.5' },
       instructions: 'Use plan_overview and plan_validate before acting. Project architecture, design revisions, and plans are separate canonical states; audit events never change them automatically.',
     };
   }
@@ -652,13 +653,9 @@ async function drain() {
 }
 
 let drainQueue = Promise.resolve();
-// Codex can provide a socket-backed stdin. Use Node's managed stream because
-// opening fd 0 with fs.createReadStream can surface EAGAIN and close transport.
-const input = process.stdin;
-input.on('data', (chunk) => {
+listenStdin((chunk) => {
   inputBuffer = Buffer.concat([inputBuffer, chunk]);
   drainQueue = drainQueue.then(() => drain()).catch((error) => {
     console.error(`MCP drain error: ${error.message}`);
   });
-});
-input.on('error', (error) => console.error(`MCP stdin error: ${error.message}`));
+}, { onError: (error) => console.error(`MCP stdin error: ${error.message}`) });

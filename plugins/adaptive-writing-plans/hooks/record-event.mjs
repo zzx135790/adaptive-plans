@@ -7,10 +7,10 @@ const args = process.argv.slice(2);
 const rootIndex = args.indexOf('--root');
 const root = path.resolve(rootIndex >= 0 ? args[rootIndex + 1] : process.env.ADAPTIVE_PLAN_ROOT ?? '.');
 
-const input = await readStdin();
-if (!input.trim()) process.exit(0);
-
 try {
+  const input = await readStdin();
+  if (!input.trim()) process.exit(0);
+
   const parsed = JSON.parse(input);
   const wrapped = parsed && typeof parsed === 'object' && parsed.event && typeof parsed.event === 'object'
     ? parsed.event
