@@ -16,6 +16,7 @@ import {
   triageDesign,
 } from './design-engine.mjs';
 import { asArray, cloneJson } from './io-utils.mjs';
+import { validateProviderResult } from './plan-protocol.mjs';
 
 function designThread(document, threadId = 'root') {
   const thread = asArray(document?.threads).find((candidate) => candidate.thread_id === threadId);
@@ -73,6 +74,13 @@ export async function updateCanonicalDesign(root, updates, options = {}) {
 }
 
 export async function recordCanonicalDesignProviderResult(root, result, options = {}) {
+  const validation = validateProviderResult(result, { strict: true });
+  if (!validation.valid) {
+    const error = new Error(`invalid provider result: ${validation.errors.map((item) => item.message).join('; ')}`);
+    error.code = 'INVALID_PROVIDER_RESULT';
+    error.validation = validation;
+    throw error;
+  }
   const document = await loadDesignLedger(root);
   const thread = designThread(document, options.threadId);
   const next = recordDesignThreadProviderResult(document, thread.thread_id, result, {

@@ -42,6 +42,26 @@ function currentLedgerRevision(document, threadId = 'root') {
   return thread?.revisions.find((revision) => revision.revision === thread.current_revision);
 }
 
+test('design approve CLI requires valid posture and brief hashes before loading a ledger', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-design-approve-usage-'));
+  const hash = 'a'.repeat(64);
+  const cases = [
+    ['--brief-hash', hash],
+    ['--expected-posture-hash', hash],
+    ['--expected-posture-hash', 'short', '--brief-hash', hash],
+    ['--expected-posture-hash', hash, '--brief-hash', 'short'],
+  ];
+  for (const extraArgs of cases) {
+    const result = await runNode('design-approve.mjs', [
+      '--root', root,
+      '--approval', 'approve exact design',
+      '--expected-hash', hash,
+      ...extraArgs,
+    ]);
+    assert.equal(result.code, 2, result.stderr);
+  }
+});
+
 test('CLI lifecycle initializes, adds, validates, invalidates, and ingests', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-cli-'));
   const init = json(await runNode('init-plan.mjs', [
@@ -289,6 +309,20 @@ test('top-level CLI completes and re-enters the design gate without replacing hi
     invariants: ['Errors use the public envelope'],
   })));
   const updatedRevision = currentLedgerRevision(updated);
+  const malformedProvider = await runNode('adaptive-plan.mjs', [
+    'design', 'record', '--root', root,
+    '--expected-hash', updatedRevision.content_hash,
+    '--provider', 'security-reviewer', '--capability', 'design',
+  ], JSON.stringify({ status: 'ok', covered_concerns: 'security' }));
+  assert.notEqual(malformedProvider.code, 0);
+  assert.ok(currentLedgerRevision(JSON.parse(await fs.readFile(path.join(root, 'design.json'), 'utf8')))
+    .provider_status.blocking_concerns.includes('security'));
+  const reviewed = json(await runNode('adaptive-plan.mjs', [
+    'design', 'record', '--root', root,
+    '--expected-hash', updatedRevision.content_hash,
+    '--provider', 'security-reviewer', '--capability', 'design',
+  ], JSON.stringify({ status: 'ok', findings: ['Boundary reviewed'], covered_concerns: ['security'] })));
+  assert.equal(currentLedgerRevision(reviewed).provider_status.blocking_concerns.includes('security'), false);
   const brief = json(await runNode('adaptive-plan.mjs', [
     'design', 'brief', '--root', root,
   ]));
@@ -300,7 +334,7 @@ test('top-level CLI completes and re-enters the design gate without replacing hi
     '--approval', 'Approve REST design',
     '--waiver', 'No installed security design reviewer',
   ]));
-  assert.equal(brief.exact_content_hash, updatedRevision.content_hash);
+  assert.equal(brief.exact_content_hash, currentLedgerRevision(reviewed).content_hash);
   assert.equal(currentLedgerRevision(approved).decision_status, 'waived');
   const linked = json(await runNode('adaptive-plan.mjs', [
     'plan', 'link-design', '--root', root,

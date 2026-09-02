@@ -16,7 +16,8 @@ import { createEngineeringPosture, postureRef } from '../scripts/lib/engineering
 import { createDesignDocument } from '../scripts/lib/design-engine.mjs';
 
 test('v2 map overview exposes topology, gates, architecture, design, and every node artifact', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-overview-'));
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-overview-'));
+  const root = path.join(project, 'docs', 'superpowers', 'plans', 'map');
   const map = await createPlanManifest(root, { planId: 'p', title: 'P', goal: 'G' });
   map.architecture_snapshot = { project_id: 'project', revision: 2, architecture_hash: 'abc123' };
   map.design_refs = [{ design_id: 'd', revision: 1, status: 'approved' }];
@@ -24,7 +25,9 @@ test('v2 map overview exposes topology, gates, architecture, design, and every n
     { id: 'N-001', title: 'Design API', status: 'done', depends_on: [], inputs: ['x'], outputs: ['y'], acceptance: ['z'], blocking_questions: [] },
     { id: 'N-002', title: 'Implement API', status: 'blocked', depends_on: ['N-001'], inputs: ['x'], outputs: ['y'], acceptance: ['z'], blocking_questions: ['contract missing'] },
   ];
-  map.artifacts = [{ path: '../../2026-08-28-api-leaf.md', format: 'superpowers-writing-plans', id: 'leaf-api' }];
+  const leafPath = path.join(project, 'docs', 'superpowers', 'plans', '2026-08-28-api-leaf.md');
+  await fs.writeFile(leafPath, '# API leaf\n');
+  map.artifacts = [{ path: '../2026-08-28-api-leaf.md', format: 'superpowers-writing-plans', id: 'leaf-api' }];
   map.engineering_posture = createEngineeringPosture('reusable_internal', {
     source: { kind: 'approved_guide', ref: 'GUIDE.md#posture' },
     allowed_capabilities: ['api'], excluded_capabilities: ['deployment'],
@@ -46,19 +49,40 @@ test('v2 map overview exposes topology, gates, architecture, design, and every n
   assert.match(markdown, /Architecture:/);
   assert.match(markdown, /Artifact Index/);
   assert.match(markdown, /nodes\/N-002\.md/);
-  const overview = await buildPlanOverview(root);
+  const overview = await buildPlanOverview(root, { projectRoot: project });
   assert.equal(overview.status_counts.blocked, 1);
   assert.ok(overview.artifacts.includes('nodes/N-002.md'));
   assert.ok(overview.artifacts.includes('decisions/D-001.md'));
   assert.ok(overview.artifacts.includes('provider-results/review.json'));
-  assert.ok(overview.artifacts.includes('../../2026-08-28-api-leaf.md'));
+  assert.ok(overview.artifacts.includes('../2026-08-28-api-leaf.md'));
   assert.equal(overview.artifact_index.find((artifact) => artifact.path === 'nodes/N-002.md').exists_in_plan_folder, true);
   assert.equal(overview.artifact_index.find((artifact) => artifact.id === 'leaf-api').exists_in_plan_folder, false);
-  assert.equal(typeof overview.artifact_index.find((artifact) => artifact.id === 'leaf-api').exists, 'boolean');
+  assert.equal(overview.artifact_index.find((artifact) => artifact.id === 'leaf-api').exists, true);
   assert.equal(overview.engineering_posture.kind, 'reusable_internal');
   assert.ok(overview.node_scope.find((node) => node.node_id === 'N-002').readiness.blockers.some((blocker) => blocker.code === 'dependency_not_done') === false);
   assert.equal(overview.binding.plan_state, 'loaded');
   assert.equal(overview.flow_receipt.workflow, 'adaptive-planning-governance');
+});
+
+test('overview rejects declared artifacts that escape project_root', async () => {
+  const project = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-overview-contained-'));
+  const root = path.join(project, 'plans', 'map');
+  const outsideRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-overview-outside-'));
+  const map = await createPlanManifest(root, { planId: 'contained', title: 'Contained', goal: 'Contain artifacts' });
+  await fs.symlink(outsideRoot, path.join(root, 'changes', 'escape'), 'dir');
+
+  for (const artifactPath of [
+    path.join(outsideRoot, 'absolute.md'),
+    path.relative(root, path.join(outsideRoot, 'traversal.md')),
+    'changes/escape/symlink.md',
+  ]) {
+    map.artifacts = [{ path: artifactPath, id: 'escaped' }];
+    await writeMap(root, map);
+    await assert.rejects(
+      () => buildPlanOverview(root, { projectRoot: project }),
+      (error) => error.code === 'PATH_TRAVERSAL',
+    );
+  }
 });
 
 test('overview distinguishes external artifact existence and renders pending design approval inline', async () => {

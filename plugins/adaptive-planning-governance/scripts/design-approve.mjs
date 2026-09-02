@@ -16,8 +16,10 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-if (!args.root || !args.approval || !args.expected_hash) {
-  console.error('Usage: node scripts/design-approve.mjs --root <plan-folder> [--thread <thread-id>] --approval <statement> --expected-hash <hash> [--expected-posture-hash <hash>] [--brief-hash <hash>] [--waiver <reason>]');
+const validHash = (value) => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+if (!args.root || !args.approval || !args.expected_hash
+  || !validHash(args.expected_posture_hash) || !validHash(args.brief_hash)) {
+  console.error('Usage: node scripts/design-approve.mjs --root <plan-folder> [--thread <thread-id>] --approval <statement> --expected-hash <hash> --expected-posture-hash <hash> --brief-hash <hash> [--waiver <reason>]');
   process.exit(2);
 }
 try {

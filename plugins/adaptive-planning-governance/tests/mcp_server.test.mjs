@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
@@ -129,6 +129,12 @@ test('MCP tools/list exposes read-only and append-event tools', async () => {
   assert.deepEqual(response.result.tools.find((tool) => tool.name === 'design_record_result').inputSchema.required, [
     'context', 'result', 'expected_hash',
   ]);
+  const providerResultSchema = response.result.tools.find(
+    (tool) => tool.name === 'design_record_result',
+  ).inputSchema.properties.result;
+  assert.deepEqual(providerResultSchema.required, ['schema_version', 'provider_id', 'capability', 'status']);
+  assert.equal(providerResultSchema.properties.schema_version.const, '2.0');
+  assert.equal(providerResultSchema.properties.covered_concerns.items.type, 'string');
 });
 
 test('MCP initialize reports the current plugin protocol version', async () => {
@@ -188,6 +194,26 @@ test('MCP architecture, design, overview, resources, and completion tools form a
   });
   const impact = impactResponse.result.structuredContent.impact;
   assert.equal(impact.status, 'satisfied');
+  const outsideRoot = await mkdtemp(path.join(os.tmpdir(), 'adaptive-mcp-v2-outside-'));
+  await symlink(outsideRoot, path.join(planRoot, 'changes', 'escape'), 'dir');
+  for (const artifactPath of [
+    path.join(outsideRoot, 'absolute-impact.json'),
+    path.relative(planRoot, path.join(outsideRoot, 'traversal-impact.json')),
+    'changes/escape/symlink-impact.json',
+  ]) {
+    const escaped = await call('plan_record_architecture_impact', {
+      impact,
+      artifact_path: artifactPath,
+    });
+    assert.equal(escaped.result.isError, true, artifactPath);
+    assert.equal(escaped.result.structuredContent.error.code, 'PATH_TRAVERSAL');
+  }
+  assert.equal(
+    JSON.parse(await readFile(path.join(planRoot, 'map.json'), 'utf8')).artifacts.some(
+      (artifact) => artifact.format === 'architecture-impact',
+    ),
+    false,
+  );
   const recorded = await call('plan_record_architecture_impact', {
     impact,
     artifact_path: 'changes/impact.json',
@@ -223,6 +249,24 @@ test('MCP architecture, design, overview, resources, and completion tools form a
   });
   const updatedDocument = updated.result.structuredContent;
   const updatedRevision = currentLedgerRevision(updatedDocument);
+  for (const result of [{
+    status: 'ok',
+    covered_concerns: ['security'],
+  }, {
+    schema_version: '2.0',
+    provider_id: 'malformed-security-reviewer',
+    capability: 'design',
+    status: 'ok',
+    covered_concerns: 'security',
+  }]) {
+    const malformed = await call('design_record_result', {
+      expected_hash: updatedRevision.content_hash,
+      result,
+    });
+    assert.equal(malformed.result.isError, true);
+  }
+  const afterMalformed = await call('design_approval_brief');
+  assert.ok(afterMalformed.result.structuredContent.provider_status.blocking_concerns.includes('security'));
   const providerRecorded = await call('design_record_result', {
     expected_hash: updatedRevision.content_hash,
     result: {
@@ -231,11 +275,14 @@ test('MCP architecture, design, overview, resources, and completion tools form a
       capability: 'design',
       status: 'ok',
       findings: ['No additional boundary risks'],
+      covered_concerns: ['security'],
     },
   });
-  assert.ok(currentLedgerRevision(providerRecorded.result.structuredContent).provider_refs.some(
+  const providerRevision = currentLedgerRevision(providerRecorded.result.structuredContent);
+  assert.ok(providerRevision.provider_refs.some(
     (provider) => provider.provider_id === 'security-reviewer',
   ));
+  assert.equal(providerRevision.provider_status.blocking_concerns.includes('security'), false);
   const briefResponse = await call('design_approval_brief');
   const brief = briefResponse.result.structuredContent;
   const approved = await call('design_approve', {

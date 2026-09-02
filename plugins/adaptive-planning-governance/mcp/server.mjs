@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import path from 'node:path';
 import { listenStdin } from '../scripts/lib/stdio.mjs';
-import { validateContext } from './context.mjs';
+import { validateContext, validateSafePath } from './context.mjs';
 import {
   appendEvent,
   buildPlanOverview,
@@ -394,7 +395,18 @@ const toolDefinitions = [
       required: ['result', 'expected_hash'],
       properties: {
         thread_id: { type: 'string', minLength: 1 },
-        result: { type: 'object' },
+        result: {
+          type: 'object',
+          required: ['schema_version', 'provider_id', 'capability', 'status'],
+          properties: {
+            schema_version: { const: '2.0' },
+            provider_id: { type: 'string', minLength: 1 },
+            capability: { type: 'string', minLength: 1 },
+            status: { enum: ['ok', 'partial', 'unavailable', 'error', 'unstructured'] },
+            covered_concerns: { type: 'array', items: { type: 'string' }, uniqueItems: true },
+          },
+          additionalProperties: true,
+        },
         expected_hash: { type: 'string' },
       },
       additionalProperties: false,
@@ -553,7 +565,13 @@ async function callTool(name, input = {}) {
         nodeId: input.node_id,
       }));
     case 'plan_record_architecture_impact':
-      return success(await recordArchitectureImpact(planRoot, input.impact, input.artifact_path));
+      {
+        const artifactPath = input.artifact_path
+          ? path.relative(planRoot, validateSafePath(path.resolve(planRoot, input.artifact_path), projectRoot))
+            .split(path.sep).join('/')
+          : null;
+        return success(await recordArchitectureImpact(planRoot, input.impact, artifactPath));
+      }
     case 'architecture_open':
       return success(await loadArchitecture(architectureRoot));
     case 'architecture_validate':

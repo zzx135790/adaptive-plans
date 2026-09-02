@@ -11,6 +11,7 @@ import {
 } from './engineering-posture.mjs';
 import { currentDesignRevision, designApprovalBrief, validateCompositionContract } from './design-engine.mjs';
 import { currentThreadRevision, ledgerApprovalBrief } from './design-ledger.mjs';
+import { validateSafePath } from '../../mcp/context.mjs';
 
 export const SCHEMA_VERSION = '2.0';
 export const LEGACY_SCHEMA_VERSION = '1.0';
@@ -554,7 +555,7 @@ export function normalizeProviderResult(input, defaults = {}) {
     : (requestedStatus === 'error' ? 'error' : (unstructured ? 'unstructured' : (PROVIDER_STATUSES.has(requestedStatus) ? requestedStatus : requestedStatus ? 'error' : 'ok')));
   const knownFields = new Set([
     'schema_version', 'provider_id', 'capability', 'status', 'questions', 'assumptions',
-    'findings', 'options', 'risks', 'confidence', 'evidence', 'raw', 'extensions',
+    'findings', 'options', 'risks', 'confidence', 'evidence', 'covered_concerns', 'raw', 'extensions',
     'output', 'text', 'source', 'provenance', 'observed_at',
     'raw_ref', 'composition_contract', 'lifecycle',
   ]);
@@ -568,6 +569,12 @@ export function normalizeProviderResult(input, defaults = {}) {
         || (typeof candidateConfidence.score === 'number' && candidateConfidence.score >= 0 && candidateConfidence.score <= 1)));
   if (!validConfidence) unknownExtensions.invalid_confidence = cloneJson(candidateConfidence);
   const confidence = validConfidence ? cloneJson(candidateConfidence ?? null) : null;
+  const candidateCoveredConcerns = object.covered_concerns;
+  const validCoveredConcerns = candidateCoveredConcerns === undefined
+    || (Array.isArray(candidateCoveredConcerns)
+      && candidateCoveredConcerns.every((concern) => typeof concern === 'string')
+      && new Set(candidateCoveredConcerns).size === candidateCoveredConcerns.length);
+  if (!validCoveredConcerns) unknownExtensions.invalid_covered_concerns = cloneJson(candidateCoveredConcerns);
   const raw = rawRef ? null : (unstructured
     ? { value: cloneJson(input), text: outputText, source, observed_at: observedAt }
     : cloneJson(input));
@@ -583,6 +590,7 @@ export function normalizeProviderResult(input, defaults = {}) {
     risks: asArray(object.risks),
     confidence,
     evidence: asArray(object.evidence),
+    covered_concerns: validCoveredConcerns ? asArray(candidateCoveredConcerns) : [],
     raw,
     raw_ref: rawRef,
     composition_contract: cloneJson(defaults.composition_contract ?? object.composition_contract ?? null),
@@ -734,6 +742,19 @@ export function validateProviderResult(value, options = {}) {
     errors.push({ code: 'invalid_observed_at', message: 'observed_at must be a string' });
   }
   validateArrayFields(value, ['questions', 'assumptions', 'findings', 'options', 'risks', 'evidence'], errors);
+  for (const [field, concerns] of [
+    ['covered_concerns', value.covered_concerns],
+    ['extensions.covered_concerns', value.extensions?.covered_concerns],
+  ]) {
+    if (concerns !== undefined && (!Array.isArray(concerns)
+      || concerns.some((concern) => typeof concern !== 'string')
+      || new Set(concerns).size !== concerns.length)) {
+      errors.push({ code: 'invalid_covered_concerns', message: `${field} must be an array of unique strings` });
+    }
+  }
+  if (value.extensions?.invalid_covered_concerns !== undefined) {
+    errors.push({ code: 'invalid_covered_concerns', message: 'covered_concerns must be an array of unique strings' });
+  }
   if (value.confidence !== undefined && value.confidence !== null) {
     if (!value.confidence || typeof value.confidence !== 'object' || Array.isArray(value.confidence)) {
       errors.push({ code: 'invalid_confidence', message: 'confidence must be an object or null' });
@@ -954,6 +975,7 @@ function flowReceipt(map, artifactIndex, binding) {
 
 export async function buildPlanOverview(root, options = {}) {
   const planRoot = path.resolve(root);
+  const projectRoot = await fs.realpath(path.resolve(options.projectRoot ?? planRoot));
   const map = await loadMap(planRoot);
   const designDocument = await readJsonIfExists(path.join(planRoot, 'design.json'));
   const actualArtifacts = await listArtifactFiles(planRoot);
@@ -967,8 +989,9 @@ export async function buildPlanOverview(root, options = {}) {
   const artifactIndex = await Promise.all(artifactPaths.map(async (artifactPath) => {
     const declared = declaredByPath.get(artifactPath);
     let exists = false;
+    const resolvedArtifactPath = validateSafePath(path.resolve(planRoot, artifactPath), projectRoot);
     try {
-      await fs.access(path.resolve(planRoot, artifactPath));
+      await fs.access(resolvedArtifactPath);
       exists = true;
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
