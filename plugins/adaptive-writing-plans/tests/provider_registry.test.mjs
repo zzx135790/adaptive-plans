@@ -4,7 +4,12 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { discoverProviders, inferCapabilities, selectVisibleProvider } from '../scripts/lib/provider-registry.mjs';
+import {
+  discoverProviders,
+  inferCapabilities,
+  selectVisibleProvider,
+  transitionProviderInvocation,
+} from '../scripts/lib/provider-registry.mjs';
 
 test('provider discovery maps installed skills and MCP servers without executing them', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-providers-'));
@@ -77,11 +82,43 @@ test('visible provider selection ignores hidden candidates and prefers an exact 
       ],
     },
   });
-  assert.equal(result.status, 'selected');
+  assert.equal(result.status, 'ready_to_invoke');
   assert.equal(result.provider, 'visible-explorer');
+  assert.equal(result.invocation, 'not_invoked');
   assert.match(result.reason, /visible provider/);
   assert.ok(result.acceptance);
   assert.ok(result.verification.length > 0);
+});
+
+test('provider invocation becomes invoked only after a matching host receipt', () => {
+  const selected = selectVisibleProvider({
+    capability: 'explore',
+    visibleProviders: { providers: [{ id: 'visible-explorer', capabilities: ['explore'], visible: true }] },
+  });
+  assert.equal(selected.status, 'ready_to_invoke');
+  assert.equal(selected.invocation, 'not_invoked');
+
+  assert.throws(
+    () => transitionProviderInvocation(selected, { provider_id: 'other-provider' }),
+    /provider id/i,
+  );
+  const invoked = transitionProviderInvocation(selected, { provider_id: 'visible-explorer', receipt_id: 'host-42' });
+  assert.equal(invoked.status, 'invoked');
+  assert.equal(invoked.invocation, 'invoked');
+  assert.equal(invoked.receipt_id, 'host-42');
+  assert.equal(selected.status, 'ready_to_invoke');
+});
+
+test('filesystem-discovered providers are ineligible without explicit visibility', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-provider-ineligible-'));
+  const skills = path.join(root, 'skills', 'explorer');
+  await fs.mkdir(skills, { recursive: true });
+  await fs.writeFile(path.join(skills, 'SKILL.md'), '---\nname: explorer\ncapabilities: [explore]\n---\n', 'utf8');
+  const discovered = await discoverProviders({ skillsRoots: [path.dirname(skills)] });
+  const result = selectVisibleProvider({ capability: 'explore', visibleProviders: discovered });
+  assert.equal(result.status, 'unavailable');
+  assert.equal(result.invocation, 'not_invoked');
+  assert.ok(result.fallback);
 });
 
 test('missing visible providers return a bounded fallback without discovery or invocation', () => {

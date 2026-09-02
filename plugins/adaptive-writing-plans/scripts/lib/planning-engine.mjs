@@ -25,12 +25,15 @@ import { selectVisibleProvider } from './provider-registry.mjs';
 
 const HIGH = new Set(['high', 'critical']);
 const LOW = new Set(['low']);
-const UNCERTAINTY_KEYS = ['scope_clarity', 'technical_risk', 'dependency_unknown', 'domain_familiarity', 'requirement_stability'];
+const MATERIAL_UNCERTAINTY_KEYS = ['technical_risk', 'dependency_unknown'];
+const SUPPORTING_UNCERTAINTY_KEYS = ['domain_familiarity', 'requirement_stability'];
 
 export function triageTask(signals = {}) {
   const goalClarity = signals.goal_clarity ?? 'medium';
-  const highCount = UNCERTAINTY_KEYS.filter((key) => HIGH.has(signals[key])).length;
-  const lowCount = UNCERTAINTY_KEYS.filter((key) => LOW.has(signals[key])).length;
+  const highCount = MATERIAL_UNCERTAINTY_KEYS.filter((key) => HIGH.has(signals[key])).length;
+  const supportingUncertainty = SUPPORTING_UNCERTAINTY_KEYS.filter((key) => LOW.has(signals[key])).length;
+  const uncertaintyReduction = SUPPORTING_UNCERTAINTY_KEYS.filter((key) => HIGH.has(signals[key])).length;
+  const uncertaintyScore = Math.max(0, highCount + supportingUncertainty - uncertaintyReduction);
   const phaseCount = Number(signals.phase_count ?? 1);
   const reasons = [];
   const design = triageDesign(signals);
@@ -47,11 +50,12 @@ export function triageTask(signals = {}) {
     gates: {
       intent: { status: mode === 'guide' ? 'pending' : 'approved' },
       design: { status: design.required ? 'required' : 'not_required' },
-      architecture_sync: { status: 'pending' },
+      architecture_sync: { status: mode === 'direct' ? 'not_required' : 'pending' },
     },
   });
 
-  if (goalClarity === 'low' || signals.success_criteria_clarity === 'low' || signals.now_later_boundary === 'low') {
+  if (goalClarity === 'low' || signals.scope_clarity === 'low'
+    || signals.success_criteria_clarity === 'low' || signals.now_later_boundary === 'low') {
     reasons.push('roadmap-blocking ambiguity');
     return result('guide', null, 'high', reasons);
   }
@@ -62,21 +66,22 @@ export function triageTask(signals = {}) {
       next_skill: 'writing-plans',
     };
   }
-  if (phaseCount <= 1 && highCount === 0 && lowCount >= 3 && !design.required) {
-    reasons.push('single stable phase with low uncertainty');
-    return result('direct', 'direct', 'low', reasons);
-  }
-  if (phaseCount > 1 || highCount >= 1) {
-    const strategy = highCount >= 3 ? 'progressive' : 'direct';
-    reasons.push(phaseCount > 1 ? 'multiple phases' : 'material uncertainty');
-    return result('map', strategy, highCount >= 3 ? 'high' : 'medium', reasons);
+  if (phaseCount > 1 || highCount >= 1 || signals.long_running === true || signals.cross_subsystem === true) {
+    const strategy = highCount >= 2 || uncertaintyScore >= 3 ? 'progressive' : 'direct';
+    reasons.push(
+      phaseCount > 1 ? 'multiple phases'
+        : signals.long_running === true ? 'long-running work'
+          : signals.cross_subsystem === true ? 'cross-subsystem coordination'
+            : 'material uncertainty',
+    );
+    return result('map', strategy, uncertaintyScore >= 3 ? 'high' : 'medium', reasons);
   }
   if (design.required) {
     reasons.push('design gate required before leaf planning');
     return result('plan', 'design-first', design.risk === 'critical' ? 'high' : 'medium', reasons);
   }
-  reasons.push('insufficient evidence for a leaf plan');
-  return result('map', 'direct', 'medium', reasons);
+  reasons.push('no explicit planning trigger');
+  return result('direct', 'direct', uncertaintyScore > 0 ? 'medium' : 'low', reasons);
 }
 
 const PHASE_ROUTES = {
@@ -101,7 +106,7 @@ export function routePlanning(signals = {}, visibleProviders = signals.visible_p
   return {
     ...triage,
     routes,
-    provider: routes.find((route) => route.status === 'selected')?.provider ?? null,
+    provider: routes.find((route) => route.status === 'ready_to_invoke')?.provider ?? null,
     fallback: routes.filter((route) => route.status === 'unavailable').map((route) => route.fallback),
     planning_artifacts: triage.mode === 'map' ? ['map-proposal'] : ['leaf-plan-proposal'],
   };

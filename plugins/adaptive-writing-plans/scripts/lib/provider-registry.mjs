@@ -48,7 +48,9 @@ export function selectVisibleProvider({ capability, role, visibleProviders, fall
     return {
       capability: normalized,
       role: role ?? null,
-      status: 'selected',
+      status: 'ready_to_invoke',
+      selection_status: 'selected',
+      invocation: 'not_invoked',
       provider: provider.id,
       provider_id: provider.id,
       reason: exact ? `visible provider ${provider.id} explicitly matches capability ${normalized} and role ${role}` : `visible provider ${provider.id} explicitly matches capability ${normalized}`,
@@ -61,12 +63,34 @@ export function selectVisibleProvider({ capability, role, visibleProviders, fall
     capability: normalized,
     role: role ?? null,
     status: 'unavailable',
+    selection_status: 'unavailable',
+    invocation: 'not_invoked',
     provider: null,
     provider_id: null,
     fallback,
     reason: `no visible provider matched capability ${normalized}${role ? ` and role ${role}` : ''}`,
     acceptance: FALLBACK_ACCEPTANCE[normalized] ?? 'bounded fallback completes without provider invocation',
     verification: [`verify fallback ${fallback} acceptance evidence`],
+  };
+}
+
+/**
+ * Convert an eligible provider route into an invoked route only when the host
+ * reports an invocation receipt. This does not invoke the provider itself.
+ */
+export function transitionProviderInvocation(route = {}, receipt = {}) {
+  if (route.status !== 'ready_to_invoke') {
+    throw new Error('provider route must be ready_to_invoke before receipt transition');
+  }
+  if (!route.provider_id || receipt?.provider_id !== route.provider_id) {
+    throw new Error('provider id in host receipt must match the ready provider route');
+  }
+  return {
+    ...route,
+    status: 'invoked',
+    invocation: 'invoked',
+    receipt_id: receipt.receipt_id ?? null,
+    host_receipt: { ...receipt },
   };
 }
 

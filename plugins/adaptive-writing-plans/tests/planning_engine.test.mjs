@@ -18,9 +18,16 @@ import {
   postureRef,
 } from '../scripts/lib/engineering-posture.mjs';
 
-test('triageTask routes blocking ambiguity to guide and high uncertainty to progressive map', () => {
+test('triageTask routes direct first and promotes only stated planning triggers', () => {
+  const sparse = triageTask({});
+  assert.equal(sparse.mode, 'direct');
+  assert.equal(sparse.gates.architecture_sync.status, 'not_required');
+
   assert.equal(triageTask({ goal_clarity: 'low', phase_count: 4 }).mode, 'guide');
-  assert.equal(triageTask({ goal_clarity: 'high', node_ready: true, phase_count: 2 }).mode, 'plan');
+  assert.equal(triageTask({ scope_clarity: 'low' }).mode, 'guide');
+  assert.equal(triageTask({ success_criteria_clarity: 'low' }).mode, 'guide');
+  assert.equal(triageTask({ now_later_boundary: 'low' }).mode, 'guide');
+  assert.equal(triageTask({ goal_clarity: 'high', node_ready: true }).mode, 'plan');
   const result = triageTask({
     goal_clarity: 'high',
     scope_clarity: 'medium',
@@ -32,21 +39,20 @@ test('triageTask routes blocking ambiguity to guide and high uncertainty to prog
   });
   assert.equal(result.mode, 'map');
   assert.equal(result.strategy, 'progressive');
+  assert.equal(triageTask({ goal_clarity: 'high', dependency_unknown: 'high' }).mode, 'map');
+  assert.equal(triageTask({ goal_clarity: 'high', phase_count: 2 }).mode, 'map');
+  assert.equal(triageTask({ goal_clarity: 'high', long_running: true }).mode, 'map');
+  assert.equal(triageTask({ goal_clarity: 'high', cross_subsystem: true }).mode, 'map');
+  assert.equal(triageTask({ goal_clarity: 'high', domain_familiarity: 'low', requirement_stability: 'low' }).mode, 'direct');
+  assert.equal(triageTask({ goal_clarity: 'high', domain_familiarity: 'high', requirement_stability: 'high' }).uncertainty, 'low');
 });
 
 test('routePlanning keeps direct work cheap and routes map phases through visible providers', () => {
-  const direct = routePlanning({
-    goal_clarity: 'high',
-    scope_clarity: 'low',
-    technical_risk: 'low',
-    dependency_unknown: 'low',
-    domain_familiarity: 'low',
-    requirement_stability: 'low',
-    phase_count: 1,
-  });
+  const direct = routePlanning({});
   assert.equal(direct.mode, 'direct');
   assert.deepEqual(direct.routes, []);
   assert.deepEqual(direct.planning_artifacts, []);
+  assert.equal(direct.gates.architecture_sync.status, 'not_required');
 
   const routed = routePlanning({
     goal_clarity: 'high', phase_count: 3,
@@ -56,6 +62,7 @@ test('routePlanning keeps direct work cheap and routes map phases through visibl
   });
   assert.equal(routed.mode, 'map');
   assert.equal(routed.routes.find((route) => route.capability === 'explore').provider, 'session-explorer');
+  assert.equal(routed.routes.find((route) => route.capability === 'explore').status, 'ready_to_invoke');
   const decomposition = routed.routes.find((route) => route.capability === 'decompose');
   assert.equal(decomposition.status, 'unavailable');
   assert.ok(decomposition.fallback);
