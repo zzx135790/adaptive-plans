@@ -1,31 +1,25 @@
 {
   "name": "adaptive-writing-plans",
-  "version": "0.3.6+codex.20260902082216",
-  "description": "Architecture-aware adaptive maps, re-entrant design gates, provider handoffs, and completion checks.",
+  "version": "0.4.0",
+  "description": "Direct-first planning, visible-skill routing, portable DAG maps, and deterministic execution waves.",
   "author": {
-    "name": "Local developer"
+    "name": "Adaptive Writing Plans Contributors"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "Adaptive Writing Plans",
-    "shortDescription": "Architecture-aware maps and design-gated plans.",
-    "longDescription": "Maintain project architecture memory, route tasks through a re-entrant Design Gate, create navigable multi-file DAG maps, preserve provider evidence, and validate implementation completion without replacing the existing writing-plans leaf format.",
-    "developerName": "Local developer",
+    "shortDescription": "Direct-first planning and fast DAG execution",
+    "longDescription": "Route stable work directly, use visible planning skills when evidence requires structure, maintain portable v1/v2 DAG maps, and partition execution into deterministic conflict-safe waves.",
+    "developerName": "Adaptive Writing Plans Contributors",
     "category": "Productivity",
     "capabilities": [
-      "planning",
-      "architecture-memory",
-      "design-gates",
-      "provider-adapters",
+      "direct-first-routing",
+      "visible-skill-selection",
+      "behavior-budgeting",
+      "dag-planning",
       "plan-validation",
-      "completion-gates",
-      "engineering-posture",
-      "scope-provenance",
-      "inline-approval-briefs",
-      "recoverable-migrations",
-      "local-mcp"
+      "parallel-execution-waves"
     ],
-    "defaultPrompt": "Use adaptive-writing-plans to route this request, check project architecture memory and the re-entrant Design Gate, and return a navigable DAG plus complete artifact index when a map is required."
-  },
-  "mcpServers": "./.mcp.json"
+    "defaultPrompt": "Use adaptive-writing-plans to choose the lightest safe route and create a DAG only when concrete evidence requires one."
+  }
 }

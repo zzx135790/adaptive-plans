@@ -59,15 +59,11 @@ test('a plan can be created in a clean temporary directory', async () => {
   assert.equal(map.plan_id, 'clean');
 });
 
-test('portable MCP and package wiring expose only repository-relative implemented commands', async () => {
-  const mcp = JSON.parse(await fs.readFile(path.join(root, '.mcp.json'), 'utf8'));
-  const server = mcp.mcpServers['adaptive-planning'];
-  assert.equal(server.command, 'node');
-  assert.equal(server.args[0], './mcp/server.mjs');
-  assert.equal(server.cwd, '.');
+test('package wiring exposes only implemented core commands', async () => {
   const pkg = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
-  for (const name of ['migrate', 'posture:assess', 'posture:check', 'posture:promote', 'design:brief', 'architecture:check', 'completion:check']) {
-    const script = pkg.scripts[name].split(' ').at(-1);
+  for (const name of ['overview', 'validate']) {
+    const script = pkg.scripts[name].split(' ')[1];
     await assert.doesNotReject(fs.access(path.join(root, script)));
   }
+  await assert.doesNotReject(fs.access(path.join(root, pkg.bin['adaptive-plan'])));
 });

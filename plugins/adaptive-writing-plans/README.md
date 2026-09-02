@@ -1,107 +1,33 @@
 # Adaptive Writing Plans
 
-Adaptive Writing Plans turns evolving project work into a visible DAG without
-turning every experiment into a production project. It keeps four states
-separate:
+Adaptive Writing Plans is a lean, direct-first planning and execution core. It
+keeps stable work in the current session, uses skills visible to the current
+host when more structure is justified, and falls back to named Ada behavior
+when no matching skill is visible.
 
-- project-owned architecture memory;
-- plan-owned topology and execution gates;
-- revisioned root and child design decisions;
-- an explicit engineering posture that defines when the work is done.
+Escalation beyond direct requires concrete ambiguity, an uncertain dependency,
+cross-subsystem coordination, or design evidence. Multi-step or long-running
+work alone stays direct and creates no planning artifact.
 
-`map.json`, project `architecture.json`, and `design.json` are independent
-canonical records. Their Markdown files are generated views.
+Maps are portable JSON DAGs. The reader validates schema v1 and v2 without
+auto-migration and preserves unknown extension fields. The scope contract is a
+behavior budget with `required`, `excluded`, and `deferred_candidates`. Every
+budget retains these safety floors:
 
-## Workflow
+- `bound_runaway_resource_cost`
+- `fail_loud_on_invalid_results`
+- `prevent_credential_exposure`
+- `prevent_destructive_data_loss`
+
+Execution is fast by default. Dependency-ready nodes with disjoint owned paths
+and no shared mutable unpartitioned resource run in the same subwave. Conflicts
+move deterministically to later subwaves; token cost is never a dispatch gate.
+The main model coordinates and integrates while delegated workers own leaf work.
 
 ```text
-project architecture snapshot
-          |
-          v
-N-000 bootstrap -> intent + posture + Design Gate -> complete DAG
-                                                     |
-                                         ready leaf node + exact refs
-                                                     |
-                                      child design when material
-                                                     |
-                                      leaf plan -> implementation
-                                                     |
-                               diff evidence -> architecture refresh
-                                                     |
-                                            completion check
+adaptive-plan route
+adaptive-plan init --root <folder> --id <id>
+adaptive-plan add --root <folder> --id <node> --title <title>
+adaptive-plan validate --root <folder>
+adaptive-plan overview --root <folder>
 ```
-
-Root design chooses module responsibilities, dependency direction, and broad
-interfaces. Material module/relation/task designs are created only when their
-leaf inputs are current, then implementation proceeds leaf-first. A private,
-contract-preserving choice may stay inline.
-
-Every map starts with visible control node `N-000`. Its only job is to create
-and verify the plan folder, canonical map, generated views, node briefs, event
-log, architecture link, posture, and required design state. `N-000` must be
-visible in the DAG and artifact index before product nodes are released.
-
-## Terminal Contract
-
-Show the whole workflow without opening each artifact:
-
-```bash
-node scripts/adaptive-plan.mjs overview --root <plan-folder>
-```
-
-The overview includes the full ASCII DAG, blockers, posture and scope budgets,
-provider lifecycle, binding diagnostics, pending approval brief, and complete
-artifact index. Approval is requested from that bounded terminal summary and
-is bound to the exact content, posture, and brief hashes. `DESIGN.md` remains an
-audit view, not the approval UI.
-
-## Engineering Posture
-
-Profiles are different definitions of done, not a maturity ladder:
-
-| Posture | Required completion evidence |
-|---|---|
-| `spike` | bounded question answered; result validity |
-| `experiment` | hypothesis; measurement validity; reproduction instructions |
-| `reusable_internal` | stable local contract; compatibility evidence; integration tests |
-| `production` | operational ownership; security assessment; migration and rollback; reliability evidence |
-
-Possible future reuse never promotes a profile. Promotion is an explicit,
-hash-bound operation that stops execution and reopens design and architecture
-synchronization.
-
-## Migration And Recovery
-
-Migration is always previewed first:
-
-```bash
-node scripts/adaptive-plan.mjs migrate --root <plan-folder>
-node scripts/adaptive-plan.mjs migrate --root <plan-folder> --apply --expected-hash <proposal-hash>
-node scripts/adaptive-plan.mjs migrate --root <plan-folder> --recover <migration-id> --expected-current-hash <map-hash>
-```
-
-The preview is read-only and includes source/target hashes, changed paths, and
-a full preservation manifest. Apply stores byte-exact recovery material before
-canonical writes. Flat design history is converted only with `--include-design`
-and an explicit authoritative PostureRef; historical approvals become evidence,
-not authority for the new hash.
-
-## Skill Composition
-
-Installed design and planning skills are composed through a versioned
-`CompositionContract`. Direct reuse keeps the provider workflow intact. A thin
-adapter may only translate envelopes and verify expected persistence. Missing
-dependencies, digest drift, failed invocation, or unwritten expected artifacts
-stay visible; the plugin does not silently reimplement the provider.
-
-## Verification
-
-```bash
-npm test
-node scripts/doctor.mjs --root .
-node scripts/validate-plan.mjs --root <plan-folder> --strict
-node scripts/completion-check.mjs --root <plan-folder>
-```
-
-Detailed lifecycle rules live under
-`skills/adaptive-writing-plans/references/`.

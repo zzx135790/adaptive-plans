@@ -3,26 +3,14 @@ import path from 'node:path';
 import { loadMap, validateMap } from './lib/plan-protocol.mjs';
 import { writeJson } from './lib/stdio.mjs';
 
-function parseArgs(argv) {
-  const result = {};
-  for (let index = 0; index < argv.length; index += 1) {
-    const token = argv[index];
-    if (!token.startsWith('--')) continue;
-    const key = token.slice(2).replaceAll('-', '_');
-    if (key === 'strict') result[key] = true;
-    else result[key] = argv[index + 1]?.startsWith('--') ? true : argv[++index];
-  }
-  return result;
-}
-
-const args = parseArgs(process.argv.slice(2));
-if (!args.root) {
-  console.error('Usage: node scripts/validate-plan.mjs --root <plan-folder> [--strict]');
+const rootIndex = process.argv.indexOf('--root');
+const root = rootIndex >= 0 ? process.argv[rootIndex + 1] : null;
+if (!root) {
+  console.error('Usage: adaptive-plan validate --root <plan-folder>');
   process.exit(2);
 }
-
 try {
-  const result = validateMap(await loadMap(path.resolve(args.root)), { strict: Boolean(args.strict) });
+  const result = validateMap(await loadMap(path.resolve(root)));
   writeJson(result);
   process.exitCode = result.valid ? 0 : 1;
 } catch (error) {
