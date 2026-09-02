@@ -32,18 +32,19 @@ import {
 } from '../scripts/lib/architecture-protocol.mjs';
 import { analyzeArchitectureImpact, validateArchitectureImpact } from '../scripts/lib/architecture-impact.mjs';
 import {
-  approveDesign,
-  createDesignDocument,
-  designApprovalBrief,
   loadDesign,
-  recordDesignProviderResult,
-  reviseDesign,
   selectDesignProviders,
   triageDesign,
-  updateDesignRevision,
-  validateDesignDocument,
-  writeDesign,
 } from '../scripts/lib/design-engine.mjs';
+import {
+  approveCanonicalDesign,
+  currentCanonicalDesignRef,
+  designApprovalBriefForDocument,
+  recordCanonicalDesignProviderResult,
+  reviseCanonicalDesign,
+  startCanonicalDesign,
+  updateCanonicalDesign,
+} from '../scripts/lib/design-operations.mjs';
 import {
   applyPosturePromotion,
   assessEngineeringPosture,
@@ -418,6 +419,13 @@ function failure(message, code = 'PLAN_ERROR') {
   };
 }
 
+function resourceRequestError(error) {
+  if (typeof error.code === 'number') return error;
+  const invalidContext = ['INVALID_CONTEXT', 'PATH_TRAVERSAL', 'INVALID_PATH'].includes(error.code);
+  const code = invalidContext ? -32602 : error.code === 'ENOENT' ? -32002 : -32603;
+  return Object.assign(new Error(error.message), { code });
+}
+
 async function callTool(name, input = {}) {
   const { projectRoot, planRoot, architectureRoot } = validateContext(input.context);
   let map;
@@ -526,15 +534,15 @@ async function callTool(name, input = {}) {
       return success(await selectDesignProviders(input.profile, input.registry));
     case 'design_start': {
       const profile = triageDesign(input.request);
-      return success(await writeDesign(planRoot, createDesignDocument({ ...input.request, profile, provider_selection: input.provider_selection })));
+      return success(await startCanonicalDesign(planRoot, { ...input.request, profile }, input.provider_selection));
     }
     case 'design_update':
-      return success(await updateDesignRevision(planRoot, input.updates, { expectedHash: input.expected_hash }));
+      return success(await updateCanonicalDesign(planRoot, input.updates, { expectedHash: input.expected_hash }));
     case 'design_revise':
       {
         const currentDocument = await loadDesign(planRoot);
-        const currentRevision = currentDocument.revisions.find((revision) => revision.revision === currentDocument.current_revision);
-        const revised = await reviseDesign(planRoot, {
+        const currentRef = currentCanonicalDesignRef(currentDocument);
+        const revised = await reviseCanonicalDesign(planRoot, {
           reason: input.reason,
           blocking_questions: input.blocking_questions,
           request: input.request,
@@ -542,17 +550,18 @@ async function callTool(name, input = {}) {
         });
         await invalidateFromDesignRevision(planRoot, {
           design_id: currentDocument.design_id,
-          revision: currentRevision.revision,
-          design_hash: currentRevision.design_hash,
+          thread_id: currentRef.thread_id,
+          revision: currentRef.revision,
+          design_hash: currentRef.design_hash,
         }, { reason: input.reason });
         return success(revised);
       }
     case 'design_record_result':
-      return success(await recordDesignProviderResult(planRoot, input.result, { expectedHash: input.expected_hash }));
+      return success(await recordCanonicalDesignProviderResult(planRoot, input.result, { expectedHash: input.expected_hash }));
     case 'design_approval_brief':
-      return success(designApprovalBrief(await loadDesign(planRoot)));
+      return success(designApprovalBriefForDocument(await loadDesign(planRoot)));
     case 'design_approve':
-      return success(await approveDesign(planRoot, {
+      return success(await approveCanonicalDesign(planRoot, {
         expectedHash: input.expected_hash,
         expectedPostureHash: input.expected_posture_hash,
         briefHash: input.brief_hash,
@@ -597,9 +606,9 @@ async function handle(request) {
       if (uri === 'plan://overview') return { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(await buildPlanOverview(planRoot, { projectRoot, mcpPlanRoot: planRoot }), null, 2) }] };
       if (uri === 'architecture://current') return { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(await loadArchitecture(architectureRoot), null, 2) }] };
       if (uri === 'design://current') return { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(await loadDesign(planRoot), null, 2) }] };
-      return failure(`Unknown resource ${uri}`, 'UNKNOWN_RESOURCE');
+      throw Object.assign(new Error(`Unknown resource ${uri}`), { code: -32002 });
     } catch (error) {
-      return failure(error.message, error.code ?? 'PLAN_ERROR');
+      throw resourceRequestError(error);
     }
   }
   if (request.method?.startsWith('notifications/')) return null;

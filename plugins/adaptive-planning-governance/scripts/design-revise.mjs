@@ -2,7 +2,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { currentDesignRevision, loadDesign, reviseDesign } from './lib/design-engine.mjs';
+import { currentCanonicalDesignRef, reviseCanonicalDesign } from './lib/design-operations.mjs';
+import { loadDesignLedger } from './lib/design-ledger.mjs';
 import { readJson } from './lib/io-utils.mjs';
 import { invalidateFromDesignRevision } from './lib/planning-engine.mjs';
 import { writeJson } from './lib/stdio.mjs';
@@ -23,9 +24,9 @@ if (!args.root || !args.reason) {
 }
 try {
   const root = path.resolve(args.root);
-  const current = currentDesignRevision(await loadDesign(root));
+  const current = currentCanonicalDesignRef(await loadDesignLedger(root));
   const details = args.details ? await readJson(path.resolve(args.details)) : {};
-  const revised = await reviseDesign(root, {
+  const revised = await reviseCanonicalDesign(root, {
     ...details,
     reason: args.reason,
     blocking_questions: args.question ? [args.question] : details.blocking_questions,
@@ -34,6 +35,7 @@ try {
     await fs.access(path.join(root, 'map.json'));
     await invalidateFromDesignRevision(root, {
       design_id: revised.design_id,
+      thread_id: current.thread_id,
       revision: current.revision,
       design_hash: current.design_hash,
     }, { reason: args.reason });

@@ -8,9 +8,14 @@ import { fileURLToPath } from 'node:url';
 
 import { writeArchitecture } from '../scripts/lib/architecture-protocol.mjs';
 import { createPlanManifest, writeMap } from '../scripts/lib/plan-protocol.mjs';
-import { createEngineeringPosture } from '../scripts/lib/engineering-posture.mjs';
+import { createEngineeringPosture, postureRef } from '../scripts/lib/engineering-posture.mjs';
 
 const serverPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'mcp', 'server.mjs');
+
+function currentLedgerRevision(document, threadId = 'root') {
+  const thread = document.threads.find((candidate) => candidate.thread_id === threadId);
+  return thread?.revisions.find((revision) => revision.revision === thread.current_revision);
+}
 
 function requestContext(root, extraArgs) {
   const projectRootIndex = extraArgs.indexOf('--project-root');
@@ -187,16 +192,25 @@ test('MCP architecture, design, overview, resources, and completion tools form a
 
   const triaged = await call('design_triage', { request: { public_api: true } });
   assert.equal(triaged.result.structuredContent.required, true);
+  const posture = createEngineeringPosture('reusable_internal', {
+    source: { kind: 'explicit_assessment', ref: 'decision://mcp-design-posture' },
+    allowed_capabilities: ['public-api'],
+    excluded_capabilities: ['deployment'],
+  });
   const started = await call('design_start', {
-    request: { design_id: 'mcp-design', public_api: true, requirements: ['Expose item reads'] },
+    request: {
+      design_id: 'mcp-design', public_api: true, requirements: ['Expose item reads'],
+      posture_ref: postureRef(posture),
+    },
     provider_selection: { selected: [] },
   });
   const startedDocument = started.result.structuredContent;
-  const startedRevision = startedDocument.revisions.find((revision) => revision.revision === startedDocument.current_revision);
-  assert.ok(startedRevision.provider_selection.blocking_concerns.includes('security'));
+  assert.equal(startedDocument.schema_version, '2.1');
+  const startedRevision = currentLedgerRevision(startedDocument);
+  assert.ok(startedRevision.provider_status.blocking_concerns.includes('security'));
 
   const updated = await call('design_update', {
-    expected_hash: startedRevision.design_hash,
+    expected_hash: startedRevision.content_hash,
     updates: {
       options: [{ id: 'rest' }, { id: 'graphql' }],
       selected_option: { id: 'rest' },
@@ -204,7 +218,20 @@ test('MCP architecture, design, overview, resources, and completion tools form a
     },
   });
   const updatedDocument = updated.result.structuredContent;
-  const updatedRevision = updatedDocument.revisions.find((revision) => revision.revision === updatedDocument.current_revision);
+  const updatedRevision = currentLedgerRevision(updatedDocument);
+  const providerRecorded = await call('design_record_result', {
+    expected_hash: updatedRevision.content_hash,
+    result: {
+      schema_version: '2.0',
+      provider_id: 'security-reviewer',
+      capability: 'design',
+      status: 'ok',
+      findings: ['No additional boundary risks'],
+    },
+  });
+  assert.ok(currentLedgerRevision(providerRecorded.result.structuredContent).provider_refs.some(
+    (provider) => provider.provider_id === 'security-reviewer',
+  ));
   const briefResponse = await call('design_approval_brief');
   const brief = briefResponse.result.structuredContent;
   const approved = await call('design_approve', {
@@ -214,7 +241,7 @@ test('MCP architecture, design, overview, resources, and completion tools form a
     approval: { source: 'user', statement: 'approve REST' },
     waiver: { reason: 'No installed security reviewer' },
   });
-  assert.equal(approved.result.structuredContent.revisions[0].status, 'waived');
+  assert.equal(currentLedgerRevision(approved.result.structuredContent).decision_status, 'waived');
   const designLinked = await call('plan_link_design');
   assert.equal(designLinked.result.structuredContent.gates.design.status, 'waived');
 
@@ -245,10 +272,11 @@ test('MCP architecture, design, overview, resources, and completion tools form a
     blocking_questions: ['Cursor or offset?'],
     request: { data_model: true, architecture_hash: architecture.architecture_hash },
   });
-  assert.equal(revised.result.structuredContent.current_revision, 2);
-  assert.equal(revised.result.structuredContent.revisions[0].status, 'stale');
-  assert.ok(revised.result.structuredContent.revisions[1].profile.concerns.includes('data'));
-  assert.deepEqual(revised.result.structuredContent.revisions[1].options, []);
+  const revisedRoot = revised.result.structuredContent.threads[0];
+  assert.equal(revisedRoot.current_revision, 2);
+  assert.equal(revisedRoot.revisions[0].decision_status, 'stale');
+  assert.deepEqual(revisedRoot.revisions[1].options, []);
+  assert.deepEqual(revisedRoot.revisions[1].blocking_questions, ['Cursor or offset?']);
   const staleOverview = await call('plan_overview');
   assert.equal(staleOverview.result.structuredContent.gates.design.status, 'stale');
 });

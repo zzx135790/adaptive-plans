@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 
-import { recordDesignProviderResult } from './lib/design-engine.mjs';
+import { recordCanonicalDesignProviderResult } from './lib/design-operations.mjs';
 import { normalizeProviderResult } from './lib/plan-protocol.mjs';
 import { readStdin, writeJson } from './lib/stdio.mjs';
 
@@ -26,7 +26,7 @@ try {
     capability: args.capability,
     source: args.source,
   });
-  writeJson(await recordDesignProviderResult(path.resolve(args.root), normalized, {
+  writeJson(await recordCanonicalDesignProviderResult(path.resolve(args.root), normalized, {
     expectedHash: args.expected_hash,
   }));
 } catch (error) {

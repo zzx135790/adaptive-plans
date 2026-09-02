@@ -37,6 +37,38 @@ describe('MCP Context Validation', () => {
     }
   });
 
+  it('rejects a default plan root that escapes through a symlink', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-test-'));
+    const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-outside-'));
+    try {
+      fs.mkdirSync(path.join(tmpDir, 'docs', 'superpowers'), { recursive: true });
+      fs.symlinkSync(outsideDir, path.join(tmpDir, 'docs', 'superpowers', 'plans'));
+      assert.throws(
+        () => validateContext({ project_root: tmpDir }),
+        { code: 'PATH_TRAVERSAL' },
+      );
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true });
+      fs.rmSync(outsideDir, { recursive: true });
+    }
+  });
+
+  it('rejects a default architecture root that escapes through a symlink', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-test-'));
+    const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-outside-'));
+    try {
+      fs.mkdirSync(path.join(tmpDir, 'docs', 'architecture'), { recursive: true });
+      fs.symlinkSync(outsideDir, path.join(tmpDir, 'docs', 'architecture', 'adaptive'));
+      assert.throws(
+        () => validateContext({ project_root: tmpDir }),
+        { code: 'PATH_TRAVERSAL' },
+      );
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true });
+      fs.rmSync(outsideDir, { recursive: true });
+    }
+  });
+
   it('rejects absolute plan_path', () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-test-'));
     try {

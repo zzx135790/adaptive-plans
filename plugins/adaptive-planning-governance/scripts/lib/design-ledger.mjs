@@ -42,6 +42,26 @@ const MATERIAL_DESIGN_TRIGGERS = new Set([
   'unresolved_tradeoff',
 ]);
 
+const PROTECTED_LEDGER_REVISION_FIELDS = new Set([
+  'revision',
+  'decision_status',
+  'architecture_hash',
+  'posture_ref',
+  'behavior_budget',
+  'scope_provenance',
+  'provider_refs',
+  'provider_status',
+  'approval',
+  'content_hash',
+  'state_hash',
+  'updated_at',
+  'supersedes_hash',
+  'reentry_reason',
+  'reentry_evidence',
+  'migration_evidence',
+  'legacy_approval',
+]);
+
 function without(value, fields) {
   const next = cloneJson(value);
   for (const field of fields) delete next[field];
@@ -386,6 +406,50 @@ export function reviseDesignThread(document, threadId, updates = {}, options = {
   };
   thread.revisions.push(successor);
   thread.current_revision = successor.revision;
+  delete thread.updated_at;
+  delete next.updated_at;
+  return finalizeDesignLedger(next);
+}
+
+export function updateDesignThread(document, threadId, updates = {}, options = {}) {
+  assertExpectedDocumentHash(document, options.expectedDocumentStateHash, 'updating a thread');
+  const next = cloneJson(document);
+  const thread = findThread(next, threadId);
+  assertExpectedThreadHash(thread, options.expectedThreadStateHash, 'updating a thread');
+  const current = currentThreadRevision(thread);
+  if (!current || current.decision_status !== 'in_progress') {
+    throw new Error('only an in-progress design thread can be updated');
+  }
+  if (current.content_hash !== options.expectedContentHash) {
+    throw Object.assign(new Error('design thread content changed'), { code: 'DESIGN_CONFLICT' });
+  }
+  const protectedFields = Object.keys(updates).filter((field) => PROTECTED_LEDGER_REVISION_FIELDS.has(field));
+  if (protectedFields.length > 0) {
+    throw new Error(`design update cannot change protected fields: ${protectedFields.join(', ')}`);
+  }
+  Object.assign(current, cloneJson(updates));
+  delete current.updated_at;
+  delete thread.updated_at;
+  delete next.updated_at;
+  return finalizeDesignLedger(next);
+}
+
+export function recordDesignThreadProviderResult(document, threadId, providerResult, options = {}) {
+  assertExpectedDocumentHash(document, options.expectedDocumentStateHash, 'recording a provider result');
+  const next = cloneJson(document);
+  const thread = findThread(next, threadId);
+  assertExpectedThreadHash(thread, options.expectedThreadStateHash, 'recording a provider result');
+  const current = currentThreadRevision(thread);
+  if (!current || current.decision_status !== 'in_progress') {
+    throw new Error('provider results require an in-progress design thread');
+  }
+  if (current.content_hash !== options.expectedContentHash) {
+    throw Object.assign(new Error('design thread content changed'), { code: 'DESIGN_CONFLICT' });
+  }
+  if (!asArray(current.provider_refs).some((result) => stableHash(result) === stableHash(providerResult))) {
+    current.provider_refs.push(cloneJson(providerResult));
+  }
+  delete current.updated_at;
   delete thread.updated_at;
   delete next.updated_at;
   return finalizeDesignLedger(next);

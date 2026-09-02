@@ -14,6 +14,7 @@ import {
   writeMap,
 } from './plan-protocol.mjs';
 import { triageDesign } from './design-engine.mjs';
+import { currentThreadRevision } from './design-ledger.mjs';
 import { validateArchitectureImpact } from './architecture-impact.mjs';
 import {
   partitionBehaviorCandidates,
@@ -393,19 +394,28 @@ export async function linkArchitectureSnapshot(root, architecture) {
 }
 
 export async function linkApprovedDesign(root, designDocument) {
-  const revision = designDocument?.revisions?.find((item) => item.revision === designDocument.current_revision);
-  if (!revision || !['approved', 'waived'].includes(revision.status)) throw new Error('an approved or explicitly waived design revision is required');
+  const legacy = Array.isArray(designDocument?.revisions);
+  const thread = legacy ? null : designDocument?.threads?.find((candidate) => candidate.thread_id === 'root');
+  const revision = legacy
+    ? designDocument.revisions.find((item) => item.revision === designDocument.current_revision)
+    : currentThreadRevision(thread);
+  const status = legacy ? revision?.status : revision?.decision_status;
+  if (!revision || !['approved', 'waived'].includes(status)) throw new Error('an approved or explicitly waived design revision is required');
   return withMapLock(root, async () => {
     const map = await loadMap(root);
     if (map.schema_version !== '2.0') throw new Error('migrate the map to v2 before linking a design');
-    const ref = { design_id: designDocument.design_id, revision: revision.revision, design_hash: revision.design_hash, status: revision.status, scope: revision.scope, node_id: revision.node_id ?? null };
-    map.design_refs = [...(map.design_refs ?? []).filter((item) => !(item.design_id === ref.design_id && item.scope === ref.scope && item.node_id === ref.node_id)), ref];
+    const ref = legacy
+      ? { design_id: designDocument.design_id, revision: revision.revision, design_hash: revision.design_hash, status, scope: revision.scope, node_id: revision.node_id ?? null }
+      : { design_id: designDocument.design_id, thread_id: thread.thread_id, revision: revision.revision, design_hash: revision.content_hash, content_hash: revision.content_hash, status, scope: 'root', node_id: null };
+    map.design_refs = [...(map.design_refs ?? []).filter((item) => legacy
+      ? !(item.design_id === ref.design_id && item.scope === ref.scope && item.node_id === ref.node_id)
+      : !(item.design_id === ref.design_id && (item.thread_id ?? 'root') === ref.thread_id)), ref];
     if (ref.scope === 'node') {
       const node = map.nodes.find((candidate) => candidate.id === ref.node_id);
       if (!node) throw new Error(`unknown design node ${ref.node_id}`);
       node.design_refs = [...(node.design_refs ?? []).filter((item) => item.design_id !== ref.design_id), ref];
     }
-    map.gates.design = { status: revision.status, design_ref: ref };
+    map.gates.design = { status, design_ref: ref };
     map.stage = map.work_shape === 'map' ? 'mapping' : map.work_shape === 'plan' ? 'leaf_planning' : 'intake';
     const next = await writeMap(root, map);
     await appendEvent(root, { event_id: makeEventId('design-linked', ref), type: 'design_linked', design_ref: ref });

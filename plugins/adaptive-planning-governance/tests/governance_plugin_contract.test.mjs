@@ -153,6 +153,7 @@ test('package contains maintained source only and has no runtime dependencies or
     path.join('hooks', 'hooks.json'),
     path.join('.codex-plugin', 'manifest.json'),
     path.join('.claude-plugin', 'manifest.json'),
+    path.join('scripts', 'lib', 'host-adapter.mjs'),
   ];
   for (const relative of forbidden) {
     assert.equal(await exists(path.join(pluginRoot, relative)), false, `${relative} must not ship`);
@@ -232,8 +233,16 @@ test('one MCP process resolves tool and resource roots per request without start
     assert.equal(JSON.parse(resource.result.contents[0].text).plan_id, 'second');
 
     const missing = await server.request('resources/read', { uri: 'plan://map' });
-    assert.equal(missing.result.isError, true);
-    assert.match(missing.result.content[0].text, /^INVALID_CONTEXT:/);
+    assert.equal(missing.error.code, -32602);
+    assert.match(missing.error.message, /context object is required/);
+    assert.equal('result' in missing, false);
+
+    const unknown = await server.request('resources/read', {
+      uri: 'plan://unknown', context: firstContext,
+    });
+    assert.equal(unknown.error.code, -32002);
+    assert.match(unknown.error.message, /Unknown resource plan:\/\/unknown/);
+    assert.equal('result' in unknown, false);
   } finally {
     server.close();
   }

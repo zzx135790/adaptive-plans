@@ -90,10 +90,6 @@ Compact handoffs are host-neutral checkpoint projections, not a second plan
 database. They preserve exact refs and pending gate identity but require a
 fresh ApprovalBrief after resume.
 
-Use the host adapter sync command in dry-run mode first. It reports files it
-would add or change and must not overwrite host-owned skills, commands, hooks,
-or user configuration. Apply only explicitly selected adapter outputs.
-
 The portable command bridge is:
 
 ```text
@@ -103,7 +99,6 @@ adaptive-plan architecture bootstrap|check|propose|apply
 adaptive-plan design start|update|record|approve|revise|brief
 adaptive-plan plan link-architecture|link-design|record-impact
 adaptive-plan completion check
-adaptive-plan host sync --host claude-code|agents [--diff] [--apply]
 ```
 
 ## Version compatibility

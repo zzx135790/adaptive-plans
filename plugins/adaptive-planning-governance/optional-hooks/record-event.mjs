@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import path from 'node:path';
+import { validateContext } from '../mcp/context.mjs';
 import { appendEvent, loadMap, makeEventId, validateMap } from '../scripts/lib/plan-protocol.mjs';
 import { readStdin, writeJson } from '../scripts/lib/stdio.mjs';
 
@@ -23,10 +24,18 @@ function parseEmbeddedObject(value) {
 
 function rootFromContext(value) {
   const context = parseEmbeddedObject(value);
+  if (!context) return { present: false, root: null };
   const projectRoot = nonEmptyString(context?.project_root);
-  if (!projectRoot) return null;
+  if (!projectRoot) return { present: true, root: null };
   const planPath = nonEmptyString(context?.plan_path);
-  return planPath ? path.resolve(projectRoot, planPath) : projectRoot;
+  try {
+    return {
+      present: true,
+      root: validateContext({ project_root: projectRoot, plan_path: planPath ?? '.' }).planRoot,
+    };
+  } catch {
+    return { present: true, root: null };
+  }
 }
 
 function rootFromEvent(parsed, wrapped) {
@@ -38,8 +47,8 @@ function rootFromEvent(parsed, wrapped) {
     parsed?.payload?.context,
   ];
   for (const candidate of contextCandidates) {
-    const contextRoot = rootFromContext(candidate);
-    if (contextRoot) return contextRoot;
+    const contextResult = rootFromContext(candidate);
+    if (contextResult.present) return contextResult.root;
   }
 
   return [wrapped?.cwd, parsed?.cwd].map(nonEmptyString).find(Boolean) ?? null;

@@ -26,6 +26,17 @@ function isContained(target, root) {
   return target === root || target.startsWith(`${root}${path.sep}`);
 }
 
+function resolveContainedProjectPath(projectRoot, relativePath, field) {
+  const canonicalPath = resolveThroughExistingAncestor(path.resolve(projectRoot, relativePath));
+  if (!isContained(canonicalPath, projectRoot)) {
+    throw Object.assign(
+      new Error(`${field} escapes project_root: ${relativePath}`),
+      { code: 'PATH_TRAVERSAL' }
+    );
+  }
+  return canonicalPath;
+}
+
 /**
  * Validate and resolve a request context.
  *
@@ -90,26 +101,14 @@ export function validateContext(context) {
       );
     }
 
-    // Resolve the plan path against project root
-    const resolvedPlanPath = path.resolve(projectRoot, plan_path);
-    const canonicalPlanPath = resolveThroughExistingAncestor(resolvedPlanPath);
-
-    // Check for path traversal escape
-    if (!isContained(canonicalPlanPath, projectRoot)) {
-      throw Object.assign(
-        new Error(`context.plan_path escapes project_root: ${plan_path}`),
-        { code: 'PATH_TRAVERSAL' }
-      );
-    }
-
-    planRoot = canonicalPlanPath;
+    planRoot = resolveContainedProjectPath(projectRoot, plan_path, 'context.plan_path');
   } else {
     // Default plan root: project_root/docs/superpowers/plans
-    planRoot = path.join(projectRoot, 'docs', 'superpowers', 'plans');
+    planRoot = resolveContainedProjectPath(projectRoot, path.join('docs', 'superpowers', 'plans'), 'default plan root');
   }
 
   // Architecture root: project_root/docs/architecture/adaptive
-  const architectureRoot = path.join(projectRoot, 'docs', 'architecture', 'adaptive');
+  const architectureRoot = resolveContainedProjectPath(projectRoot, path.join('docs', 'architecture', 'adaptive'), 'default architecture root');
 
   return { projectRoot, planRoot, architectureRoot };
 }

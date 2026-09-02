@@ -37,6 +37,11 @@ function json(result) {
   return JSON.parse(result.stdout);
 }
 
+function currentLedgerRevision(document, threadId = 'root') {
+  const thread = document.threads.find((candidate) => candidate.thread_id === threadId);
+  return thread?.revisions.find((revision) => revision.revision === thread.current_revision);
+}
+
 test('CLI lifecycle initializes, adds, validates, invalidates, and ingests', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-cli-'));
   const init = json(await runNode('init-plan.mjs', [
@@ -257,32 +262,46 @@ test('top-level CLI completes and re-enters the design gate without replacing hi
   json(await runNode('init-plan.mjs', [
     '--root', root, '--id', 'design-map', '--title', 'Design map', '--goal', 'Exercise design re-entry',
   ]));
+  const posture = createEngineeringPosture('reusable_internal', {
+    source: { kind: 'explicit_assessment', ref: 'decision://cli-design-posture' },
+    allowed_capabilities: ['public-api'],
+    excluded_capabilities: ['deployment'],
+  });
   const started = json(await runNode('adaptive-plan.mjs', [
     'design', 'start', '--root', root,
   ], JSON.stringify({
     design_id: 'public-api',
     public_api: true,
     requirements: ['Expose item reads'],
+    posture_ref: postureRef(posture),
   })));
-  const first = started.revisions.find((revision) => revision.revision === started.current_revision);
-  assert.equal(first.status, 'in_progress');
+  assert.equal(started.schema_version, '2.1');
+  assert.equal(started.threads[0].thread_id, 'root');
+  const first = currentLedgerRevision(started);
+  assert.equal(first.decision_status, 'in_progress');
 
   const updated = json(await runNode('adaptive-plan.mjs', [
-    'design', 'update', '--root', root, '--expected-hash', first.design_hash,
+    'design', 'update', '--root', root, '--expected-hash', first.content_hash,
   ], JSON.stringify({
     options: [{ id: 'rest', summary: 'REST' }, { id: 'graphql', summary: 'GraphQL' }],
     selected_option: { id: 'rest' },
     interfaces: ['GET /items/:id'],
     invariants: ['Errors use the public envelope'],
   })));
-  const updatedRevision = updated.revisions.find((revision) => revision.revision === updated.current_revision);
+  const updatedRevision = currentLedgerRevision(updated);
+  const brief = json(await runNode('adaptive-plan.mjs', [
+    'design', 'brief', '--root', root,
+  ]));
   const approved = json(await runNode('adaptive-plan.mjs', [
     'design', 'approve', '--root', root,
-    '--expected-hash', updatedRevision.design_hash,
+    '--expected-hash', brief.exact_content_hash,
+    '--expected-posture-hash', brief.exact_posture_hash,
+    '--brief-hash', brief.brief_hash,
     '--approval', 'Approve REST design',
     '--waiver', 'No installed security design reviewer',
   ]));
-  assert.equal(approved.revisions.find((revision) => revision.revision === approved.current_revision).status, 'waived');
+  assert.equal(brief.exact_content_hash, updatedRevision.content_hash);
+  assert.equal(currentLedgerRevision(approved).decision_status, 'waived');
   const linked = json(await runNode('adaptive-plan.mjs', [
     'plan', 'link-design', '--root', root,
   ]));
@@ -293,10 +312,74 @@ test('top-level CLI completes and re-enters the design gate without replacing hi
     '--reason', 'Pagination contract changed',
     '--question', 'Cursor or offset pagination?',
   ]));
-  assert.equal(revised.current_revision, 2);
-  assert.equal(revised.revisions[0].status, 'stale');
-  assert.equal(revised.revisions[1].status, 'in_progress');
+  assert.equal(revised.threads[0].current_revision, 2);
+  assert.equal(revised.threads[0].revisions[0].decision_status, 'stale');
+  assert.equal(revised.threads[0].revisions[1].decision_status, 'in_progress');
   assert.equal(JSON.parse(await fs.readFile(path.join(root, 'map.json'), 'utf8')).gates.design.status, 'stale');
+});
+
+test('top-level design update, approve, and link accept a migrated v2.1 ledger', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'adaptive-design-migrated-cli-'));
+  json(await runNode('init-plan.mjs', [
+    '--root', root, '--id', 'migrated-design-map', '--title', 'Migrated design', '--goal', 'Continue migrated design work',
+  ]));
+  await fs.writeFile(path.join(root, 'design.json'), `${JSON.stringify({
+    schema_version: '2.0',
+    design_id: 'legacy-in-progress',
+    current_revision: 1,
+    revisions: [{
+      revision: 1,
+      status: 'in_progress',
+      requirements: ['Choose a storage API'],
+      options: [],
+      selected_option: null,
+      interfaces: [],
+      invariants: [],
+      failure_modes: [],
+      operational_model: [],
+      migration: [],
+      blocking_questions: [],
+      provider_selection: { status: 'ready', selected: [], blocking_concerns: [], composition_blockers: [] },
+      profile: {},
+      approval: null,
+    }],
+  }, null, 2)}\n`, 'utf8');
+  const posture = createEngineeringPosture('reusable_internal', {
+    source: { kind: 'explicit_assessment', ref: 'decision://migrated-design-posture' },
+    allowed_capabilities: ['storage-api'],
+    excluded_capabilities: ['deployment'],
+  });
+  const postureJson = JSON.stringify(postureRef(posture));
+  const preview = json(await runNode('adaptive-plan.mjs', [
+    'migrate', '--root', root, '--include-design', '--posture-ref', postureJson,
+  ]));
+  const migrated = json(await runNode('adaptive-plan.mjs', [
+    'migrate', '--root', root, '--include-design', '--posture-ref', postureJson,
+    '--apply', '--expected-hash', preview.proposal_hash,
+  ]));
+  assert.equal(migrated.design.schema_version, '2.1');
+
+  const first = currentLedgerRevision(migrated.design);
+  const updated = json(await runNode('adaptive-plan.mjs', [
+    'design', 'update', '--root', root, '--expected-hash', first.content_hash,
+  ], JSON.stringify({
+    options: [{ id: 'files' }],
+    selected_option: { id: 'files' },
+    interfaces: ['Storage.read(key)'],
+  })));
+  const brief = json(await runNode('adaptive-plan.mjs', ['design', 'brief', '--root', root]));
+  const approved = json(await runNode('adaptive-plan.mjs', [
+    'design', 'approve', '--root', root,
+    '--expected-hash', brief.exact_content_hash,
+    '--expected-posture-hash', brief.exact_posture_hash,
+    '--brief-hash', brief.brief_hash,
+    '--approval', 'Approve file storage',
+  ]));
+  assert.equal(currentLedgerRevision(updated).decision_status, 'in_progress');
+  assert.equal(currentLedgerRevision(approved).decision_status, 'approved');
+  const linked = json(await runNode('adaptive-plan.mjs', ['plan', 'link-design', '--root', root]));
+  assert.equal(linked.gates.design.status, 'approved');
+  assert.equal(linked.gates.design.design_ref.design_hash, currentLedgerRevision(approved).content_hash);
 });
 
 test('top-level completion check enforces all workflow gates', async () => {
@@ -335,12 +418,17 @@ test('top-level design brief prints the exact terminal approval contract', async
   json(await runNode('init-plan.mjs', [
     '--root', root, '--id', 'brief', '--title', 'Brief', '--goal', 'Render approval inline',
   ]));
+  const posture = createEngineeringPosture('reusable_internal', {
+    source: { kind: 'explicit_assessment', ref: 'decision://brief-design-posture' },
+    allowed_capabilities: ['public-api'],
+    excluded_capabilities: ['deployment'],
+  });
   json(await runNode('adaptive-plan.mjs', ['design', 'start', '--root', root], JSON.stringify({
-    design_id: 'brief-design', public_api: true, requirements: ['Expose reads'],
+    design_id: 'brief-design', public_api: true, requirements: ['Expose reads'], posture_ref: postureRef(posture),
   })));
   const brief = json(await runNode('adaptive-plan.mjs', ['design', 'brief', '--root', root]));
   assert.equal(brief.subject.design_id, 'brief-design');
   assert.equal(typeof brief.exact_content_hash, 'string');
   assert.equal(typeof brief.brief_hash, 'string');
-  assert.match(brief.prompt, /Approve brief-design/);
+  assert.match(brief.prompt, /Approve root revision 1/);
 });

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, symlink } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
@@ -144,6 +144,29 @@ test('record-event hook derives a valid plan root from host tool context when av
   const [event] = await readEvents(planRoot);
   assert.equal(event.type, 'PostToolUse');
   await assert.rejects(readFile(path.join(eventRoot, 'events.jsonl'), 'utf8'));
+});
+
+test('record-event hook rejects absolute, traversing, and symlink-escaping context plan paths', async () => {
+  for (const kind of ['absolute', 'traversal', 'symlink']) {
+    const projectRoot = await mkdtemp(path.join(os.tmpdir(), `adaptive-hook-${kind}-project-`));
+    const outsideRoot = await createPlanRoot(`adaptive-hook-${kind}-outside-`);
+    let planPath;
+    if (kind === 'absolute') planPath = outsideRoot;
+    if (kind === 'traversal') planPath = path.relative(projectRoot, outsideRoot);
+    if (kind === 'symlink') {
+      planPath = 'escaped-plan';
+      await symlink(outsideRoot, path.join(projectRoot, planPath));
+    }
+
+    const result = await runHook({
+      hook_event_name: 'PostToolUse',
+      cwd: outsideRoot,
+      tool_input: { context: { project_root: projectRoot, plan_path: planPath } },
+    });
+    assert.equal(result.exitCode, 0, kind);
+    assert.equal(result.stdout, '{}\n', kind);
+    assert.deepEqual(await readEvents(outsideRoot), [], kind);
+  }
 });
 
 test('record-event hook is idempotent for replay and distinguishes Codex turns', async () => {

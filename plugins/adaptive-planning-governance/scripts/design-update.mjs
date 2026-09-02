@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 
-import { updateDesignRevision } from './lib/design-engine.mjs';
+import { updateCanonicalDesign } from './lib/design-operations.mjs';
 import { readStdin, writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
@@ -21,7 +21,7 @@ if (!args.root || !args.expected_hash) {
 const input = await readStdin();
 try {
   const updates = JSON.parse(input || '{}');
-  writeJson(await updateDesignRevision(path.resolve(args.root), updates, {
+  writeJson(await updateCanonicalDesign(path.resolve(args.root), updates, {
     expectedHash: args.expected_hash,
   }));
 } catch (error) {

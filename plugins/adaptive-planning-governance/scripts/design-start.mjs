@@ -2,7 +2,8 @@
 import path from 'node:path';
 
 import { discoverProviders } from './lib/provider-registry.mjs';
-import { createDesignDocument, selectDesignProviders, triageDesign, writeDesign } from './lib/design-engine.mjs';
+import { selectDesignProviders, triageDesign } from './lib/design-engine.mjs';
+import { startCanonicalDesign } from './lib/design-operations.mjs';
 import { readStdin, writeJson } from './lib/stdio.mjs';
 
 function values(argv, flag) {
@@ -24,8 +25,7 @@ try {
   const profile = triageDesign(request);
   const registry = await discoverProviders({ skillsRoots: values(argv, '--skills-root'), pluginRoots: values(argv, '--plugin-root') });
   const providerSelection = await selectDesignProviders(profile, registry);
-  const document = createDesignDocument({ ...request, profile, provider_selection: providerSelection });
-  const written = await writeDesign(path.resolve(argv[rootIndex + 1]), document);
+  const written = await startCanonicalDesign(path.resolve(argv[rootIndex + 1]), { ...request, profile }, providerSelection);
   writeJson(written);
 } catch (error) {
   console.error(error.message);

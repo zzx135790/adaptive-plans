@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 
-import { approveDesign } from './lib/design-engine.mjs';
+import { approveCanonicalDesign } from './lib/design-operations.mjs';
 import { writeJson } from './lib/stdio.mjs';
 
 function parseArgs(argv) {
@@ -21,7 +21,7 @@ if (!args.root || !args.approval || !args.expected_hash) {
   process.exit(2);
 }
 try {
-  const result = await approveDesign(path.resolve(args.root), {
+  const result = await approveCanonicalDesign(path.resolve(args.root), {
     expectedHash: args.expected_hash,
     approval: { source: 'user', statement: args.approval },
     expectedPostureHash: args.expected_posture_hash,

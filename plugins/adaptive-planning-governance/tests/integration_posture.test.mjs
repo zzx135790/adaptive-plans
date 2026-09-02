@@ -21,7 +21,7 @@ import {
   createLeafPlanningHandoff,
   validateExecutionCheckpoint,
 } from '../scripts/lib/execution-protocol.mjs';
-import { verifyProviderWorkflowOutcome } from '../scripts/lib/host-adapter.mjs';
+import { verifyProviderWorkflowOutcome } from '../scripts/lib/provider-composition.mjs';
 import {
   buildHandoff,
   validateMap,
