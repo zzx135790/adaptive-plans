@@ -192,16 +192,60 @@ test('execution evaluator dispatches compatible ready candidates together withou
   assert.deepEqual(map, before);
 });
 
-test('execution evaluator partitions conflicts into stable maximal dispatch batches', () => {
+test('execution evaluator assigns unique execution waves to deterministic parallel subwaves', () => {
   const map = { nodes: [
-    executionNode('B', 'src/shared.mjs'),
-    executionNode('C', 'src/c.mjs'),
-    executionNode('A', 'src/shared.mjs'),
+    executionNode('D', 'src/a-d.mjs', {
+      parallelization: {
+        candidate: true,
+        owned_paths: ['src/a-d.mjs', 'src/c-d.mjs'],
+        shared_resources: [],
+        independent_verification: ['node --test tests/D.test.mjs'],
+      },
+    }),
+    executionNode('B', 'src/a-b.mjs', {
+      parallelization: {
+        candidate: true,
+        owned_paths: ['src/a-b.mjs', 'src/b-c.mjs'],
+        shared_resources: [],
+        independent_verification: ['node --test tests/B.test.mjs'],
+        token_cost: { estimated: 999999 },
+      },
+    }),
+    executionNode('C', 'src/b-c.mjs', {
+      parallelization: {
+        candidate: true,
+        owned_paths: ['src/b-c.mjs', 'src/c-d.mjs'],
+        shared_resources: [],
+        independent_verification: ['node --test tests/C.test.mjs'],
+        estimated_token_cost: 888888,
+      },
+    }),
+    executionNode('A', 'src/a-b.mjs', {
+      parallelization: {
+        candidate: true,
+        owned_paths: ['src/a-b.mjs', 'src/a-d.mjs'],
+        shared_resources: [],
+        independent_verification: ['node --test tests/A.test.mjs'],
+        token_cost: { estimated: 777777 },
+      },
+    }),
   ] };
 
   const result = evaluateExecutionSafeWaves(map);
 
-  assert.deepEqual(result.execution_safe_waves.map((wave) => wave.map((node) => node.node_id)), [['A', 'C']]);
+  assert.deepEqual(result.execution_safe_waves.map((wave) => wave.map((node) => ({
+    node_id: node.node_id,
+    execution_wave: node.execution_wave,
+  }))), [
+    [
+      { node_id: 'A', execution_wave: '1.1' },
+      { node_id: 'C', execution_wave: '1.1' },
+    ],
+    [
+      { node_id: 'B', execution_wave: '1.2' },
+      { node_id: 'D', execution_wave: '1.2' },
+    ],
+  ]);
   assert.deepEqual(result.dispatch_batches, [
     {
       dependency_wave: 1,
@@ -212,16 +256,9 @@ test('execution evaluator partitions conflicts into stable maximal dispatch batc
     {
       dependency_wave: 1,
       subwave: 2,
-      node_ids: ['B'],
-      mode: 'serial',
-      reason: 'conflicts with nodes in an earlier subwave of dependency wave 1',
+      node_ids: ['B', 'D'],
+      mode: 'parallel',
     },
   ]);
-  assert.deepEqual(result.serial, [{
-    node_id: 'B',
-    dependency_wave: 1,
-    execution_wave: 'serial',
-    parallel: false,
-    reason: 'conflicts with nodes in an earlier subwave of dependency wave 1',
-  }]);
+  assert.deepEqual(result.serial, []);
 });

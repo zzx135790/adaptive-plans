@@ -173,7 +173,7 @@ export function evaluateExecutionSafeWaves(map) {
       const results = batch.map((node) => executionResult(
         node,
         dependencyWave,
-        dependencyWave,
+        `${dependencyWave}.${batchIndex + 1}`,
         true,
         'dependency satisfied and execution safety evidence is complete',
       ));
