@@ -10,4 +10,4 @@ try {
   console.error(`Invalid JSON: ${error.message}`);
   process.exit(2);
 }
-writeJson(routePlanning(signals, signals.visible_providers));
+writeJson(routePlanning(signals));

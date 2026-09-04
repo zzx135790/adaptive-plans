@@ -18,27 +18,30 @@ function pathOverlaps(left, right) {
   return false;
 }
 
-function resource(resource) {
-  if (isObject(resource)) {
+function normalizeResource(value) {
+  if (isObject(value)) {
     return {
-      name: String(resource.name ?? resource.resource ?? resource.id ?? ''),
-      mutable: resource.mutable !== false && resource.mutability !== 'immutable',
-      partition: resource.partition ?? resource.partition_key ?? null,
+      name: String(value.name ?? value.resource ?? value.id ?? ''),
+      mutable: value.mutable !== false && value.mutability !== 'immutable',
+      partition: value.partition ?? value.partition_key ?? null,
     };
   }
-  const value = String(resource);
-  const match = value.match(/^([^:]+):partition[:=](.+)$/);
-  return { name: match?.[1] ?? value, mutable: true, partition: match?.[2] ?? null };
+  const text = String(value);
+  const match = text.match(/^([^:]+):partition[:=](.+)$/);
+  return { name: match?.[1] ?? text, mutable: true, partition: match?.[2] ?? null };
 }
 
 function conflicts(left, right) {
   const leftMeta = left.parallelization ?? {};
   const rightMeta = right.parallelization ?? {};
+  const rightPaths = asArray(rightMeta.owned_paths);
   for (const leftPath of asArray(leftMeta.owned_paths)) {
-    if (asArray(rightMeta.owned_paths).some((rightPath) => pathOverlaps(leftPath, rightPath))) return true;
+    if (rightPaths.some((rightPath) => pathOverlaps(leftPath, rightPath))) return true;
   }
-  for (const leftResource of asArray(leftMeta.shared_resources).map(resource)) {
-    for (const rightResource of asArray(rightMeta.shared_resources).map(resource)) {
+  const leftResources = asArray(leftMeta.shared_resources).map(normalizeResource);
+  const rightResources = asArray(rightMeta.shared_resources).map(normalizeResource);
+  for (const leftResource of leftResources) {
+    for (const rightResource of rightResources) {
       if (!leftResource.name || leftResource.name !== rightResource.name) continue;
       if (!leftResource.mutable || !rightResource.mutable) continue;
       const separatelyPartitioned = leftResource.partition !== null

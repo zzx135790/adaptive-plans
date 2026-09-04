@@ -21,10 +21,14 @@ try {
   const statuses = JSON.parse(valueAfter('--statuses') ?? '{}');
   if (!statuses || typeof statuses !== 'object' || Array.isArray(statuses)) throw new Error('--statuses must be a JSON object');
   const runtimeMap = structuredClone(map);
-  const known = new Set(runtimeMap.nodes.map((node) => node.id));
+  const nodesById = new Map();
+  for (const node of runtimeMap.nodes) {
+    if (!nodesById.has(node.id)) nodesById.set(node.id, node);
+  }
   for (const [nodeId, status] of Object.entries(statuses)) {
-    if (!known.has(nodeId)) throw new Error(`unknown runtime node ${nodeId}`);
-    runtimeMap.nodes.find((node) => node.id === nodeId).status = String(status);
+    const node = nodesById.get(nodeId);
+    if (!node) throw new Error(`unknown runtime node ${nodeId}`);
+    node.status = String(status);
   }
   writeJson(evaluateExecutionSafeWaves(runtimeMap));
 } catch (error) {

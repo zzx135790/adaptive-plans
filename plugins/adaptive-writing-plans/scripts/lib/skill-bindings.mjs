@@ -1,4 +1,4 @@
-import { asArray, cloneJson, isObject } from './io-utils.mjs';
+import { cloneJson, isObject } from './io-utils.mjs';
 
 function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0;
@@ -83,9 +83,9 @@ export function validateSkillBindings(value) {
 export function normalizeSkillBindings(value) {
   const errors = validateSkillBindings(value);
   if (errors.length > 0) throw new Error(errors.map((item) => item.message).join('; '));
-  return value
-    .map((binding) => ({ ...cloneJson(binding), alternatives: cloneJson(binding.alternatives ?? []) }))
-    .sort((left, right) => left.execution_order - right.execution_order);
+  const bindings = cloneJson(value);
+  for (const binding of bindings) binding.alternatives ??= [];
+  return bindings.sort((left, right) => left.execution_order - right.execution_order);
 }
 
 export function renderSkillRouteLine(value) {
@@ -102,13 +102,14 @@ export function renderSkillBindings(value) {
   if (bindings.length === 0) return 'No skill bindings.';
   return bindings.flatMap((binding) => {
     const routeLabel = binding.selected_skill ? 'Selected skill' : 'Ada fallback';
+    const alternatives = binding.alternatives;
     const lines = [
       `### ${binding.execution_order}. ${binding.behavior}`,
       '',
       `- Purpose: ${binding.purpose}`,
       `- ${routeLabel}: ${binding.selected_skill ?? binding.ada_fallback}`,
       `- Selection reason: ${binding.selection_reason}`,
-      `- Alternatives: ${asArray(binding.alternatives).length === 0 ? 'none' : asArray(binding.alternatives).map((item) => `${item.skill} (${item.not_selected_reason})`).join('; ')}`,
+      `- Alternatives: ${alternatives.length === 0 ? 'none' : alternatives.map((item) => `${item.skill} (${item.not_selected_reason})`).join('; ')}`,
     ];
     if (binding.override_reason !== undefined) lines.push(`- Override reason: ${binding.override_reason}`);
     return [...lines, ''];

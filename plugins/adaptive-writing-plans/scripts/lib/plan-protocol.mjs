@@ -129,7 +129,6 @@ export async function writeMap(root, map) {
   const validation = validateMap(map);
   if (!validation.valid) throw new Error(`invalid map: ${validation.errors.map((error) => error.message).join('; ')}`);
   const planRoot = path.resolve(root);
-  await ensureDir(planRoot);
   await writeJsonAtomic(path.join(planRoot, 'map.json'), map);
   await writeTextAtomic(path.join(planRoot, 'MAP.md'), renderMapMarkdown(map));
   return cloneJson(map);
